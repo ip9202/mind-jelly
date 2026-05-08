@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+
+<html lang="ko"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Mind Jelly Onboarding</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;700;800&amp;family=Dongle:wght@400;700&amp;family=Gowun+Dodum&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "tertiary-container": "#dbdbef",
+                    "on-background": "#1b1c1a",
+                    "surface-bright": "#fbf9f6",
+                    "primary-fixed-dim": "#e7bbc6",
+                    "outline-variant": "#d3c3c5",
+                    "on-secondary-fixed-variant": "#344a52",
+                    "inverse-primary": "#e7bbc6",
+                    "on-secondary-container": "#516870",
+                    "on-tertiary-fixed": "#191b29",
+                    "on-tertiary-fixed-variant": "#444655",
+                    "secondary": "#4b626a",
+                    "on-primary-fixed-variant": "#5e3e47",
+                    "on-tertiary-container": "#5e6070",
+                    "on-primary-container": "#7a5761",
+                    "secondary-fixed": "#cee7f0",
+                    "text-primary": "#4E5968",
+                    "on-secondary": "#ffffff",
+                    "bg-dark": "#191F28",
+                    "surface-container-highest": "#e4e2df",
+                    "surface-container": "#efeeeb",
+                    "outline": "#817476",
+                    "surface": "#fbf9f6",
+                    "primary-fixed": "#ffd9e2",
+                    "surface-container-lowest": "#ffffff",
+                    "surface-container-high": "#eae8e5",
+                    "background": "#fbf9f6",
+                    "on-surface": "#1b1c1a",
+                    "primary": "#78555e",
+                    "on-primary": "#ffffff",
+                    "inverse-surface": "#30312f",
+                    "tertiary-fixed-dim": "#c5c5d8",
+                    "tertiary-fixed": "#e1e1f5",
+                    "jelly-sad": "#AEC6CF",
+                    "on-tertiary": "#ffffff",
+                    "surface-tint": "#78555e",
+                    "error-container": "#ffdad6",
+                    "error": "#ba1a1a",
+                    "jelly-anger": "#FFB3A7",
+                    "secondary-container": "#cee7f0",
+                    "jelly-base": "#FFD1DC",
+                    "on-surface-variant": "#4f4446",
+                    "surface-container-low": "#f5f3f0",
+                    "surface-dim": "#dbdad7",
+                    "primary-container": "#ffd1dc",
+                    "tertiary": "#5c5d6e",
+                    "secondary-fixed-dim": "#b2cad3",
+                    "on-primary-fixed": "#2d141c",
+                    "on-secondary-fixed": "#061e25",
+                    "on-error": "#ffffff",
+                    "inverse-on-surface": "#f2f0ed",
+                    "jelly-tired": "#E6E6FA",
+                    "bg-base": "#FAF8F5",
+                    "surface-variant": "#e4e2df",
+                    "on-error-container": "#93000a"
+            },
+            "borderRadius": {
+                    "DEFAULT": "1rem",
+                    "lg": "2rem",
+                    "xl": "3rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "space-xs": "4px",
+                    "space-lg": "24px",
+                    "space-xl": "32px",
+                    "layout-margin": "20px",
+                    "gutter": "12px",
+                    "space-md": "16px",
+                    "space-sm": "8px"
+            },
+            "fontFamily": {
+                    "h1": ["Plus Jakarta Sans"],
+                    "body-md": ["Plus Jakarta Sans"],
+                    "caption": ["Plus Jakarta Sans"],
+                    "dongle": ["Dongle"],
+                    "gowun": ["Gowun Dodum"]
+            },
+            "fontSize": {
+                    "h1": ["24px", {"lineHeight": "1.4", "fontWeight": "700"}],
+                    "body-md": ["16px", {"lineHeight": "1.5", "fontWeight": "500"}],
+                    "caption": ["13px", {"lineHeight": "1.6", "fontWeight": "400"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .jelly-float {
+            animation: float 4s ease-in-out infinite;
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
+        }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.45);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head>
+<body class="bg-background text-on-background font-body-md antialiased overflow-hidden">
+<!-- Full Screen Soft Pastel Gradient Canvas -->
+<main class="relative h-screen w-full flex flex-col items-center justify-between py-16 px-layout-margin bg-gradient-to-br from-surface-bright via-primary-container/20 to-tertiary-fixed/30">
+<!-- Header / Logo Placeholder (Hidden for focused onboarding flow) -->
+<div class="w-full flex justify-center">
+<span class="font-dongle text-5xl text-primary/40 select-none">Mind Jelly</span>
+</div>
+<!-- Central Character Section -->
+<div class="flex-1 flex flex-col items-center justify-center w-full max-w-md gap-8">
+<!-- The Jelly (Main Character) -->
+<div class="relative w-64 h-64 jelly-float">
+<!-- Inner Glow / Soft Body Body -->
+<div class="absolute inset-0 bg-jelly-base rounded-full opacity-80 blur-xl"></div>
+<div class="relative w-full h-full bg-jelly-base rounded-[40%_60%_70%_30%/40%_50%_60%_50%] shadow-[inset_-10px_-10px_30px_rgba(0,0,0,0.05),inset_10px_10px_30px_rgba(255,255,255,0.6)] flex items-center justify-center overflow-visible">
+<!-- Jelly Face -->
+<div class="flex flex-col gap-2 items-center -mt-4">
+<div class="flex gap-8">
+<div class="w-2.5 h-2.5 bg-primary/60 rounded-full"></div>
+<div class="w-2.5 h-2.5 bg-primary/60 rounded-full"></div>
+</div>
+<div class="w-6 h-3 border-b-2 border-primary/40 rounded-full"></div>
+</div>
+<!-- Waving Hand Illustration Component -->
+<div class="absolute -right-4 top-1/2 -translate-y-1/2">
+<div class="w-12 h-12 bg-jelly-base rounded-full shadow-[inset_-4px_-4px_10px_rgba(0,0,0,0.05),inset_4px_4px_10px_rgba(255,255,255,0.8)] rotate-12 flex items-center justify-center">
+<span class="material-symbols-outlined text-primary/40 text-2xl" style="font-variation-settings: 'FILL' 1;">front_hand</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Content Area -->
+<div class="text-center space-y-4">
+<h1 class="font-dongle leading-none text-primary text-[64px] whitespace-nowrap tracking-tight">
+                    안녕! 나는 마인드 젤리야
+                </h1>
+<p class="font-gowun text-lg text-text-primary/70 tracking-tight">
+                    너의 감정을 먹고 커가는 젤리 친구
+                </p>
+</div>
+</div>
+<!-- Navigation & Progress -->
+<div class="w-full max-w-md flex flex-col items-center gap-10">
+<!-- Progress Indicator -->
+<div class="flex gap-2">
+<div class="w-6 h-2 rounded-full bg-primary"></div>
+<div class="w-2 h-2 rounded-full bg-primary/20"></div>
+<div class="w-2 h-2 rounded-full bg-primary/20"></div>
+</div>
+<!-- Action Button -->
+<button class="w-full py-5 rounded-lg bg-gradient-to-r from-primary-container to-primary/40 text-on-primary-container font-gowun text-xl shadow-sm hover:opacity-90 active:scale-95 transition-all duration-300">
+                다음
+            </button>
+</div>
+</main>
+<!-- Background Decorative Elements -->
+<div class="fixed -top-20 -left-20 w-80 h-80 bg-jelly-tired/30 rounded-full blur-[100px] pointer-events-none"></div>
+<div class="fixed -bottom-20 -right-20 w-96 h-96 bg-primary-container/30 rounded-full blur-[120px] pointer-events-none"></div>
+</body></html>

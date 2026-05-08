@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+
+<html lang="ko"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;700&amp;family=Dongle:wght@400;700&amp;family=Gowun+Dodum&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        "colors": {
+                "tertiary-container": "#dbdbef",
+                "on-background": "#1b1c1a",
+                "surface-bright": "#fbf9f6",
+                "primary-fixed-dim": "#e7bbc6",
+                "outline-variant": "#d3c3c5",
+                "on-secondary-fixed-variant": "#344a52",
+                "inverse-primary": "#e7bbc6",
+                "on-secondary-container": "#516870",
+                "on-tertiary-fixed": "#191b29",
+                "on-tertiary-fixed-variant": "#444655",
+                "secondary": "#4b626a",
+                "on-primary-fixed-variant": "#5e3e47",
+                "on-tertiary-container": "#5e6070",
+                "on-primary-container": "#7a5761",
+                "secondary-fixed": "#cee7f0",
+                "text-primary": "#4E5968",
+                "on-secondary": "#ffffff",
+                "bg-dark": "#191F28",
+                "surface-container-highest": "#e4e2df",
+                "surface-container": "#efeeeb",
+                "outline": "#817476",
+                "surface": "#fbf9f6",
+                "primary-fixed": "#ffd9e2",
+                "surface-container-lowest": "#ffffff",
+                "surface-container-high": "#eae8e5",
+                "background": "#fbf9f6",
+                "on-surface": "#1b1c1a",
+                "primary": "#78555e",
+                "on-primary": "#ffffff",
+                "inverse-surface": "#30312f",
+                "tertiary-fixed-dim": "#c5c5d8",
+                "tertiary-fixed": "#e1e1f5",
+                "jelly-sad": "#AEC6CF",
+                "on-tertiary": "#ffffff",
+                "surface-tint": "#78555e",
+                "error-container": "#ffdad6",
+                "error": "#ba1a1a",
+                "jelly-anger": "#FFB3A7",
+                "secondary-container": "#cee7f0",
+                "jelly-base": "#FFD1DC",
+                "on-surface-variant": "#4f4446",
+                "surface-container-low": "#f5f3f0",
+                "surface-dim": "#dbdad7",
+                "primary-container": "#ffd1dc",
+                "tertiary": "#5c5d6e",
+                "secondary-fixed-dim": "#b2cad3",
+                "on-primary-fixed": "#2d141c",
+                "on-secondary-fixed": "#061e25",
+                "on-error": "#ffffff",
+                "inverse-on-surface": "#f2f0ed",
+                "jelly-tired": "#E6E6FA",
+                "bg-base": "#FAF8F5",
+                "surface-variant": "#e4e2df",
+                "on-error-container": "#93000a"
+        },
+        "borderRadius": {
+                "DEFAULT": "1rem",
+                "lg": "2rem",
+                "xl": "3rem",
+                "full": "9999px"
+        },
+        "spacing": {
+                "space-xs": "4px",
+                "space-lg": "24px",
+                "space-xl": "32px",
+                "layout-margin": "20px",
+                "gutter": "12px",
+                "space-md": "16px",
+                "space-sm": "8px"
+        },
+        "fontFamily": {
+                "h1": ["Plus Jakarta Sans"],
+                "body-md": ["Plus Jakarta Sans"],
+                "caption": ["Plus Jakarta Sans"],
+                "dongle": ["Dongle"],
+                "gowun": ["Gowun Dodum"]
+        },
+        "fontSize": {
+                "h1": ["24px", {"lineHeight": "1.4", "fontWeight": "700"}],
+                "body-md": ["16px", {"lineHeight": "1.5", "fontWeight": "500"}],
+                "caption": ["13px", {"lineHeight": "1.6", "fontWeight": "400"}]
+        }
+      },
+    },
+  }
+</script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .jelly-float {
+            animation: float 3s ease-in-out infinite;
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
+        }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+        }
+        .confetti-gradient {
+            background: radial-gradient(circle, rgba(255,209,220,1) 0%, rgba(250,248,245,0) 70%);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+<link href="https://fonts.googleapis.com/css2?family=Gamja+Flower&amp;display=swap" rel="stylesheet"/></head>
+<body class="bg-bg-base min-h-screen flex flex-col font-body-md text-on-background overflow-hidden">
+<!-- Header (Suppressed Navigation as per Destination Rule) -->
+<header class="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-layout-margin h-16 backdrop-blur-md bg-white/10">
+<div class="text-primary tracking-tight"><div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-3xl">pill</span>
+<span class="font-dongle text-4xl">Mind Jelly</span>
+</div></div>
+<div class="flex items-center gap-space-sm">
+<span class="text-primary font-bold font-caption text-caption">3/3</span>
+<div class="w-16 h-1.5 bg-surface-container rounded-full overflow-hidden">
+<div class="w-full h-full bg-primary"></div>
+</div>
+</div>
+</header>
+<!-- Main Canvas -->
+<main class="flex-1 flex flex-col items-center justify-center px-layout-margin pb-32 relative pt-32">
+<!-- Celebration Background Elements -->
+<div class="absolute inset-0 pointer-events-none opacity-40">
+<div class="absolute top-1/4 left-10 w-4 h-4 rounded-full bg-jelly-base"></div>
+<div class="absolute top-1/3 right-12 w-6 h-6 rounded-lg rotate-12 bg-jelly-sad"></div>
+<div class="absolute bottom-1/4 left-16 w-3 h-3 rounded-sm rotate-45 bg-jelly-anger"></div>
+<div class="absolute top-1/2 right-20 w-5 h-5 rounded-full bg-jelly-tired"></div>
+</div>
+<!-- Character Focus -->
+<div class="relative mb-12">
+<div class="absolute inset-0 bg-primary-container/30 blur-3xl rounded-full scale-150"></div>
+<!-- Jelly Character: Party State -->
+<div class="jelly-float relative w-48 h-48 md:w-64 md:h-64 flex items-center justify-center">
+<div class="absolute inset-0 bg-jelly-base rounded-full opacity-80 backdrop-blur-sm border-4 border-white/40 shadow-[inset_0_4px_12px_rgba(255,255,255,0.8)]"></div>
+<!-- Simple SVG Face -->
+<svg class="w-24 h-24 relative z-10" viewbox="0 0 100 100">
+<path d="M30 45 Q35 40 40 45" fill="none" stroke="#78555e" stroke-linecap="round" stroke-width="4"></path>
+<path d="M60 45 Q65 40 70 45" fill="none" stroke="#78555e" stroke-linecap="round" stroke-width="4"></path>
+<path d="M40 65 Q50 75 60 65" fill="none" stroke="#78555e" stroke-linecap="round" stroke-width="4"></path>
+<circle cx="25" cy="55" fill="#FFB3A7" opacity="0.6" r="5"></circle>
+<circle cx="75" cy="55" fill="#FFB3A7" opacity="0.6" r="5"></circle>
+</svg>
+<!-- Party Hat Accessory -->
+<div class="absolute -top-4 right-10 rotate-12">
+<span class="material-symbols-outlined text-4xl text-primary" style="font-variation-settings: 'FILL' 1;">celebration</span>
+</div>
+</div>
+</div>
+<!-- Headline -->
+<div class="text-center mb-10">
+<h1 class="font-dongle text-primary leading-none text-5xl whitespace-nowrap tracking-tight">준비 완료! 시작해볼까?</h1>
+</div>
+<!-- Naming Input Section -->
+<div class="w-full max-w-sm space-y-space-md">
+<div class="glass-panel p-1 rounded-xl shadow-sm border border-white/40 focus-within:ring-2 focus-within:ring-primary/40 transition-all duration-300">
+<input class="w-full bg-transparent border-none focus:ring-0 px-space-md py-4 font-gowun text-lg text-on-surface placeholder:text-outline-variant text-center" placeholder="젤리 이름 지어주기" type="text"/>
+</div>
+<p class="text-center text-outline font-caption text-caption" style="font-family: 'Gamja Flower', cursive;">나만의 소중한 젤리에게 이름을 선물해주세요.</p>
+</div>
+</main>
+<!-- Bottom Action Area -->
+<footer class="fixed bottom-0 left-0 w-full p-layout-margin flex flex-col items-center">
+<button class="w-full max-w-sm bg-primary text-on-primary py-5 rounded-lg shadow-lg active:scale-95 transition-all duration-300 text-h1 hover:opacity-90 font-gowun">
+            시작!
+        </button>
+<!-- Subtle Background Glow behind button -->
+<div class="absolute -bottom-10 left-1/2 -translate-x-1/2 w-64 h-32 bg-primary/20 blur-3xl -z-10"></div>
+</footer>
+<!-- Illustrative Celebration Elements (Images as requested) -->
+<div class="fixed left-4 md:left-20 w-32 h-32 pointer-events-none -rotate-12 opacity-80 top-28">
+<img alt="Confetti Burst" class="w-full h-full object-contain" data-alt="A burst of colorful, soft pastel confetti including pink, mint, and lavender paper fragments floating in a bright, airy space with soft diffused sunlight. The aesthetic is clean and modern, mimicking a celebration scene in a high-end digital design system. The lighting is high-key, creating a joyful and encouraging atmosphere with gentle depth and blur." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAH5r473qp2QVsk_sN1gHTdMHa3PX7GFnK6x-ovN62G4Ugb0unC_yjctZB2DO8jUqYhGwiOU0wSQ8hooBCw1qaGosqUOZRbqZNqruEDdoBHlZ69Qb4ubBsmfIDCkOfvJ7L4epbCHup_uczslfAuLx9kE0eblrshBuBPPleGiRjap8YzFUntLMEtEPTJQvaqKeBC6ZnE1SQZPihddl56BK_jAHG8iP_47g_vihbbD6Q2oIZVSHm0MOT6dTD_lZLNHxJLicAJdfqLhlk"/>
+</div>
+<div class="fixed right-4 md:right-24 w-36 h-36 pointer-events-none rotate-12 opacity-80 top-32">
+<img alt="Party Streamers" class="w-full h-full object-contain" data-alt="Abstract soft-focus party streamers in warm pink and cream tones gracefully looping through a minimalist light-filled environment. The composition is airy and playful, using a pastel color palette that aligns with a comforting digital sanctuary. Every element feels weightless and organic, bathed in a soft internal glow that creates a sense of tactile depth and quiet celebration." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDET49Xp6SlxlaIfAItauUN2qV6xyx5rcx97hMUQUDoQy93EzFEtES_Kcxjt2-XEn8PDkJiUxvFodkscsrtEuLapMgwVW3WQJjBqoKBPrdae-dJM-bqbFMWYfAH9IeZ3ZagoB9vmPMri8m5ZYvVHXKmerbLxnfJs1-YrJ8rIly_HV17qDOv_ZUayWk5YZ9Hgi8uVLUvLU-HFohvDShaT0akhlvy1LCRlVn5CKNrcvSFYVnqRT-dF5SoX84Mir_ABY1IvQtmnR7zSYY"/>
+</div>
+</body></html>

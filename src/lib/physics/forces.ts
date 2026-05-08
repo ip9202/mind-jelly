@@ -2,8 +2,8 @@ import type { Vector } from '@/types/physics';
 import * as Matter from 'matter-js';
 
 // 자기장 상수
-const MAGNETIC_RADIUS = 50; // 자기장 반경 (px)
-const MAX_FORCE = 0.001; // 최대 힘 크기
+const MAGNETIC_RADIUS = 250; // 자기장 반경 (px) - 구슬이 멀리서도 끌리도록 충분히 넓게
+const MAX_FORCE = 0.008; // 최대 힘 크기 - 중력을 상쇄할 수 있는 수준
 
 /**
  * 자기장 효과를 위한 힘을 계산한다

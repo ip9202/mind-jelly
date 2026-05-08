@@ -69,8 +69,8 @@ describe('PHYSICS_CONSTANTS', () => {
       expect(PHYSICS_CONSTANTS.beadSizes).toEqual([12, 18, 24]);
     });
 
-    it('벽면 Restitution은 0.3이어야 한다', () => {
-      expect(PHYSICS_CONSTANTS.wallRestitution).toBe(0.3);
+    it('벽면 Restitution은 0.8이어야 한다', () => {
+      expect(PHYSICS_CONSTANTS.wallRestitution).toBe(0.8);
     });
 
     it('벽면 두께는 10px이어야 한다', () => {

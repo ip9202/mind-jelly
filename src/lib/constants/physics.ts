@@ -29,6 +29,6 @@ export const PHYSICS_CONSTANTS = {
 
   // 구슬 파라미터 (REQ-EVT-005)
   beadSizes: [12, 18, 24] as const, // 구슬 크기 옵션: 소/중/대
-  wallRestitution: 0.3, // 벽면 반탄성계수: 약간 튕김 (REQ-UNW-003)
+  wallRestitution: 0.8, // 벽면 반탄성계수: 강한 튕김 (REQ-UNW-003 v1.1.0)
   wallThickness: 10, // 벽면 두께: 픽셀 단위 (REQ-UNW-003)
 } as const;

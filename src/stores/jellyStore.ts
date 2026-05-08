@@ -39,6 +39,9 @@ interface JellyStoreState {
   // 구슬 개수
   beadCount: number;
 
+  // 마지막 감정 타입
+  lastEmotion: string;
+
   // 액션: 상태 전이
   transitionState: (newState: JellyState) => boolean;
 
@@ -63,6 +66,9 @@ interface JellyStoreState {
 
   // 액션: 구슬 개수 감소
   decrementBeadCount: (amount?: number) => void;
+
+  // 액션: 마지막 감정 설정
+  setLastEmotion: (emotion: string) => void;
 }
 
 /**
@@ -91,6 +97,8 @@ export const jellyStore = create<JellyStoreState>()(
       },
 
       beadCount: 0,
+
+      lastEmotion: 'joy',
 
       // 상태 전이 (가드 조건 검증)
       transitionState: (newState: JellyState) => {
@@ -157,6 +165,11 @@ export const jellyStore = create<JellyStoreState>()(
         set((state) => ({
           beadCount: Math.max(0, state.beadCount - amount),
         }));
+      },
+
+      // 마지막 감정 설정
+      setLastEmotion: (emotion: string) => {
+        set({ lastEmotion: emotion });
       },
     }),
     {

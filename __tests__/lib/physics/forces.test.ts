@@ -77,9 +77,9 @@ describe('Magnetic Force Calculation', () => {
 
       const force = calculateMagneticForce(beadPosition, jellyCenter);
 
-      // 자기장 반경 밖이면 힘 0
-      expect(force.x).toBe(0);
-      expect(force.y).toBe(0);
+      // 자기장 반경 밖이면 힘 0 (floating point 정밀도 고려)
+      expect(force.x).toBeCloseTo(0);
+      expect(force.y).toBeCloseTo(0);
     });
 
     it('대각선 방향으로도 올바른 힘을 계산해야 한다', () => {

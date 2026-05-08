@@ -47,7 +47,7 @@ export function createPhysicsEngine(canvas: HTMLCanvasElement): Engine {
  * @param canvasHeight - 캔버스 높이
  * @returns 생성된 벽들의 배열
  */
-// @MX:NOTE: 경계 벽은 두께 10px, Restitution 0.3, Friction 0.0
+// @MX:NOTE: 경계 벽은 두께 10px, Restitution 0.8, Friction 0.0
 // @MX:ANCHOR: 경계 벽 생성 함수 (REQ-UBI-004, REQ-UNW-003)
 // @MX:REASON: 물리 객체들이 캔버스 밖으로 벗어나는 것을 방지
 // @MX:SPEC: SPEC-JELLY-001 REQ-UNW-003
@@ -62,7 +62,7 @@ export function createBoundaryWalls(
     // 상단 벽
     Bodies.rectangle(canvasWidth / 2, 0, canvasWidth, wallThickness, {
       isStatic: true,
-      restitution: 0.3,
+      restitution: 0.8,
       friction: 0.0,
       render: { visible: false },
     }),
@@ -74,7 +74,7 @@ export function createBoundaryWalls(
       wallThickness,
       {
         isStatic: true,
-        restitution: 0.3,
+        restitution: 0.8,
         friction: 0.0,
         render: { visible: false },
       },
@@ -82,14 +82,14 @@ export function createBoundaryWalls(
     // 좌측 벽
     Bodies.rectangle(0, canvasHeight / 2, wallThickness, canvasHeight, {
       isStatic: true,
-      restitution: 0.3,
+      restitution: 0.8,
       friction: 0.0,
       render: { visible: false },
     }),
     // 우측 벽
     Bodies.rectangle(canvasWidth, canvasHeight / 2, wallThickness, canvasHeight, {
       isStatic: true,
-      restitution: 0.3,
+      restitution: 0.8,
       friction: 0.0,
       render: { visible: false },
     }),
