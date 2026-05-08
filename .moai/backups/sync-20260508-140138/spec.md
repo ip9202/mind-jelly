@@ -7,7 +7,7 @@
 | SPEC ID | SPEC-JELLY-001 |
 | 제목 | Core Physics + Interaction |
 | 우선순위 | P0 (Critical) |
-| 상태 | Completed |
+| 상태 | Planned |
 | 생성일 | 2026-05-08 |
 | 담당자 | expert-frontend |
 | 관련 SPEC | 없음 (최초 SPEC) |

@@ -27,13 +27,6 @@
 - Fixed integration test mocks: named + default exports
 - FINAL: 147 tests passing, 19 suites, 92%+ statement coverage
 
-## SYNC Phase (2026-05-08)
-- Type error fix: JellyFace → JellyFaceMap in physics.test.ts
-- Pre-sync quality gate: PASS (147 tests, 0 type errors)
-- Coverage: 91.9% statements, 71.42% branches, 89.23% functions, 93.05% lines
-- SPEC status: Planned → Completed
-- Sync mode: auto (main_direct strategy)
-
 ## Strategy Decisions
 - Development mode: TDD (RED-GREEN-REFACTOR)
 - Approach: Layer-based TDD (not milestone sequential)

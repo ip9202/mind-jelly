@@ -1,0 +1,166 @@
+import { create } from 'zustand';
+import { devtools } from 'zustand/middleware';
+
+import type { JellyState, JellyFace } from '@/types/physics';
+
+// 상태 전이 맵 (유효한 전이만 정의)
+const TRANSITION_MAP: Record<string, string[]> = {
+  idle: ['anticipation'],
+  anticipation: ['eating'],
+  eating: ['anticipation', 'satisfied'],
+  satisfied: ['idle'],
+};
+
+// 상태별 기본 표정
+const STATE_FACES: Record<string, JellyFace> = {
+  idle: { eyes: '• •', mouth: 'o' },
+  anticipation: { eyes: '• •', mouth: 'o' },
+  eating: { eyes: 'u u', mouth: 'o' },
+  satisfied: { eyes: '^ ^', mouth: '-' },
+};
+
+interface JellyStoreState {
+  // 현재 상태
+  currentState: JellyState;
+
+  // 젤리 위치
+  jellyPosition: { x: number; y: number };
+
+  // 표정
+  faceExpression: JellyFace;
+
+  // 애니메이션 파라미터
+  animationParams: {
+    scale: number;
+    translateY: number;
+    wobble: number;
+  };
+
+  // 구슬 개수
+  beadCount: number;
+
+  // 액션: 상태 전이
+  transitionState: (newState: JellyState) => boolean;
+
+  // 액션: 표정 업데이트
+  setFaceExpression: (face: Partial<JellyFace>) => void;
+
+  // 액션: 애니메이션 파라미터 업데이트
+  setAnimationParams: (params: Partial<{
+    scale: number;
+    translateY: number;
+    wobble: number;
+  }>) => void;
+
+  // 액션: 위치 업데이트
+  setJellyPosition: (position: { x: number; y: number }) => void;
+
+  // 액션: 구슬 개수 설정
+  setBeadCount: (count: number) => void;
+
+  // 액션: 구슬 개수 증가
+  incrementBeadCount: (amount?: number) => void;
+
+  // 액션: 구슬 개수 감소
+  decrementBeadCount: (amount?: number) => void;
+}
+
+/**
+ * 젤리 상태 관리를 위한 Zustand Store
+ *
+ * 상태 머신과 전이 가드를 포함하며,
+ * 표정, 애니메이션 파라미터, 구슬 개수를 관리한다.
+ */
+// @MX:ANCHOR: 젤리 상태의 단일 소스 오브 트루스 (REQ-UBI-003)
+// @MX:REASON: 모든 컴포넌트가 이 store를 통해 젤리 상태에 접근
+// @MX:SPEC: SPEC-JELLY-001 REQ-UBI-003, REQ-STA-001~004, REQ-UNW-004
+export const jellyStore = create<JellyStoreState>()(
+  devtools(
+    (set, get) => ({
+      // 초기 상태
+      currentState: 'idle',
+
+      jellyPosition: { x: 0, y: 0 },
+
+      faceExpression: STATE_FACES.idle,
+
+      animationParams: {
+        scale: 1,
+        translateY: 0,
+        wobble: 0,
+      },
+
+      beadCount: 0,
+
+      // 상태 전이 (가드 조건 검증)
+      transitionState: (newState: JellyState) => {
+        const currentState = get().currentState;
+
+        // 유효한 전이인지 확인
+        const validTransitions = TRANSITION_MAP[currentState];
+        if (!validTransitions || !validTransitions.includes(newState)) {
+          console.warn(
+            `무효한 상태 전이: ${currentState} -> ${newState}. ` +
+              `유효한 전이: ${validTransitions?.join(', ') || '없음'}`,
+          );
+          return false;
+        }
+
+        // 상태 전이 및 표정 업데이트
+        set({
+          currentState: newState,
+          faceExpression: STATE_FACES[newState],
+        });
+
+        return true;
+      },
+
+      // 표정 업데이트
+      setFaceExpression: (face: Partial<JellyFace>) => {
+        set((state) => ({
+          faceExpression: {
+            ...state.faceExpression,
+            ...face,
+          },
+        }));
+      },
+
+      // 애니메이션 파라미터 업데이트
+      setAnimationParams: (params) => {
+        set((state) => ({
+          animationParams: {
+            ...state.animationParams,
+            ...params,
+          },
+        }));
+      },
+
+      // 위치 업데이트
+      setJellyPosition: (position) => {
+        set({ jellyPosition: position });
+      },
+
+      // 구슬 개수 설정
+      setBeadCount: (count) => {
+        set({ beadCount: count });
+      },
+
+      // 구슬 개수 증가
+      incrementBeadCount: (amount = 1) => {
+        set((state) => ({
+          beadCount: Math.max(0, state.beadCount + amount),
+        }));
+      },
+
+      // 구슬 개수 감소 (음수 방지)
+      decrementBeadCount: (amount = 1) => {
+        set((state) => ({
+          beadCount: Math.max(0, state.beadCount - amount),
+        }));
+      },
+    }),
+    {
+      name: 'jellyStore',
+    },
+  ),
+);
