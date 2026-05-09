@@ -3,7 +3,6 @@
  * M1-T4: POST /api/analyze
  */
 import { NextResponse } from 'next/server';
-import OpenAI from 'openai';
 import { emotionSchema, analysisResponseSchema } from '@/lib/ai/schemas';
 import { mockAnalyze } from '@/lib/ai/mockAnalyzer';
 import type { EmotionType } from '@/types/emotion';
@@ -80,24 +79,37 @@ export async function POST(request: Request): Promise<Response> {
     });
   }
 
-  // AI API 호출 (OpenAI 호환 엔드포인트)
+  // Z.AI API 직접 호출 (OpenAI SDK는 thinking 파라미터 미지원)
   try {
-    const openai = new OpenAI({
-      apiKey,
-      ...(baseUrl && { baseURL: baseUrl }),
-    });
-    const completion = await openai.chat.completions.create({
-      model: 'glm-4.7-flash',
-      messages: [
-        { role: 'system', content: SYSTEM_PROMPT },
-        { role: 'user', content: text },
-      ],
-      temperature: 0.3,
-      // Z.AI 확장 파라미터: 추론 비활성화로 응답 속도 향상
-      ...({ thinking: { type: 'disabled' } } as Record<string, unknown>),
+    const apiUrl = `${baseUrl || 'https://open.bigmodel.cn/api/paas/v4'}/chat/completions`;
+    const response = await fetch(apiUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: 'glm-4.7-flash',
+        messages: [
+          { role: 'system', content: SYSTEM_PROMPT },
+          { role: 'user', content: text },
+        ],
+        temperature: 0.3,
+        thinking: { type: 'disabled' },
+      }),
     });
 
-    const content = completion.choices[0]?.message?.content;
+    if (!response.ok) {
+      return NextResponse.json(
+        { error: `API 호출 실패: ${response.status}` },
+        { status: 502 },
+      );
+    }
+
+    const data = await response.json() as {
+      choices: Array<{ message: { content: string } }>;
+    };
+    const content = data.choices[0]?.message?.content;
     if (!content) {
       return NextResponse.json(
         { error: 'AI 응답을 받을 수 없습니다' },
