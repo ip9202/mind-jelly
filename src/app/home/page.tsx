@@ -31,14 +31,20 @@ const EmotionInput = dynamic(
 
 const emptySubscribe = () => () => {};
 
+// @MX:NOTE: [AUTO] 감정 표현 UI 상태머신 (idle→input→restoring→beads→report→idle)
+type UiState = 'idle' | 'input' | 'restoring' | 'beads' | 'report';
+
+// @MX:NOTE: 플로우 전환 타이밍 상수
+const RESTORE_DURATION_MS = 500;
+const SATISFIED_DISPLAY_MS = 3000;
+const REPORT_DISPLAY_MS = 4000;
+
 export default function HomePage() {
   const mounted = useSyncExternalStore(emptySubscribe, () => true, () => false);
   const [matterReady, setMatterReady] = useState(false);
   const [matterError, setMatterError] = useState<string | null>(null);
   const [jellyPos, setJellyPos] = useState({ x: 400, y: 240 });
   const matterRef = useRef<typeof import('matter-js') | null>(null);
-  // @MX:NOTE: [AUTO] 감정 표현 UI 상태머신 (idle→input→restoring→beads→report→idle)
-  type UiState = 'idle' | 'input' | 'restoring' | 'beads' | 'report';
   const [uiState, setUiState] = useState<UiState>('idle');
   const [keyboardHeight, setKeyboardHeight] = useState(0);
 
@@ -79,7 +85,7 @@ export default function HomePage() {
         setUiState('beads');
         // 젤리가 원래 크기로 복원된 후 구슬 생성
         jellyStore.getState().incrementBeadCount(5);
-      }, 500);
+      }, RESTORE_DURATION_MS);
       return () => clearTimeout(timer);
     }
   }, [uiState]);
@@ -91,7 +97,7 @@ export default function HomePage() {
     if (uiState === 'beads' && currentState === 'satisfied') {
       const timer = setTimeout(() => {
         setUiState('report');
-      }, 3000);
+      }, SATISFIED_DISPLAY_MS);
       return () => clearTimeout(timer);
     }
   }, [uiState, currentState]);
@@ -101,7 +107,7 @@ export default function HomePage() {
     if (uiState === 'report') {
       const timer = setTimeout(() => {
         setUiState('idle');
-      }, 4000);
+      }, REPORT_DISPLAY_MS);
       return () => clearTimeout(timer);
     }
   }, [uiState]);
