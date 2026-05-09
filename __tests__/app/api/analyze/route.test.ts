@@ -159,7 +159,7 @@ describe('POST /api/analyze', () => {
     expect(data).toHaveProperty('emotionKo');
   });
 
-  it('API 429 과부하 시 glm-4-plus 폴백 후에도 실패하면 503 반환', async () => {
+  it('API 429 과부하 시 glm-4.5-flash 폴백 후에도 실패하면 503 반환', async () => {
     // 1차(4.7-flash) 실패 + 2차(4-plus)도 실패
     mockFetch
       .mockResolvedValueOnce({ ok: false, status: 429 })
@@ -171,7 +171,7 @@ describe('POST /api/analyze', () => {
     expect(data.error).toContain('잠시 후');
   });
 
-  it('API 429 시 glm-4-plus로 폴백 성공하면 정상 결과 반환', async () => {
+  it('API 429 시 glm-4.5-flash로 폴백 성공하면 정상 결과 반환', async () => {
     mockFetch
       .mockResolvedValueOnce({ ok: false, status: 429 })
       .mockResolvedValueOnce({
@@ -234,7 +234,7 @@ describe('POST /api/analyze', () => {
     );
 
     const callBody = JSON.parse((mockFetch.mock.calls[0] as [string, RequestInit])[1].body as string);
-    expect(callBody.model).toBe('glm-4.7-flash');
+    expect(callBody.model).toBe('glm-4.5-flash');
     expect(callBody.thinking).toEqual({ type: 'disabled' });
     expect(callBody.messages[1].content).toBe('정말 화나!');
   });

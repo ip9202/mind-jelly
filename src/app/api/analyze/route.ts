@@ -19,9 +19,13 @@ const EMOTION_KO: Record<EmotionType, string> = {
 // @MX:NOTE: 텍스트 길이 제한
 const MAX_TEXT_LENGTH = 500;
 
-// @MX:NOTE: 시스템 프롬프트
+// @MX:WARN: 모델당 타임아웃 - 폴백 체인 총 시간이 클라이언트 타임아웃(25s) 내이어야 함
+// @MX:REASON: 서버 측 fetch에 타임아웃이 없으면 2차 모델 응답 지연 시 클라이언트 타임아웃 초과
+const PER_MODEL_TIMEOUT_MS = 8_000;
+
+// @MX:NOTE: 시스템 프롬프트 - 반드시 5가지 감정 중 하나만 반환
 const SYSTEM_PROMPT =
-  'You are an emotion analyzer. Analyze the given Korean text and return ONLY a JSON object with: { "emotion": "joy|sadness|anger|fear|disgust", "confidence": 0.0-1.0 }';
+  'Analyze the emotion of the Korean text. Return ONLY this JSON, no other text: {"emotion":"joy","confidence":0.9}. Emotion MUST be exactly one of: joy, sadness, anger, fear, disgust. Never use "neutral" or any other value. If unsure, pick the closest match.';
 
 export async function POST(request: Request): Promise<Response> {
   // 요청 본문 파싱
@@ -79,7 +83,7 @@ export async function POST(request: Request): Promise<Response> {
     });
   }
 
-  // Z.AI API 직접 호출 (모델 폴백 체인: glm-4.7-flash → glm-4-plus)
+  // Z.AI API 직접 호출 (모델 폴백 체인: glm-4.5-flash → glm-4-plus)
   try {
     const apiUrl = `${baseUrl || 'https://open.bigmodel.cn/api/paas/v4'}/chat/completions`;
     const headers: Record<string, string> = {
@@ -87,29 +91,17 @@ export async function POST(request: Request): Promise<Response> {
       'Authorization': `Bearer ${apiKey}`,
     };
 
-    // 1차: glm-4.7-flash (thinking disabled)
-    let response = await fetch(apiUrl, {
-      method: 'POST',
-      headers,
-      body: JSON.stringify({
-        model: 'glm-4.7-flash',
-        messages: [
-          { role: 'system', content: SYSTEM_PROMPT },
-          { role: 'user', content: text },
-        ],
-        temperature: 0.3,
-        thinking: { type: 'disabled' },
-      }),
-    });
-
-    // 2차: glm-4-plus 폴백 (429/5xx 시)
-    if (!response.ok) {
-      console.warn(`glm-4.7-flash ${response.status}, glm-4-plus로 폴백`);
+    // 1차: glm-4.5-flash (빠른 응답, 8s 타임아웃)
+    const ctrl1 = new AbortController();
+    const timer1 = setTimeout(() => ctrl1.abort(), PER_MODEL_TIMEOUT_MS);
+    let response: Response;
+    try {
       response = await fetch(apiUrl, {
         method: 'POST',
         headers,
+        signal: ctrl1.signal,
         body: JSON.stringify({
-          model: 'glm-4-plus',
+          model: 'glm-4.5-flash',
           messages: [
             { role: 'system', content: SYSTEM_PROMPT },
             { role: 'user', content: text },
@@ -117,11 +109,43 @@ export async function POST(request: Request): Promise<Response> {
           temperature: 0.3,
         }),
       });
+    } catch (e) {
+      response = { ok: false, status: 408 } as Response;
+      console.warn('glm-4.5-flash 1차 타임아웃:', e instanceof Error ? e.message : e);
+    } finally {
+      clearTimeout(timer1);
+    }
+
+    // 2차: glm-4-plus 폴백 (안정적, 8s 타임아웃)
+    if (!response.ok) {
+      console.warn(`glm-4.5-flash 1차 실패(${response.status}), glm-4-plus 2차 폴백`);
+      const ctrl2 = new AbortController();
+      const timer2 = setTimeout(() => ctrl2.abort(), PER_MODEL_TIMEOUT_MS);
+      try {
+        response = await fetch(apiUrl, {
+          method: 'POST',
+          headers,
+          signal: ctrl2.signal,
+          body: JSON.stringify({
+            model: 'glm-4-plus',
+            messages: [
+              { role: 'system', content: SYSTEM_PROMPT },
+              { role: 'user', content: text },
+            ],
+            temperature: 0.3,
+          }),
+        });
+      } catch (e) {
+        response = { ok: false, status: 408 } as Response;
+        console.warn('glm-4-plus 2차 타임아웃:', e instanceof Error ? e.message : e);
+      } finally {
+        clearTimeout(timer2);
+      }
     }
 
     // 둘 다 실패하면 안내 메시지
     if (!response.ok) {
-      console.warn(`Z.AI API 최종 실패 ${response.status}`);
+      console.warn(`Z.AI API 최종 실패 (glm-4.5-flash + glm-4-plus 모두 실패) ${response.status}`);
       return NextResponse.json(
         { error: 'AI 서비스가 혼잡합니다. 잠시 후 다시 이용해 주세요.' },
         { status: 503 },
