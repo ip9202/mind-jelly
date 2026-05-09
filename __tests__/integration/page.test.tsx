@@ -35,11 +35,23 @@ jest.mock('next/dynamic', () => {
   return () => () => <div data-testid="dynamic-component">Loading...</div>;
 });
 
+// 충돌 감지 모킹
+jest.mock('@/lib/physics/collisions', () => ({
+  setupCollisionDetection: jest.fn(),
+}));
+
+// 자기장 모킹
+jest.mock('@/lib/physics/forces', () => ({
+  applyMagneticField: jest.fn(),
+}));
+
 import Home from '@/app/home/page';
+import { tossStore } from '@/stores/tossStore';
 
 describe('Page Integration', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    tossStore.getState().reset();
   });
 
   it('HomePage 컴포넌트가 크래시 없이 렌더링되어야 함', () => {
@@ -64,5 +76,44 @@ describe('Page Integration', () => {
     const { container } = render(<Home />);
     const dynamicSlots = container.querySelectorAll('[data-testid="dynamic-component"]');
     expect(dynamicSlots.length).toBeGreaterThan(0);
+  });
+
+  it('WebView가 아닐 때 설정 버튼이 표시된다', () => {
+    render(<Home />);
+
+    // next/link가 설정 아이콘 링크를 렌더링해야 함
+    const settingsIcon = screen.getByText('settings');
+    expect(settingsIcon).toBeInTheDocument();
+  });
+
+  it('WebView 환경에서 사용자 인사말이 표시된다', () => {
+    tossStore.setState({
+      isWebView: true,
+      userInfo: { name: '테스트유저' } as any,
+    });
+
+    render(<Home />);
+
+    expect(screen.getByText('테스트유저님, 반가워요!')).toBeInTheDocument();
+  });
+
+  it('WebView 환경에서 설정 버튼이 숨겨진다', () => {
+    tossStore.setState({ isWebView: true });
+
+    render(<Home />);
+
+    // WebView일 때 설정 링크가 없어야 함
+    // settings 아이콘은 header에 있을 수 있으므로 정확한 선택자로 확인
+    const { container } = render(<Home />);
+    const settingsLinks = container.querySelectorAll('a[href="/settings"]');
+    expect(settingsLinks).toHaveLength(0);
+  });
+
+  it('로딩 상태 텍스트가 표시된다', () => {
+    render(<Home />);
+
+    // 다이내믹 컴포넌트의 로딩 텍스트
+    const loadingElements = screen.getAllByText('Loading...');
+    expect(loadingElements.length).toBeGreaterThan(0);
   });
 });

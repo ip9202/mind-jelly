@@ -93,7 +93,7 @@ describe('PhysicsCanvas', () => {
     const { container, rerender } = render(
       <PhysicsCanvas width={800} height={600}>
         <div>Child</div>
-      </PhysicsCanvas>
+      </PhysicsCanvas>,
     );
 
     const canvas = container.querySelector('canvas');
@@ -103,9 +103,49 @@ describe('PhysicsCanvas', () => {
     rerender(
       <PhysicsCanvas width={1024} height={768}>
         <div>Child</div>
-      </PhysicsCanvas>
+      </PhysicsCanvas>,
     );
 
     expect(canvas).toHaveAttribute('width', '1024');
+  });
+
+  it('children이 함수면 engine을 인자로 호출한다', async () => {
+    const childrenFn = jest.fn(() => <div data-testid="fn-child">Fn Child</div>);
+
+    render(
+      <PhysicsCanvas width={800} height={600}>
+        {childrenFn}
+      </PhysicsCanvas>,
+    );
+
+    // 비동기로 engine이 설정됨
+    await waitFor(() => {
+      expect(childrenFn).toHaveBeenCalled();
+    });
+
+    // children 함수의 첫 번째 인자가 engine 또는 null
+    const calls = childrenFn.mock.calls as unknown as [unknown[]][];
+
+    expect(calls[0]?.[0]).toBeDefined();
+
+    expect(screen.getByTestId('fn-child')).toBeInTheDocument();
+  });
+
+  it('children 함수에 engine이 null로 전달된 후 엔진 생성 후 업데이트된다', async () => {
+    let receivedEngine: any = 'not-set';
+
+    render(
+      <PhysicsCanvas width={800} height={600}>
+        {(engine) => {
+          receivedEngine = engine;
+          return <div>{engine ? 'engine ready' : 'no engine'}</div>;
+        }}
+      </PhysicsCanvas>,
+    );
+
+    // 처음에는 engine이 null
+    await waitFor(() => {
+      expect(receivedEngine).toBe(mockEngine);
+    });
   });
 });

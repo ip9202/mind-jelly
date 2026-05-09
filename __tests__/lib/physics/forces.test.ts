@@ -1,6 +1,6 @@
 import { calculateMagneticForce, applyMagneticField } from '@/lib/physics/forces';
 import type { Vector } from '@/types/physics';
-import * as Matter from 'matter-js';
+import Matter from 'matter-js';
 
 // Matter.Body.applyForce 모킹
 Matter.Body.applyForce = jest.fn();
@@ -119,6 +119,30 @@ describe('Magnetic Force Calculation', () => {
       const beads: Matter.Body[] = [];
 
       expect(() => applyMagneticField(beads, jellyCenter)).not.toThrow();
+    });
+
+    it('반경 내 구슬에 applyForce가 호출되어야 함', () => {
+      const jellyCenter: Vector = { x: 100, y: 100 };
+      const beads = [
+        { position: { x: 90, y: 100 } } as any,
+      ];
+
+      (Matter.Body.applyForce as jest.Mock).mockClear();
+      applyMagneticField(beads, jellyCenter);
+
+      expect(Matter.Body.applyForce).toHaveBeenCalledTimes(1);
+    });
+
+    it('반경 밖 구슬에는 applyForce가 호출되지 않아야 함', () => {
+      const jellyCenter: Vector = { x: 100, y: 100 };
+      const beads = [
+        { position: { x: 500, y: 500 } } as any,
+      ];
+
+      (Matter.Body.applyForce as jest.Mock).mockClear();
+      applyMagneticField(beads, jellyCenter);
+
+      expect(Matter.Body.applyForce).not.toHaveBeenCalled();
     });
   });
 });
