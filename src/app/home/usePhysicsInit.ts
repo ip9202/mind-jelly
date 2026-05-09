@@ -119,14 +119,13 @@ export function usePhysicsInit(options: UsePhysicsInitOptions): UsePhysicsInitRe
             Matter.Body.setVelocity(jellyBody, { x: 0, y: 0 });
           }
 
+          // @MX:NOTE: [AUTO] 모든 구슬 먹힘 → satisfied 전이 (idle 전이는 page.tsx에서 관리)
           satisfiedTimerRef.current = setTimeout(() => {
             const st = jellyStore.getState();
             if (st.currentState !== 'satisfied') {
               st.transitionState('satisfied');
             }
-            satisfiedTimerRef.current = setTimeout(() => {
-              jellyStore.getState().transitionState('idle');
-            }, 3000);
+            // idle 자동 전이 제거 — page.tsx의 beads→report→idle 플로우가 대신 처리
           }, 500);
         }
       });

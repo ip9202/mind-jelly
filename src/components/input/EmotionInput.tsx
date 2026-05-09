@@ -10,8 +10,8 @@ import type { EmotionType } from '@/types/emotion';
 const MAX_TEXT_LENGTH = 500;
 // @MX:NOTE: 경고 임계값 (이 수치부터 글자 수 카운터 색상 변경)
 const WARNING_THRESHOLD = 450;
-// @MX:NOTE: 결과 표시 후 자동 초기화 시간 (ms)
-const AUTO_RESET_MS = 2000;
+// @MX:NOTE: 결과 표시 후 자동 초기화 시간 (ms) — restoring 전환 전 짧은 대기
+const AUTO_RESET_MS = 1000;
 
 // @MX:NOTE: 한국어 감정명 매핑
 const EMOTION_KO: Record<EmotionType, string> = {
@@ -51,7 +51,7 @@ export function EmotionInput({ onCompleteAction }: { onCompleteAction?: () => vo
   const handleSubmit = useCallback(async () => {
     if (isSubmitDisabled) return;
 
-    const { setAnalyzing, setAnalysisError, addEmotionResult, setLastEmotion, setLastInputText, incrementBeadCount } =
+    const { setAnalyzing, setAnalysisError, addEmotionResult, setLastEmotion, setLastInputText } =
       jellyStore.getState();
 
     setAnalyzing(true);
@@ -70,10 +70,9 @@ export function EmotionInput({ onCompleteAction }: { onCompleteAction?: () => vo
       setLastInputText(trimmedText);
       addEmotionResult(fullResult);
       setLastEmotion(analysisResult.emotion);
-      incrementBeadCount(5);
       setResult(analysisResult);
 
-      // 2초 후 자동 초기화 및 부모에 완료 알림
+      // 결과를 잠시 보여준 후 부모에 완료 알림 (restoring 전이 트리거)
       resetTimerRef.current = setTimeout(() => {
         setResult(null);
         setText('');

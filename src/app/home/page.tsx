@@ -37,7 +37,9 @@ export default function HomePage() {
   const [matterError, setMatterError] = useState<string | null>(null);
   const [jellyPos, setJellyPos] = useState({ x: 400, y: 240 });
   const matterRef = useRef<typeof import('matter-js') | null>(null);
-  const [uiState, setUiState] = useState<'idle' | 'input'>('idle');
+  // @MX:NOTE: [AUTO] 감정 표현 UI 상태머신 (idle→input→restoring→beads→report→idle)
+  type UiState = 'idle' | 'input' | 'restoring' | 'beads' | 'report';
+  const [uiState, setUiState] = useState<UiState>('idle');
   const [keyboardHeight, setKeyboardHeight] = useState(0);
 
   const currentState = jellyStore((s) => s.currentState);
@@ -69,6 +71,40 @@ export default function HomePage() {
         setMatterError('물리 엔진을 불러올 수 없습니다.');
       });
   }, []);
+
+  // restoring 애니메이션(500ms) 완료 후 beads 상태로 전환 + 구슬 생성
+  useEffect(() => {
+    if (uiState === 'restoring') {
+      const timer = setTimeout(() => {
+        setUiState('beads');
+        // 젤리가 원래 크기로 복원된 후 구슬 생성
+        jellyStore.getState().incrementBeadCount(5);
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [uiState]);
+
+  // 모든 구슬이 먹히면(satisfied) report 상태로 전환
+  // @MX:WARN: [AUTO] satisfiedTimerRef(usePhysicsInit) 500ms 지연 → 총 3.5초 대기
+  // @MX:REASON: usePhysicsInit에서 마지막 구슬 충돌 후 500ms 뒤 satisfied 전이, 이후 3초 지속
+  useEffect(() => {
+    if (uiState === 'beads' && currentState === 'satisfied') {
+      const timer = setTimeout(() => {
+        setUiState('report');
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [uiState, currentState]);
+
+  // 리포트 표시 후 idle로 복귀
+  useEffect(() => {
+    if (uiState === 'report') {
+      const timer = setTimeout(() => {
+        setUiState('idle');
+      }, 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [uiState]);
 
   // 모바일 키보드 높이 추적 (입력 모드)
   useEffect(() => {
@@ -284,11 +320,11 @@ export default function HomePage() {
           )}
         </div>
 
-        {/* Bottom Content Area (idle only: message card + CTA) */}
-        {uiState === 'idle' && (
+        {/* Bottom Content Area (idle: message card + CTA, report: fade-in card) */}
+        {(uiState === 'idle' || uiState === 'report') && (
           <div className="w-full flex flex-col items-center gap-3 px-[20px] pb-6">
             {/* Emotional Message Card */}
-            <div className="w-full max-w-md">
+            <div className={`w-full max-w-md ${uiState === 'report' ? 'animate-fade-in' : ''}`}>
               <div
                 className="glass-card rounded-3xl px-5 py-4"
                 style={{ transition: 'all 800ms linear' }}
@@ -312,11 +348,12 @@ export default function HomePage() {
               </div>
             </div>
 
-            {/* CTA Button */}
-            <div className="w-full max-w-md">
+            {/* CTA Button (report에서는 fade-in 지연 등장, idle에서는 항상 표시) */}
+            <div className={`w-full max-w-md ${uiState === 'report' ? 'animate-fade-in-delayed' : ''}`}>
               <button
                 onClick={() => setUiState('input')}
-                className="w-full py-4 rounded-full bg-primary text-white font-gowun text-base font-semibold shadow-lg hover:scale-[0.98] active:scale-95 transition-all duration-300 flex items-center justify-center gap-2"
+                disabled={uiState === 'report'}
+                className="w-full py-4 rounded-full bg-primary text-white font-gowun text-base font-semibold shadow-lg hover:scale-[0.98] active:scale-95 transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-default"
               >
                 <span className="material-symbols-outlined text-xl" style={{ fontVariationSettings: "'FILL' 1" }}>edit_note</span>
                 감정 표현하기
@@ -333,7 +370,7 @@ export default function HomePage() {
           style={{ bottom: (uiState === 'input' ? keyboardHeight : 0) + 24 }}
         >
           <div className="animate-slide-up">
-            <EmotionInput onCompleteAction={() => setUiState('idle')} />
+            <EmotionInput onCompleteAction={() => setUiState('restoring')} />
           </div>
         </section>
       )}
