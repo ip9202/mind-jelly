@@ -98,9 +98,18 @@ export function usePhysicsInit(options: UsePhysicsInitOptions): UsePhysicsInitRe
         const remainingBeads = Matter.Composite.allBodies(engine.world)
           .filter((b) => b.label === 'bead').length;
 
-        // 모든 구슬이 먹히면 satisfied -> (3s) -> idle
+        // 모든 구슬이 먹히면 satisfied -> (3s) -> idle + 젤리 중앙 복귀
         if (remainingBeads <= 1) {
           if (satisfiedTimerRef.current) clearTimeout(satisfiedTimerRef.current);
+
+          // 젤리를 중앙으로 즉시 리셋
+          const jellyBody = Matter.Composite.allBodies(engine.world)
+            .find((b) => b.label === 'jelly');
+          if (jellyBody) {
+            Matter.Body.setPosition(jellyBody, { x: 400, y: 180 });
+            Matter.Body.setVelocity(jellyBody, { x: 0, y: 0 });
+          }
+
           satisfiedTimerRef.current = setTimeout(() => {
             const st = jellyStore.getState();
             if (st.currentState !== 'satisfied') {
@@ -123,6 +132,13 @@ export function usePhysicsInit(options: UsePhysicsInitOptions): UsePhysicsInitRe
           const jelly = allBodies.find((b) => b.label === 'jelly');
           if (jelly) {
             setJellyPos({ x: jelly.position.x, y: jelly.position.y });
+
+            // 젤리 중앙 복귀 스프링 힘 (항상 중앙으로 약하게 당김)
+            const springK = 0.00015;
+            Matter.Body.applyForce(jelly, jelly.position, {
+              x: (400 - jelly.position.x) * springK,
+              y: (180 - jelly.position.y) * springK,
+            });
 
             // 자기장 힘 적용 (REQ-EVT-002, REQ-STA-005)
             const beadBodies = allBodies.filter((b) => b.label === 'bead');
