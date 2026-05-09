@@ -1,6 +1,7 @@
 /**
  * DiaryPage 컴포넌트 테스트
  * 감정 일기 페이지 - 캘린더, 타임라인, 주간 감정 흐름
+ * 동적 렌더링 (diaryStore 연동)
  */
 import { render, screen } from '@testing-library/react';
 
@@ -8,6 +9,41 @@ import { render, screen } from '@testing-library/react';
 jest.mock('@/components/layout/BottomNav', () => {
   const MockNav = () => <nav data-testid="bottom-nav">Nav</nav>;
   return { __esModule: true, default: MockNav };
+});
+
+// diaryStore 모킹 - 빈 엔트리 상태
+jest.mock('@/stores/diaryStore', () => {
+  const mockState = {
+    entries: [],
+    addEntry: jest.fn(),
+    getEntriesByDate: () => [],
+    getEntriesByMonth: () => [],
+    getWeekStats: () => ({
+      joy: 0,
+      sadness: 0,
+      anger: 0,
+      fear: 0,
+      disgust: 0,
+    }),
+    deleteEntry: jest.fn(),
+  };
+
+  // Zustand store는 callable(=hook)이며 .getState()도 지원해야 함
+  const mockStoreHook = Object.assign(
+    jest.fn((selector: (state: { entries: unknown[] }) => unknown) => {
+      if (selector) return selector({ entries: [] });
+      return [];
+    }),
+    {
+      getState: () => mockState,
+      setState: jest.fn(),
+      subscribe: jest.fn(),
+    },
+  );
+
+  return {
+    diaryStore: mockStoreHook,
+  };
 });
 
 import DiaryPage from '@/app/diary/page';
@@ -22,7 +58,9 @@ describe('DiaryPage', () => {
   it('캘린더 월 표시를 렌더링한다', () => {
     render(<DiaryPage />);
 
-    expect(screen.getByText('2024년 5월')).toBeInTheDocument();
+    // 현재 월 표시 (동적)
+    const monthText = screen.getByText(/년 \d+월/);
+    expect(monthText).toBeInTheDocument();
   });
 
   it('요일 헤더를 렌더링한다', () => {
@@ -46,20 +84,12 @@ describe('DiaryPage', () => {
     expect(screen.getByText('타임라인')).toBeInTheDocument();
   });
 
-  it('타임라인 항목을 렌더링한다', () => {
+  it('엔트리가 없으면 빈 상태 메시지를 렌더링한다', () => {
     render(<DiaryPage />);
 
-    expect(screen.getByText('조금 답답한 오후')).toBeInTheDocument();
-    expect(screen.getByText('갑자기 울컥한 기분')).toBeInTheDocument();
-    expect(screen.getByText('평온한 시작')).toBeInTheDocument();
-  });
-
-  it('시간 정보를 렌더링한다', () => {
-    render(<DiaryPage />);
-
-    expect(screen.getByText('오후 2:30')).toBeInTheDocument();
-    expect(screen.getByText('오전 11:15')).toBeInTheDocument();
-    expect(screen.getByText('오전 8:00')).toBeInTheDocument();
+    expect(
+      screen.getByText('이 날의 감정 기록이 없어요'),
+    ).toBeInTheDocument();
   });
 
   it('주간 감정 흐름 섹션을 렌더링한다', () => {
@@ -74,7 +104,7 @@ describe('DiaryPage', () => {
     expect(screen.getByText('평온')).toBeInTheDocument();
     expect(screen.getByText('분노')).toBeInTheDocument();
     expect(screen.getByText('우울')).toBeInTheDocument();
-    expect(screen.getByText('피곤')).toBeInTheDocument();
+    expect(screen.getByText('불안')).toBeInTheDocument();
   });
 
   it('하단 네비게이션을 렌더링한다', () => {
@@ -83,10 +113,13 @@ describe('DiaryPage', () => {
     expect(screen.getByTestId('bottom-nav')).toBeInTheDocument();
   });
 
-  it('날짜들을 렌더링한다', () => {
+  it('월 이동 버튼이 렌더링된다', () => {
     render(<DiaryPage />);
 
-    expect(screen.getByText('13')).toBeInTheDocument();
-    expect(screen.getByText('10')).toBeInTheDocument();
+    const prevButton = screen.getByLabelText('이전 달');
+    const nextButton = screen.getByLabelText('다음 달');
+
+    expect(prevButton).toBeInTheDocument();
+    expect(nextButton).toBeInTheDocument();
   });
 });

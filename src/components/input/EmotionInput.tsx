@@ -51,7 +51,7 @@ export function EmotionInput() {
   const handleSubmit = useCallback(async () => {
     if (isSubmitDisabled) return;
 
-    const { setAnalyzing, setAnalysisError, addEmotionResult, setLastEmotion, incrementBeadCount } =
+    const { setAnalyzing, setAnalysisError, addEmotionResult, setLastEmotion, setLastInputText, incrementBeadCount } =
       jellyStore.getState();
 
     setAnalyzing(true);
@@ -67,6 +67,7 @@ export function EmotionInput() {
         emotionKo: EMOTION_KO[analysisResult.emotion],
       };
 
+      setLastInputText(trimmedText);
       addEmotionResult(fullResult);
       setLastEmotion(analysisResult.emotion);
       incrementBeadCount(5);
@@ -94,13 +95,12 @@ export function EmotionInput() {
   };
 
   return (
-    <div className="bg-white/90 dark:bg-[#191F28]/90 backdrop-blur-xl rounded-t-[28px] rounded-b-lg shadow-xl p-6">
-      <div className="w-12 h-1.5 bg-surface-container-high rounded-full mx-auto mb-4" />
+    <div className={`bg-white/30 backdrop-blur-[12px] border border-white/20 rounded-lg p-6 flex flex-col gap-4 shadow-[0_8px_32px_0_rgba(120,85,94,0.08)] transition-all duration-500 ease-in-out ${isAnalyzing ? 'translate-y-[120%] opacity-0 pointer-events-none' : ''}`}>
 
       {/* 결과 표시 */}
       {result && (
         <div
-          className="mb-4 p-3 rounded-xl text-center"
+          className="p-3 rounded-xl text-center"
           style={{ backgroundColor: `${EMOTION_COLORS[result.emotion]}20` }}
         >
           <span
@@ -117,10 +117,15 @@ export function EmotionInput() {
 
       {/* 에러 표시 */}
       {analysisError && (
-        <div className="mb-4 p-3 rounded-xl bg-red-50 dark:bg-red-900/30 text-center">
+        <div className="p-3 rounded-xl bg-red-50/60 text-center">
           <span className="text-sm text-red-600">{analysisError}</span>
         </div>
       )}
+
+      {/* 제목 */}
+      <h2 className="text-lg font-bold text-center text-primary">
+        오늘 기분은 어때요?
+      </h2>
 
       {/* 텍스트 입력 */}
       <div className="relative">
@@ -130,11 +135,11 @@ export function EmotionInput() {
           placeholder="오늘 감정을 적어보세요..."
           maxLength={MAX_TEXT_LENGTH}
           disabled={isAnalyzing}
-          className="w-full h-20 p-3 rounded-xl border border-outline-variant dark:border-white/20 bg-surface-container-lowest dark:bg-[#1a2233] text-on-surface dark:text-[#e8eaed] resize-none text-sm focus:outline-none focus:border-primary disabled:opacity-50"
+          className="w-full h-28 bg-white/60 border-none rounded-xl p-4 text-on-surface resize-none text-base placeholder:text-on-surface-variant/40 focus:ring-2 focus:ring-[#ffd1dc] focus:outline-none transition-all disabled:opacity-50"
         />
         <span
-          className={`absolute bottom-2 right-3 text-xs ${
-            isNearLimit ? 'text-red-500' : 'text-on-surface-variant'
+          className={`absolute bottom-2 right-4 text-xs ${
+            isNearLimit ? 'text-red-500' : 'text-on-surface-variant/50'
           }`}
         >
           {charCount}/{MAX_TEXT_LENGTH}
@@ -142,25 +147,26 @@ export function EmotionInput() {
       </div>
 
       {/* 제출 버튼 + 로딩 */}
-      <div className="mt-3 flex justify-center">
-        {isAnalyzing ? (
-          <div
-            data-testid="loading-indicator"
-            className="flex items-center gap-2 text-primary"
-          >
-            <span className="inline-block w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-            <span className="text-sm">분석 중...</span>
-          </div>
-        ) : (
-          <button
-            onClick={handleSubmit}
-            disabled={isSubmitDisabled}
-            className="px-6 py-2 rounded-xl bg-primary text-on-primary dark:bg-primary/80 dark:text-white text-sm font-medium disabled:opacity-40 disabled:cursor-not-allowed hover:bg-primary/90 active:scale-95 transition-all"
-          >
-            감정 분석
-          </button>
-        )}
-      </div>
+      {isAnalyzing ? (
+        <div
+          data-testid="loading-indicator"
+          className="flex items-center justify-center gap-2 py-3 text-primary"
+        >
+          <span className="inline-block w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+          <span className="text-sm font-medium">분석 중...</span>
+        </div>
+      ) : (
+        <button
+          onClick={handleSubmit}
+          disabled={isSubmitDisabled}
+          className="w-full bg-primary text-white font-medium py-3 rounded-full shadow-lg disabled:opacity-40 disabled:cursor-not-allowed hover:scale-[0.98] active:scale-95 transition-all duration-300 flex items-center justify-center gap-2"
+        >
+          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.3375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z" />
+          </svg>
+          감정 분석
+        </button>
+      )}
     </div>
   );
 }

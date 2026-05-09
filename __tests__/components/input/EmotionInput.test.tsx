@@ -6,11 +6,21 @@ import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
 import userEvent from '@testing-library/user-event';
 import { EmotionInput } from '@/components/input/EmotionInput';
 import { jellyStore } from '@/stores/jellyStore';
+import { diaryStore } from '@/stores/diaryStore';
 
 // analyzeEmotion 모킹
 const mockAnalyzeEmotion = jest.fn();
 jest.mock('@/lib/ai/analyzer', () => ({
   analyzeEmotion: (...args: unknown[]) => mockAnalyzeEmotion(...args),
+}));
+
+// diaryStore.addEntry 모킹 (jellyStore에서 호출)
+const mockAddEntry = jest.fn();
+jest.mock('@/stores/diaryStore', () => ({
+  diaryStore: {
+    getState: () => ({ addEntry: mockAddEntry }),
+    setState: jest.fn(),
+  },
 }));
 
 beforeEach(() => {
@@ -21,7 +31,9 @@ beforeEach(() => {
     analysisError: null,
     emotionHistory: [],
     lastEmotion: 'joy',
+    lastInputText: '',
   });
+  diaryStore.setState({ entries: [] });
 });
 
 describe('EmotionInput', () => {

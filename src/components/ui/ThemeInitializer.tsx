@@ -1,16 +1,15 @@
 'use client';
 
 import { useEffect } from 'react';
-import { themeStore } from '@/stores/themeStore';
 
 /**
  * 테마 초기화 컴포넌트
- * 클라이언트에서 themeStore.initTheme()을 호출하여
- * localStorage 읽기 + matchMedia 리스너 등록
+ * 앱인토스: 다크모드 미지원, 항상 라이트모드 강제
  */
 export function ThemeInitializer() {
   useEffect(() => {
-    themeStore.getState().initTheme();
+    document.documentElement.classList.remove('dark');
+    localStorage.removeItem('mind-jelly-theme');
   }, []);
 
   return null;

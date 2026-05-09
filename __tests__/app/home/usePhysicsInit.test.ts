@@ -41,6 +41,7 @@ function createFakeEngine(bodies: ReturnType<typeof createFakeBody>[] = []) {
   return {
     world: { bodies, __bodies: bodies },
     gravity: { x: 0, y: 1, scale: 0.001 },
+    timing: { timeScale: 1 },
   };
 }
 
@@ -168,6 +169,9 @@ describe('usePhysicsInit', () => {
 
     // engineRef에 엔진 저장 확인
     expect(result.current.engineRef.current).toBe(fakeEngine);
+
+    // timeScale 설정 확인 (시뮬레이션 속도 절반)
+    expect(fakeEngine.timing.timeScale).toBe(0.5);
   });
 
   // --- 2. 이미 초기화된 경우 재초기화 방지 ---
@@ -465,7 +469,7 @@ describe('usePhysicsInit', () => {
   });
 
   // --- 8. idle 충돌 시 eating 지연 전이 테스트 ---
-  it('idle 상태 충돌 후 150ms 뒤 eating으로 전이해야 함', () => {
+  it('idle 상태 충돌 후 400ms 뒤 eating으로 전이해야 함', () => {
     jest.useFakeTimers();
     const fakeEngine = createFakeEngine();
     const options = createDefaultOptions();
@@ -501,9 +505,9 @@ describe('usePhysicsInit', () => {
     // 즉시 anticipation 전이
     expect(mockTransitionState).toHaveBeenCalledWith('anticipation');
 
-    // 150ms 후 eating 전이
+    // 400ms 후 eating 전이
     act(() => {
-      jest.advanceTimersByTime(150);
+      jest.advanceTimersByTime(400);
     });
 
     expect(mockTransitionState).toHaveBeenCalledWith('eating');

@@ -14,7 +14,7 @@ export default function BottomNav({ activeTab = 'jelly' }: BottomNavProps) {
   ] as const;
 
   return (
-    <nav className="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pb-6 pt-3 bg-surface-container/80 dark:bg-[#191F28]/80 backdrop-blur-lg border-t border-white/20 dark:border-white/10 rounded-t-lg shadow-sm">
+    <nav className="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pb-6 pt-3 bg-surface-container/80 backdrop-blur-lg border-t border-white/20 rounded-t-lg shadow-sm">
       {tabs.map((tab) => {
         const isActive = activeTab === tab.id;
         return (
@@ -23,8 +23,8 @@ export default function BottomNav({ activeTab = 'jelly' }: BottomNavProps) {
             href={tab.href}
             className={`flex flex-col items-center justify-center active:scale-95 transition-all duration-300 ${
               isActive
-                ? 'bg-primary-container text-on-primary-container dark:bg-primary/30 dark:text-primary-fixed rounded-xl px-4 py-1'
-                : 'text-text-primary dark:text-[#b0b8c4] px-4 py-1 hover:bg-surface-variant/50 dark:hover:bg-white/10'
+                ? 'bg-primary-container text-on-primary-container rounded-xl px-4 py-1'
+                : 'text-text-primary px-4 py-1 hover:bg-surface-variant/50'
             }`}
           >
             <span

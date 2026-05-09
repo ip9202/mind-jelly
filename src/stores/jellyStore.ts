@@ -4,6 +4,7 @@ import { devtools } from 'zustand/middleware';
 import type { JellyState, JellyFace } from '@/types/physics';
 import type { EmotionType, AnalysisResponse } from '@/types/emotion';
 import { EMOTION_COLORS, JELLY_COLOR } from '@/lib/constants/emotion';
+import { diaryStore } from '@/stores/diaryStore';
 
 // 상태 전이 맵 (유효한 전이만 정의)
 const TRANSITION_MAP: Record<string, string[]> = {
@@ -49,6 +50,9 @@ interface JellyStoreState {
   analysisError: string | null;
   emotionHistory: AnalysisResponse[];
 
+  // 마지막 분석 입력 텍스트 (diaryStore 저장용)
+  lastInputText: string;
+
   // M2: 감정 기반 색상
   emotionColor: string;
 
@@ -84,6 +88,9 @@ interface JellyStoreState {
   setAnalyzing: (value: boolean) => void;
   setAnalysisError: (error: string | null) => void;
   addEmotionResult: (result: AnalysisResponse) => void;
+
+  // 마지막 입력 텍스트 설정
+  setLastInputText: (text: string) => void;
 
   // M2 액션: 감정 색상
   setEmotionColor: (color: string) => void;
@@ -121,6 +128,8 @@ export const jellyStore = create<JellyStoreState>()(
       isAnalyzing: false,
       analysisError: null,
       emotionHistory: [],
+
+      lastInputText: '',
 
       // M2: 감정 기반 색상 (초기값: 기본 젤리 색상)
       emotionColor: JELLY_COLOR,
@@ -214,11 +223,28 @@ export const jellyStore = create<JellyStoreState>()(
 
       // M1: 감정 분석 결과 추가
       // M2: emotionColor도 감정에 맞게 자동 업데이트
+      // diaryStore에도 일기 엔트리로 자동 저장
       addEmotionResult: (result: AnalysisResponse) => {
         set((state) => ({
           emotionHistory: [...state.emotionHistory, result],
           emotionColor: EMOTION_COLORS[result.emotion],
         }));
+
+        // diaryStore에 일기 엔트리로 저장
+        const inputText = get().lastInputText;
+        if (inputText) {
+          diaryStore.getState().addEntry({
+            text: inputText,
+            emotion: result.emotion,
+            confidence: result.confidence,
+            emotionKo: result.emotionKo,
+          });
+        }
+      },
+
+      // 마지막 입력 텍스트 설정
+      setLastInputText: (text: string) => {
+        set({ lastInputText: text });
       },
     }),
     {

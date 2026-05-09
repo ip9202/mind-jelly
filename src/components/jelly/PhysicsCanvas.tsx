@@ -13,15 +13,29 @@ interface PhysicsCanvasProps {
 /**
  * Matter.js 물리 엔진을 호스팅하는 캔버스 컴포넌트
  * requestAnimationFrame 루프로 애니메이션 실행
+ * CSS transform 스케일링으로 모바일 대응
  */
 // @MX:ANCHOR: PhysicsCanvas 컴포넌트
 // @MX:REASON: 앱의 진입점이자 물리 시뮬레이션의 핵심 컨테이너
 // @MX:SPEC: REQ-UBI-001
 export function PhysicsCanvas({ width, height, children }: PhysicsCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const engineRef = useRef<Matter.Engine | null>(null);
   const runnerRef = useRef<Matter.Runner | null>(null);
   const [engine, setEngine] = useState<Matter.Engine | null>(null);
+  const [scale, setScale] = useState(1);
+
+  // 컨테이너 크기 변화 감지 → 스케일 팩터 계산
+  useEffect(() => {
+    if (!containerRef.current) return;
+    const observer = new ResizeObserver((entries) => {
+      const containerWidth = entries[0].contentRect.width;
+      setScale(containerWidth / width);
+    });
+    observer.observe(containerRef.current);
+    return () => observer.disconnect();
+  }, [width]);
 
   useEffect(() => {
     if (!canvasRef.current) return;
@@ -64,14 +78,27 @@ export function PhysicsCanvas({ width, height, children }: PhysicsCanvasProps) {
   };
 
   return (
-    <div className="relative">
-      <canvas
-        ref={canvasRef}
-        width={width}
-        height={height}
-        className="block"
-      />
-      {renderChildren()}
+    <div
+      ref={containerRef}
+      className="relative w-full max-w-[800px] mx-auto overflow-hidden"
+      style={{ aspectRatio: `${width}/${height}` }}
+    >
+      <div
+        style={{
+          width,
+          height,
+          transform: `scale(${scale})`,
+          transformOrigin: 'top left',
+        }}
+      >
+        <canvas
+          ref={canvasRef}
+          width={width}
+          height={height}
+          className="block"
+        />
+        {renderChildren()}
+      </div>
     </div>
   );
 }

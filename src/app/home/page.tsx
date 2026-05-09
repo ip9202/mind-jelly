@@ -33,6 +33,7 @@ const emptySubscribe = () => () => {};
 export default function HomePage() {
   const mounted = useSyncExternalStore(emptySubscribe, () => true, () => false);
   const [matterReady, setMatterReady] = useState(false);
+  const [matterError, setMatterError] = useState<string | null>(null);
   const [jellyPos, setJellyPos] = useState({ x: 400, y: 200 });
   const matterRef = useRef<typeof import('matter-js') | null>(null);
 
@@ -53,16 +54,51 @@ export default function HomePage() {
   });
 
   useEffect(() => {
-    import('matter-js').then((M) => {
-      matterRef.current = M;
-      setMatterReady(true);
-    });
+    import('matter-js')
+      .then((M) => {
+        matterRef.current = M;
+        setMatterReady(true);
+      })
+      .catch((err) => {
+        console.error('Matter.js 로드 실패:', err);
+        setMatterError('물리 엔진을 불러올 수 없습니다.');
+      });
   }, []);
 
+  // 모바일 키보드 닫힘 후 스크롤 복원
+  useEffect(() => {
+    const resetScroll = () => {
+      window.scrollTo(0, 0);
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+    };
+
+    // visualViewport로 키보드 상태 변화 감지
+    const vv = window.visualViewport;
+    if (vv) {
+      vv.addEventListener('resize', resetScroll);
+      vv.addEventListener('scroll', resetScroll);
+      return () => {
+        vv.removeEventListener('resize', resetScroll);
+        vv.removeEventListener('scroll', resetScroll);
+      };
+    }
+  }, []);
+
+  // 모바일 hydration 차단 방지: SSR에서도 전체 렌더링 (로딩 UI는 CSS로 처리)
   if (!mounted) {
     return (
-      <div className="h-screen w-full flex items-center justify-center bg-gradient-to-br from-[#E6E6FA] via-[#fbf9f6] to-[#ffd9e2]">
-        <div className="text-on-surface-variant font-body-md">로딩중...</div>
+      <div className="h-screen w-full flex flex-col overflow-hidden bg-gradient-to-br from-[#E6E6FA] via-[#fbf9f6] to-[#ffd9e2] font-dongum text-on-surface">
+        <header className="sticky top-0 z-50 flex justify-between items-center px-[20px] h-16 backdrop-blur-md bg-white/70 border-b border-white/30">
+          <div className="flex items-center gap-2">
+            <span className="material-symbols-outlined text-primary text-3xl" style={{ fontVariationSettings: "'FILL' 1" }}>bubble_chart</span>
+            <h1 className="font-dongle text-4xl leading-none text-primary tracking-tight">Mind Jelly</h1>
+          </div>
+        </header>
+        <main className="flex-1 flex items-center justify-center">
+          <div className="text-on-surface-variant font-body-md animate-pulse">로딩중...</div>
+        </main>
+        <BottomNav activeTab="jelly" />
       </div>
     );
   }
@@ -72,7 +108,7 @@ export default function HomePage() {
   return (
     <div className="h-screen w-full flex flex-col overflow-hidden bg-gradient-to-br from-[#E6E6FA] via-[#fbf9f6] to-[#ffd9e2] font-dodum text-on-surface">
       {/* TopAppBar */}
-      <header className="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-[20px] h-16 backdrop-blur-md bg-white/10">
+      <header className="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-[20px] h-16 backdrop-blur-md bg-white/70 border-b border-white/30">
         <div className="flex items-center gap-2">
           <span className="material-symbols-outlined text-primary text-3xl" style={{ fontVariationSettings: "'FILL' 1" }}>bubble_chart</span>
           <h1 className="font-dongle text-4xl leading-none text-primary tracking-tight">Mind Jelly</h1>
@@ -140,25 +176,31 @@ export default function HomePage() {
         </div>
 
         {/* Physics Engine Canvas */}
-        <PhysicsCanvas width={800} height={600}>
-          {(engine) => {
-            initPhysics(engine);
+        {matterError ? (
+          <div className="flex-1 flex items-center justify-center p-4">
+            <p className="text-on-surface-variant text-center text-sm">{matterError}</p>
+          </div>
+        ) : (
+          <PhysicsCanvas width={800} height={600}>
+            {(engine) => {
+              initPhysics(engine);
 
-            return (
-              <>
-                <JellyRenderer
-                  bodies={bodies}
-                  face={currentState}
-                  animation={0}
-                  emotionColor={emotionColor}
-                />
-                {engineRef.current && (
-                  <BeadGroup count={beadCount} engine={engineRef.current} emotion={lastEmotion} />
-                )}
-              </>
-            );
-          }}
-        </PhysicsCanvas>
+              return (
+                <>
+                  <JellyRenderer
+                    bodies={bodies}
+                    face={currentState}
+                    animation={0}
+                    emotionColor={emotionColor}
+                  />
+                  {engineRef.current && (
+                    <BeadGroup count={beadCount} engine={engineRef.current} emotion={lastEmotion} />
+                  )}
+                </>
+              );
+            }}
+          </PhysicsCanvas>
+        )}
       </main>
 
       {/* Bottom Sheet (Collapsed) - Emotion Input */}

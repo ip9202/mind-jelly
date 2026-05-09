@@ -59,8 +59,17 @@ export function usePhysicsInit(options: UsePhysicsInitOptions): UsePhysicsInitRe
       engineRef.current = engine;
       const Matter = matterRef.current!;
 
+      // 전체 시뮬레이션 속도 절반 (젤리/구슬 동작이 시각적으로 보이도록)
+      engine.timing.timeScale = 0.5;
+
+      // 캔버스 논리 크기 (모바일에서 축소 렌더링)
+      const W = 800;
+      const H = 600;
+      const cx = W / 2;
+      const cy = H * 0.3;
+
       // 젤리 바디 생성
-      const jellyBody = Matter.Bodies.circle(400, 180, 40, {
+      const jellyBody = Matter.Bodies.circle(cx, cy, 40, {
         label: 'jelly',
         restitution: 0.5,
         friction: 0.1,
@@ -70,10 +79,10 @@ export function usePhysicsInit(options: UsePhysicsInitOptions): UsePhysicsInitRe
 
       // 벽 생성 (바닥, 천장, 좌측, 우측)
       const walls = [
-        Matter.Bodies.rectangle(400, 395, 400, 10, { isStatic: true, restitution: 0.3 }),
-        Matter.Bodies.rectangle(400, 5, 400, 10, { isStatic: true, restitution: 0.3 }),
-        Matter.Bodies.rectangle(220, 200, 10, 400, { isStatic: true, restitution: 0.3 }),
-        Matter.Bodies.rectangle(580, 200, 10, 400, { isStatic: true, restitution: 0.3 }),
+        Matter.Bodies.rectangle(cx, H - 5, W, 10, { isStatic: true, restitution: 0.3 }),
+        Matter.Bodies.rectangle(cx, 5, W, 10, { isStatic: true, restitution: 0.3 }),
+        Matter.Bodies.rectangle(W * 0.275, H / 2, 10, H, { isStatic: true, restitution: 0.3 }),
+        Matter.Bodies.rectangle(W * 0.725, H / 2, 10, H, { isStatic: true, restitution: 0.3 }),
       ];
       Matter.Composite.add(engine.world, walls);
 
@@ -86,7 +95,7 @@ export function usePhysicsInit(options: UsePhysicsInitOptions): UsePhysicsInitRe
           state.transitionState('anticipation');
           setTimeout(() => {
             jellyStore.getState().transitionState('eating');
-          }, 150);
+          }, 400);
         } else if (state.currentState === 'anticipation') {
           jellyStore.getState().transitionState('eating');
         }
@@ -106,7 +115,7 @@ export function usePhysicsInit(options: UsePhysicsInitOptions): UsePhysicsInitRe
           const jellyBody = Matter.Composite.allBodies(engine.world)
             .find((b) => b.label === 'jelly');
           if (jellyBody) {
-            Matter.Body.setPosition(jellyBody, { x: 400, y: 180 });
+            Matter.Body.setPosition(jellyBody, { x: cx, y: cy });
             Matter.Body.setVelocity(jellyBody, { x: 0, y: 0 });
           }
 
@@ -136,8 +145,8 @@ export function usePhysicsInit(options: UsePhysicsInitOptions): UsePhysicsInitRe
             // 젤리 중앙 복귀 스프링 힘 (항상 중앙으로 약하게 당김)
             const springK = 0.00015;
             Matter.Body.applyForce(jelly, jelly.position, {
-              x: (400 - jelly.position.x) * springK,
-              y: (180 - jelly.position.y) * springK,
+              x: (cx - jelly.position.x) * springK,
+              y: (cy - jelly.position.y) * springK,
             });
 
             // 자기장 힘 적용 (REQ-EVT-002, REQ-STA-005)
@@ -150,7 +159,7 @@ export function usePhysicsInit(options: UsePhysicsInitOptions): UsePhysicsInitRe
               beadBodies.forEach((bead) => {
                 Matter.Body.applyForce(bead, bead.position, {
                   x: 0,
-                  y: -0.4 * bead.mass * eng.gravity.y * gScale,
+                  y: -0.6 * bead.mass * eng.gravity.y * gScale,
                 });
               });
 

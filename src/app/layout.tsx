@@ -49,20 +49,20 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ko" className={`${jakartaSans.variable} ${dongle.variable} ${gowun.variable} ${gamja.variable} h-full antialiased`}>
+    <html lang="ko" className={`${jakartaSans.variable} ${dongle.variable} ${gowun.variable} ${gamja.variable} h-full antialiased`} suppressHydrationWarning>
       <head>
         <link
           href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
           rel="stylesheet"
         />
-        {/* FOUC 방지: React hydration 전에 localStorage에서 테마를 읽어 dark 클래스 적용 */}
+        {/* 앱인토스: 다크모드 미지원, 항상 라이트모드 강제 */}
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var t=localStorage.getItem('mind-jelly-theme');if(t==='dark'||((!t||t==='system')&&window.matchMedia('(prefers-color-scheme:dark)').matches)){document.documentElement.classList.add('dark')}}catch(e){}})()`,
+            __html: `(function(){try{document.documentElement.classList.remove('dark');localStorage.removeItem('mind-jelly-theme')}catch(e){}})()`,
           }}
         />
       </head>
-      <body className="min-h-full flex flex-col">
+      <body className="min-h-full flex flex-col" suppressHydrationWarning>
         <BridgeInitializer />
         <ThemeInitializer />
         {children}
