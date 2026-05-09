@@ -60,6 +60,20 @@
   --color-jelly-anger: #FFB3A7;
   --color-jelly-sad: #AEC6CF;
   --color-jelly-tired: #E6E6FA;
+  --color-jelly-fear: #E6E6FA;
+  --color-jelly-disgust: #B5D8C7;
+
+  /* Emotion background gradients */
+  --color-emotion-bg-joy-start: #FFF0F3;
+  --color-emotion-bg-joy-end: #FFD1DC;
+  --color-emotion-bg-sadness-start: #EEF2F5;
+  --color-emotion-bg-sadness-end: #AEC6CF;
+  --color-emotion-bg-anger-start: #FFF0ED;
+  --color-emotion-bg-anger-end: #FFB3A7;
+  --color-emotion-bg-fear-start: #F0EEF5;
+  --color-emotion-bg-fear-end: #E6E6FA;
+  --color-emotion-bg-disgust-start: #EEF5EF;
+  --color-emotion-bg-disgust-end: #B5D8C7;
 
   /* Background variations */
   --color-bg-base: #FAF8F5;

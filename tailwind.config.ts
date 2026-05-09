@@ -65,6 +65,20 @@ const config: Config = {
         "jelly-anger": "#FFB3A7",
         "jelly-sad": "#AEC6CF",
         "jelly-tired": "#E6E6FA",
+        "jelly-fear": "#E6E6FA",
+        "jelly-disgust": "#B5D8C7",
+
+        // Emotion background gradients
+        "emotion-bg-joy-start": "#FFF0F3",
+        "emotion-bg-joy-end": "#FFD1DC",
+        "emotion-bg-sadness-start": "#EEF2F5",
+        "emotion-bg-sadness-end": "#AEC6CF",
+        "emotion-bg-anger-start": "#FFF0ED",
+        "emotion-bg-anger-end": "#FFB3A7",
+        "emotion-bg-fear-start": "#F0EEF5",
+        "emotion-bg-fear-end": "#E6E6FA",
+        "emotion-bg-disgust-start": "#EEF5EF",
+        "emotion-bg-disgust-end": "#B5D8C7",
 
         // Background variations
         "bg-base": "#FAF8F5",

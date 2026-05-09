@@ -3,10 +3,12 @@
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import BottomNav from '@/components/layout/BottomNav';
-import { useEffect, useState, useRef, useSyncExternalStore } from 'react';
+import { useEffect, useState, useRef, useSyncExternalStore, useMemo } from 'react';
 import { jellyStore } from '@/stores/jellyStore';
 import { tossStore } from '@/stores/tossStore';
 import { usePhysicsInit } from './usePhysicsInit';
+import { EMOTION_THEME, EMOTION_COLORS } from '@/lib/constants/emotion';
+import type { EmotionType } from '@/types/emotion';
 
 const PhysicsCanvas = dynamic(
   () => import('@/components/jelly/PhysicsCanvas').then((m) => m.PhysicsCanvas),
@@ -41,6 +43,7 @@ export default function HomePage() {
   const beadCount = jellyStore((s) => s.beadCount);
   const lastEmotion = jellyStore((s) => s.lastEmotion);
   const emotionColor = jellyStore((s) => s.emotionColor);
+  const emotionHistory = jellyStore((s) => s.emotionHistory);
 
   // M4-T5: Toss WebView 분기 처리
   const isWebView = tossStore((s) => s.isWebView);
@@ -85,10 +88,33 @@ export default function HomePage() {
     }
   }, []);
 
+  // 감정 분포 계산 (최근 분석 기록 기준)
+  const emotionDistribution = useMemo(() => {
+    const emotions: EmotionType[] = ['joy', 'sadness', 'anger', 'fear', 'disgust'];
+    if (emotionHistory.length === 0) {
+      return emotions.map((e) => ({ emotion: e, count: e === 'joy' ? 1 : 0 }));
+    }
+    const counts: Record<EmotionType, number> = { joy: 0, sadness: 0, anger: 0, fear: 0, disgust: 0 };
+    emotionHistory.forEach((r) => { counts[r.emotion] = (counts[r.emotion] || 0) + 1; });
+    return emotions.map((e) => ({ emotion: e, count: counts[e] }));
+  }, [emotionHistory]);
+
+  // 마지막 분석 신뢰도
+  const lastConfidence = emotionHistory.length > 0 ? emotionHistory[emotionHistory.length - 1].confidence : null;
+
+  // 감정 테마 (동적 배경용)
+  const currentTheme = EMOTION_THEME[lastEmotion];
+
   // 모바일 hydration 차단 방지: SSR에서도 전체 렌더링 (로딩 UI는 CSS로 처리)
   if (!mounted) {
     return (
-      <div className="h-screen w-full flex flex-col overflow-hidden bg-gradient-to-br from-[#E6E6FA] via-[#fbf9f6] to-[#ffd9e2] font-dongum text-on-surface">
+      <div
+        className="h-screen w-full flex flex-col overflow-hidden font-dongum text-on-surface"
+        style={{
+          background: `linear-gradient(135deg, ${currentTheme.bgGradientStart} 0%, #fbf9f6 40%, ${currentTheme.bgGradientEnd} 100%)`,
+          transition: 'background 800ms linear',
+        }}
+      >
         <header className="sticky top-0 z-50 flex justify-between items-center px-[20px] h-16 backdrop-blur-md bg-white/70 border-b border-white/30">
           <div className="flex items-center gap-2">
             <span className="material-symbols-outlined text-primary text-3xl" style={{ fontVariationSettings: "'FILL' 1" }}>bubble_chart</span>
@@ -106,7 +132,13 @@ export default function HomePage() {
   const bodies = [{ position: jellyPos, circleRadius: 40 }];
 
   return (
-    <div className="h-screen w-full flex flex-col overflow-hidden bg-gradient-to-br from-[#E6E6FA] via-[#fbf9f6] to-[#ffd9e2] font-dodum text-on-surface">
+    <div
+      className="h-screen w-full flex flex-col overflow-hidden font-dodum text-on-surface"
+      style={{
+        background: `linear-gradient(135deg, ${currentTheme.bgGradientStart} 0%, #fbf9f6 40%, ${currentTheme.bgGradientEnd} 100%)`,
+        transition: 'background 800ms linear',
+      }}
+    >
       {/* TopAppBar */}
       <header className="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-[20px] h-16 backdrop-blur-md bg-white/70 border-b border-white/30">
         <div className="flex items-center gap-2">
@@ -126,8 +158,41 @@ export default function HomePage() {
         )}
       </header>
 
+      {/* Emotion Status Header */}
+      <div className="fixed top-16 left-0 w-full z-40 px-[20px] py-2">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span
+              className="inline-block w-3 h-3 rounded-full"
+              style={{ backgroundColor: currentTheme.jellyColor, transition: 'background-color 800ms linear' }}
+            />
+            <span className="font-jakarta text-sm font-semibold text-text-primary">
+              {currentTheme.label}
+            </span>
+            {lastConfidence !== null && (
+              <span className="font-jakarta text-xs text-on-surface-variant">
+                {Math.round(lastConfidence * 100)}%
+              </span>
+            )}
+          </div>
+          <div className="flex gap-1">
+            {emotionDistribution.map(({ emotion }) => (
+              <span
+                key={emotion}
+                className="inline-block w-5 h-5 rounded-full border border-white/50"
+                style={{
+                  backgroundColor: EMOTION_COLORS[emotion],
+                  opacity: emotion === lastEmotion ? 1 : 0.4,
+                  transition: 'opacity 800ms linear',
+                }}
+              />
+            ))}
+          </div>
+        </div>
+      </div>
+
       {/* Main Canvas Area */}
-      <main className="relative w-full flex-1 flex items-center justify-center overflow-hidden pt-16 pb-32">
+      <main className="relative w-full flex-1 flex flex-col items-center justify-center overflow-hidden pt-28 pb-32">
         {/* Decorative Atmosphere */}
         <div className="absolute inset-0 pointer-events-none">
           {/* Clouds */}
@@ -192,6 +257,7 @@ export default function HomePage() {
                     face={currentState}
                     animation={0}
                     emotionColor={emotionColor}
+                    emotion={emotionHistory.length > 0 ? lastEmotion : null}
                   />
                   {engineRef.current && (
                     <BeadGroup count={beadCount} engine={engineRef.current} emotion={lastEmotion} />
@@ -201,6 +267,31 @@ export default function HomePage() {
             }}
           </PhysicsCanvas>
         )}
+
+        {/* Emotional Message Card */}
+        <div className="w-[calc(100%-40px)] max-w-md mt-4">
+          <div
+            className="glass-card rounded-3xl px-5 py-4"
+            style={{ transition: 'all 800ms linear' }}
+          >
+            <div className="flex items-center gap-2 mb-2">
+              <span className="material-symbols-outlined text-primary text-lg" style={{ fontVariationSettings: "'FILL' 1" }}>auto_awesome</span>
+              <span className="font-jakarta text-xs font-semibold text-text-primary">오늘의 감정 리포트</span>
+            </div>
+            <p className="font-gowun text-sm text-text-primary leading-relaxed">
+              {currentTheme.message}
+            </p>
+            <div className="flex items-center gap-2 mt-3">
+              <span
+                className="inline-block w-2 h-2 rounded-full"
+                style={{ backgroundColor: currentTheme.jellyColor, transition: 'background-color 800ms linear' }}
+              />
+              <span className="font-jakarta text-xs text-on-surface-variant">
+                모은 구슬 {beadCount}개
+              </span>
+            </div>
+          </div>
+        </div>
       </main>
 
       {/* Bottom Sheet (Collapsed) - Emotion Input */}
