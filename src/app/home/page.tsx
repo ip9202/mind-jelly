@@ -6,9 +6,7 @@ import BottomNav from '@/components/layout/BottomNav';
 import { useEffect, useState, useRef, useSyncExternalStore } from 'react';
 import { jellyStore } from '@/stores/jellyStore';
 import { tossStore } from '@/stores/tossStore';
-import { setupCollisionDetection } from '@/lib/physics/collisions';
-import { applyMagneticField } from '@/lib/physics/forces';
-import type { Engine } from 'matter-js';
+import { usePhysicsInit } from './usePhysicsInit';
 
 const PhysicsCanvas = dynamic(
   () => import('@/components/jelly/PhysicsCanvas').then((m) => m.PhysicsCanvas),
@@ -36,30 +34,29 @@ export default function HomePage() {
   const mounted = useSyncExternalStore(emptySubscribe, () => true, () => false);
   const [matterReady, setMatterReady] = useState(false);
   const [jellyPos, setJellyPos] = useState({ x: 400, y: 200 });
-  const engineRef = useRef<Engine | null>(null);
   const matterRef = useRef<typeof import('matter-js') | null>(null);
-  const animRef = useRef<number>(0);
-  const collisionSetupRef = useRef(false);
-  const satisfiedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const currentState = jellyStore((s) => s.currentState);
   const beadCount = jellyStore((s) => s.beadCount);
   const lastEmotion = jellyStore((s) => s.lastEmotion);
+  const emotionColor = jellyStore((s) => s.emotionColor);
 
   // M4-T5: Toss WebView 분기 처리
   const isWebView = tossStore((s) => s.isWebView);
   const userInfo = tossStore((s) => s.userInfo);
+
+  // 물리 엔진 초기화 훅
+  const { engineRef, initPhysics } = usePhysicsInit({
+    matterReady,
+    matterRef,
+    setJellyPos,
+  });
 
   useEffect(() => {
     import('matter-js').then((M) => {
       matterRef.current = M;
       setMatterReady(true);
     });
-    return () => {
-      if (animRef.current) cancelAnimationFrame(animRef.current);
-      if (satisfiedTimerRef.current) clearTimeout(satisfiedTimerRef.current);
-      engineRef.current = null;
-    };
   }, []);
 
   if (!mounted) {
@@ -145,106 +142,7 @@ export default function HomePage() {
         {/* Physics Engine Canvas */}
         <PhysicsCanvas width={800} height={600}>
           {(engine) => {
-            if (engine && matterReady && !engineRef.current) {
-              engineRef.current = engine;
-              const Matter = matterRef.current!;
-
-              const jellyBody = Matter.Bodies.circle(400, 180, 40, {
-                label: 'jelly',
-                restitution: 0.5,
-                friction: 0.1,
-                density: 0.002,
-              });
-              Matter.Composite.add(engine.world, jellyBody);
-
-              const walls = [
-                Matter.Bodies.rectangle(400, 395, 400, 10, { isStatic: true, restitution: 0.3 }),
-                Matter.Bodies.rectangle(400, 5, 400, 10, { isStatic: true, restitution: 0.3 }),
-                Matter.Bodies.rectangle(220, 200, 10, 400, { isStatic: true, restitution: 0.3 }),
-                Matter.Bodies.rectangle(580, 200, 10, 400, { isStatic: true, restitution: 0.3 }),
-              ];
-              Matter.Composite.add(engine.world, walls);
-
-              // 충돌 감지 설정 (REQ-EVT-003)
-              setupCollisionDetection(engine, (_beadBody, _jellyBody) => {
-                const state = jellyStore.getState();
-
-                // idle -> anticipation -> eating 전이
-                if (state.currentState === 'idle') {
-                  state.transitionState('anticipation');
-                  setTimeout(() => {
-                    jellyStore.getState().transitionState('eating');
-                  }, 150);
-                } else if (state.currentState === 'anticipation') {
-                  jellyStore.getState().transitionState('eating');
-                }
-
-                // 구슬 개수 감소
-                state.decrementBeadCount();
-
-                // 남은 구슬 확인
-                const remainingBeads = Matter.Composite.allBodies(engine.world)
-                  .filter((b) => b.label === 'bead').length;
-
-                // 모든 구슬이 먹히면 satisfied -> (3s) -> idle
-                if (remainingBeads <= 1) {
-                  if (satisfiedTimerRef.current) clearTimeout(satisfiedTimerRef.current);
-                  satisfiedTimerRef.current = setTimeout(() => {
-                    const st = jellyStore.getState();
-                    if (st.currentState !== 'satisfied') {
-                      st.transitionState('satisfied');
-                    }
-                    satisfiedTimerRef.current = setTimeout(() => {
-                      jellyStore.getState().transitionState('idle');
-                    }, 3000);
-                  }, 500);
-                }
-              });
-
-              collisionSetupRef.current = true;
-
-              // 애니메이션 루프: 젤리 위치 추적 + 자기장 적용
-              const track = () => {
-                const eng = engineRef.current;
-                if (eng?.world) {
-                  const allBodies = Matter.Composite.allBodies(eng.world);
-                  const jelly = allBodies.find((b) => b.label === 'jelly');
-                  if (jelly) {
-                    setJellyPos({ x: jelly.position.x, y: jelly.position.y });
-
-                    // 자기장 힘 적용 (REQ-EVT-002, REQ-STA-005)
-                    const beadBodies = allBodies.filter((b) => b.label === 'bead');
-                    if (beadBodies.length > 0) {
-                      applyMagneticField(beadBodies, jelly.position);
-
-                      // 구슬 부유력: 중력의 40%를 상쇄하여 가벼운 부유감
-                      const gScale = eng.gravity.scale ?? 0.001;
-                      beadBodies.forEach((bead) => {
-                        Matter.Body.applyForce(bead, bead.position, {
-                          x: 0,
-                          y: -0.4 * bead.mass * eng.gravity.y * gScale,
-                        });
-                      });
-
-                      // 구슬이 자기장 반경 진입 시 anticipation 트리거
-                      const st = jellyStore.getState();
-                      if (st.currentState === 'idle') {
-                        const nearJelly = beadBodies.some((b) => {
-                          const dx = b.position.x - jelly.position.x;
-                          const dy = b.position.y - jelly.position.y;
-                          return Math.sqrt(dx * dx + dy * dy) < 250;
-                        });
-                        if (nearJelly) {
-                          st.transitionState('anticipation');
-                        }
-                      }
-                    }
-                  }
-                }
-                animRef.current = requestAnimationFrame(track);
-              };
-              animRef.current = requestAnimationFrame(track);
-            }
+            initPhysics(engine);
 
             return (
               <>
@@ -252,6 +150,7 @@ export default function HomePage() {
                   bodies={bodies}
                   face={currentState}
                   animation={0}
+                  emotionColor={emotionColor}
                 />
                 {engineRef.current && (
                   <BeadGroup count={beadCount} engine={engineRef.current} emotion={lastEmotion} />

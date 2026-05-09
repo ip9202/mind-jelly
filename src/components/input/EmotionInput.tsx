@@ -51,7 +51,7 @@ export function EmotionInput() {
   const handleSubmit = useCallback(async () => {
     if (isSubmitDisabled) return;
 
-    const { setAnalyzing, setAnalysisError, addEmotionResult, setLastEmotion } =
+    const { setAnalyzing, setAnalysisError, addEmotionResult, setLastEmotion, incrementBeadCount } =
       jellyStore.getState();
 
     setAnalyzing(true);
@@ -69,6 +69,7 @@ export function EmotionInput() {
 
       addEmotionResult(fullResult);
       setLastEmotion(analysisResult.emotion);
+      incrementBeadCount(5);
       setResult(analysisResult);
 
       // 2초 후 자동 초기화

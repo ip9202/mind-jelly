@@ -178,11 +178,15 @@ describe('POST /api/analyze', () => {
     expect(response.status).toBe(400);
   });
 
-  it('OPENAI_API_KEY가 없으면 500을 반환한다', async () => {
+  it('OPENAI_API_KEY가 없으면 mock 분석 결과를 반환한다', async () => {
     delete process.env.OPENAI_API_KEY;
 
     const response = await POST(createRequest({ text: '테스트' }));
-    expect(response.status).toBe(500);
+    expect(response.status).toBe(200);
+    const data = await response.json();
+    expect(data).toHaveProperty('emotion');
+    expect(data).toHaveProperty('confidence');
+    expect(data).toHaveProperty('emotionKo');
   });
 
   it('OpenAI API 에러 시 500을 반환한다', async () => {

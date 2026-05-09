@@ -5,6 +5,7 @@
 import { NextResponse } from 'next/server';
 import OpenAI from 'openai';
 import { emotionSchema, analysisResponseSchema } from '@/lib/ai/schemas';
+import { mockAnalyze } from '@/lib/ai/mockAnalyzer';
 import type { EmotionType } from '@/types/emotion';
 
 // @MX:NOTE: 한국어 감정명 매핑
@@ -24,15 +25,6 @@ const SYSTEM_PROMPT =
   'You are an emotion analyzer. Analyze the given Korean text and return ONLY a JSON object with: { "emotion": "joy|sadness|anger|fear|disgust", "confidence": 0.0-1.0 }';
 
 export async function POST(request: Request): Promise<Response> {
-  // API 키 확인
-  const apiKey = process.env.OPENAI_API_KEY;
-  if (!apiKey) {
-    return NextResponse.json(
-      { error: '서버 설정 오류입니다' },
-      { status: 500 },
-    );
-  }
-
   // 요청 본문 파싱
   let body: unknown;
   try {
@@ -75,11 +67,27 @@ export async function POST(request: Request): Promise<Response> {
     );
   }
 
-  // OpenAI API 호출
+  // API 키 확인 (없으면 mock 분석 사용)
+  const apiKey = process.env.OPENAI_API_KEY;
+  const baseUrl = process.env.OPENAI_BASE_URL;
+  const isPlaceholder = !apiKey || apiKey.startsWith('sk-your');
+  if (isPlaceholder) {
+    const mock = mockAnalyze(text);
+    return NextResponse.json({
+      emotion: mock.emotion,
+      confidence: mock.confidence,
+      emotionKo: EMOTION_KO[mock.emotion],
+    });
+  }
+
+  // AI API 호출 (OpenAI 호환 엔드포인트)
   try {
-    const openai = new OpenAI({ apiKey });
+    const openai = new OpenAI({
+      apiKey,
+      ...(baseUrl && { baseURL: baseUrl }),
+    });
     const completion = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
+      model: 'glm-4.5-flash',
       messages: [
         { role: 'system', content: SYSTEM_PROMPT },
         { role: 'user', content: text },
@@ -95,10 +103,11 @@ export async function POST(request: Request): Promise<Response> {
       );
     }
 
-    // 응답 파싱
+    // 응답 파싱 (마크다운 코드펜스 제거)
     let parsed: unknown;
     try {
-      parsed = JSON.parse(content);
+      const cleaned = content.replace(/^```(?:json)?\s*\n?/m, '').replace(/\n?```\s*$/m, '').trim();
+      parsed = JSON.parse(cleaned);
     } catch {
       return NextResponse.json(
         { error: 'AI 응답을 해석할 수 없습니다' },
