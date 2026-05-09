@@ -33,9 +33,17 @@ export function BeadGroup({ count, engine, emotion }: BeadGroupProps) {
   const lastCreatedCountRef = useRef(0);
   const [beadInfos, setBeadInfos] = useState<Map<number, BeadInfo>>(new Map());
 
-  // count 증가 시 새 구슬만 생성
+  // count 변화 감지: 증가 시 새 구슬 생성, 0 되면 리셋
   useEffect(() => {
-    if (!engine || !engine.world || count <= lastCreatedCountRef.current) return;
+    if (!engine || !engine.world) return;
+
+    // 구슬이 모두 소비되면 카운터 리셋 (다음 생성 대비)
+    if (count === 0) {
+      lastCreatedCountRef.current = 0;
+      return;
+    }
+
+    if (count <= lastCreatedCountRef.current) return;
 
     const color = EMOTION_COLORS[emotion as keyof typeof EMOTION_COLORS] || '#FFD93D';
     const newCount = count - lastCreatedCountRef.current;
