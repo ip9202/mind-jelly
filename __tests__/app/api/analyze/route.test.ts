@@ -159,11 +159,11 @@ describe('POST /api/analyze', () => {
     expect(data).toHaveProperty('emotionKo');
   });
 
-  it('API 429 과부하 시 503 안내 메시지를 반환한다', async () => {
-    mockFetch.mockResolvedValueOnce({
-      ok: false,
-      status: 429,
-    });
+  it('API 429 과부하 시 glm-4-plus 폴백 후에도 실패하면 503 반환', async () => {
+    // 1차(4.7-flash) 실패 + 2차(4-plus)도 실패
+    mockFetch
+      .mockResolvedValueOnce({ ok: false, status: 429 })
+      .mockResolvedValueOnce({ ok: false, status: 500 });
 
     const response = await POST(createRequest({ text: '테스트' }));
     expect(response.status).toBe(503);
@@ -171,11 +171,28 @@ describe('POST /api/analyze', () => {
     expect(data.error).toContain('잠시 후');
   });
 
-  it('API 500 에러 시에도 503 안내 메시지를 반환한다', async () => {
-    mockFetch.mockResolvedValueOnce({
-      ok: false,
-      status: 500,
-    });
+  it('API 429 시 glm-4-plus로 폴백 성공하면 정상 결과 반환', async () => {
+    mockFetch
+      .mockResolvedValueOnce({ ok: false, status: 429 })
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          choices: [{ message: { content: JSON.stringify({ emotion: 'sadness', confidence: 0.9 }) } }],
+        }),
+      });
+
+    const response = await POST(createRequest({ text: '슬퍼' }));
+    expect(response.status).toBe(200);
+    const data = await response.json();
+    expect(data.emotion).toBe('sadness');
+    expect(mockFetch).toHaveBeenCalledTimes(2);
+  });
+
+  it('API 500 에러 시에도 폴백 후 503 안내 메시지를 반환', async () => {
+    mockFetch
+      .mockResolvedValueOnce({ ok: false, status: 500 })
+      .mockResolvedValueOnce({ ok: false, status: 500 });
 
     const response = await POST(createRequest({ text: '테스트' }));
     expect(response.status).toBe(503);

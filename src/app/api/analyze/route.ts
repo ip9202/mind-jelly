@@ -79,15 +79,18 @@ export async function POST(request: Request): Promise<Response> {
     });
   }
 
-  // Z.AI API 직접 호출 (OpenAI SDK는 thinking 파라미터 미지원)
+  // Z.AI API 직접 호출 (모델 폴백 체인: glm-4.7-flash → glm-4-plus)
   try {
     const apiUrl = `${baseUrl || 'https://open.bigmodel.cn/api/paas/v4'}/chat/completions`;
-    const response = await fetch(apiUrl, {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${apiKey}`,
+    };
+
+    // 1차: glm-4.7-flash (thinking disabled)
+    let response = await fetch(apiUrl, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
-      },
+      headers,
       body: JSON.stringify({
         model: 'glm-4.7-flash',
         messages: [
@@ -99,11 +102,28 @@ export async function POST(request: Request): Promise<Response> {
       }),
     });
 
-    // API 에러 시 사용자 안내 메시지 반환 (429 과부하, 5xx 서버 에러 등)
+    // 2차: glm-4-plus 폴백 (429/5xx 시)
     if (!response.ok) {
-      console.warn(`Z.AI API ${response.status}`);
+      console.warn(`glm-4.7-flash ${response.status}, glm-4-plus로 폴백`);
+      response = await fetch(apiUrl, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          model: 'glm-4-plus',
+          messages: [
+            { role: 'system', content: SYSTEM_PROMPT },
+            { role: 'user', content: text },
+          ],
+          temperature: 0.3,
+        }),
+      });
+    }
+
+    // 둘 다 실패하면 안내 메시지
+    if (!response.ok) {
+      console.warn(`Z.AI API 최종 실패 ${response.status}`);
       return NextResponse.json(
-        { error: 'AI 서비스가 현재 혼잡합니다. 잠시 후 다시 이용해 주세요.' },
+        { error: 'AI 서비스가 혼잡합니다. 잠시 후 다시 이용해 주세요.' },
         { status: 503 },
       );
     }
