@@ -99,11 +99,15 @@ export async function POST(request: Request): Promise<Response> {
       }),
     });
 
+    // API 에러 시 mock fallback (429 과부하, 5xx 서버 에러 등)
     if (!response.ok) {
-      return NextResponse.json(
-        { error: `API 호출 실패: ${response.status}` },
-        { status: 502 },
-      );
+      console.warn(`Z.AI API ${response.status}, mock 분석으로 대체`);
+      const mock = mockAnalyze(text);
+      return NextResponse.json({
+        emotion: mock.emotion,
+        confidence: mock.confidence,
+        emotionKo: EMOTION_KO[mock.emotion],
+      });
     }
 
     const data = await response.json() as {
