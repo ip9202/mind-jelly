@@ -311,3 +311,53 @@ body {
   background-color: #191F28;
   background-image: linear-gradient(135deg, #191F28 0%, rgba(120, 85, 94, 0.15) 50%, rgba(92, 93, 110, 0.15) 100%);
 }
+
+/* 접근성: 모션 감소 선호 */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* 접근성: 키보드 포커스 표시 */
+:focus-visible {
+  outline: 3px solid #78555e;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* 접근성: 스킵 네비게이션 */
+.skip-nav {
+  position: absolute;
+  top: -100%;
+  left: 0;
+  z-index: 9999;
+  padding: 8px 16px;
+  background: #78555e;
+  color: white;
+  font-weight: bold;
+  text-decoration: none;
+  border-radius: 0 0 8px 0;
+}
+
+.skip-nav:focus {
+  top: 0;
+}
+
+/* 접근성: 스크린 리더 전용 */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}

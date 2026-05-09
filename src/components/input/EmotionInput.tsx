@@ -100,6 +100,8 @@ export function EmotionInput({ onCompleteAction }: { onCompleteAction?: () => vo
       {/* 결과 표시 */}
       {result && (
         <div
+          role="status"
+          aria-live="polite"
           className="p-3 rounded-xl text-center"
           style={{ backgroundColor: `${EMOTION_COLORS[result.emotion]}20` }}
         >
@@ -117,7 +119,7 @@ export function EmotionInput({ onCompleteAction }: { onCompleteAction?: () => vo
 
       {/* 에러 표시 */}
       {analysisError && (
-        <div className="p-3 rounded-xl bg-red-50/60 text-center">
+        <div role="alert" aria-live="assertive" className="p-3 rounded-xl bg-red-50/60 text-center">
           <span className="text-sm text-red-600">{analysisError}</span>
         </div>
       )}
@@ -135,9 +137,14 @@ export function EmotionInput({ onCompleteAction }: { onCompleteAction?: () => vo
           placeholder="감정을 자유롭게 적어보세요..."
           maxLength={MAX_TEXT_LENGTH}
           disabled={isAnalyzing}
+          aria-label="감정 텍스트 입력"
+          aria-describedby="char-count"
           className="w-full h-28 bg-white/60 border-none rounded-xl p-4 text-on-surface resize-none text-base placeholder:text-on-surface-variant/40 focus:ring-2 focus:ring-[#ffd1dc] focus:outline-none transition-all disabled:opacity-50"
         />
         <span
+          id="char-count"
+          aria-live="polite"
+          aria-label={`현재 ${charCount}/${MAX_TEXT_LENGTH}자`}
           className={`absolute bottom-2 right-4 text-xs ${
             isNearLimit ? 'text-red-500' : 'text-on-surface-variant/50'
           }`}
@@ -151,17 +158,21 @@ export function EmotionInput({ onCompleteAction }: { onCompleteAction?: () => vo
         <div
           data-testid="loading-indicator"
           className="flex items-center justify-center gap-2 py-3 text-primary"
+          aria-busy="true"
         >
-          <span className="inline-block w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+          <span className="inline-block w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" aria-hidden="true" />
           <span className="text-sm font-medium">분석 중...</span>
+          <span className="sr-only" aria-live="polite">감정을 분석하고 있습니다...</span>
         </div>
       ) : (
         <button
           onClick={handleSubmit}
           disabled={isSubmitDisabled}
+          aria-label="감정 분석하기"
+          aria-busy={isAnalyzing}
           className="w-full bg-primary text-white font-medium py-3 rounded-full shadow-lg disabled:opacity-40 disabled:cursor-not-allowed hover:scale-[0.98] active:scale-95 transition-all duration-300 flex items-center justify-center gap-2"
         >
-          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
             <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.3375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z" />
           </svg>
           감정 분석

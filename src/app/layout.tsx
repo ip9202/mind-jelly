@@ -63,6 +63,7 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-full flex flex-col" suppressHydrationWarning>
+        <a href="#main-content" className="skip-nav">본문으로 바로가기</a>
         <BridgeInitializer />
         <ThemeInitializer />
         {children}

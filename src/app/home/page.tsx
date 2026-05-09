@@ -246,10 +246,10 @@ export default function HomePage() {
       )}
 
       {/* Main Canvas Area */}
-      <main className="relative w-full flex-1 flex flex-col items-center overflow-hidden transition-all duration-500">
+      <main id="main-content" role="main" className="relative w-full flex-1 flex flex-col items-center overflow-hidden transition-all duration-500">
 
         {/* Decorative Atmosphere */}
-        <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
           <div className="absolute top-[15%] left-[10%] opacity-40">
             <span className="material-symbols-outlined text-6xl text-white">cloud</span>
           </div>
@@ -268,7 +268,7 @@ export default function HomePage() {
         </div>
 
         {/* Emotion Beads Canvas (decorative) */}
-        <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
           <div className="absolute top-[30%] left-[25%] w-6 h-6 rounded-full bg-yellow-200 border-2 border-yellow-300 shadow-sm flex items-center justify-center animate-pulse pointer-events-auto cursor-pointer hover:scale-110 transition-transform">
             <div className="flex gap-0.5">
               <div className="w-1 h-1 bg-on-surface-variant rounded-full"></div>
@@ -291,6 +291,7 @@ export default function HomePage() {
 
         {/* Jelly Container - takes remaining space, jelly centered within */}
         <div
+          aria-busy={uiState === 'restoring' || uiState === 'beads'}
           className={`flex-1 flex items-center justify-center ${uiState === 'idle' ? 'pt-28' : 'pt-16'}`}
           style={{
             minHeight: uiState === 'idle' ? '280px' : '160px',
@@ -304,25 +305,30 @@ export default function HomePage() {
               <p className="text-on-surface-variant text-center text-sm">{matterError}</p>
             </div>
           ) : (
-            <PhysicsCanvas width={800} height={600}>
-              {(engine) => {
-                initPhysics(engine);
-                return (
-                  <>
-                    <JellyRenderer
-                      bodies={bodies}
-                      face={currentState}
-                      animation={0}
-                      emotionColor={emotionColor}
-                      emotion={emotionHistory.length > 0 ? lastEmotion : null}
-                    />
-                    {engineRef.current && (
-                      <BeadGroup count={beadCount} engine={engineRef.current} emotion={lastEmotion} />
-                    )}
-                  </>
-                );
-              }}
-            </PhysicsCanvas>
+            <>
+              <PhysicsCanvas width={800} height={600}>
+                {(engine) => {
+                  initPhysics(engine);
+                  return (
+                    <>
+                      <JellyRenderer
+                        bodies={bodies}
+                        face={currentState}
+                        animation={0}
+                        emotionColor={emotionColor}
+                        emotion={emotionHistory.length > 0 ? lastEmotion : null}
+                      />
+                      {engineRef.current && (
+                        <BeadGroup count={beadCount} engine={engineRef.current} emotion={lastEmotion} />
+                      )}
+                    </>
+                  );
+                }}
+              </PhysicsCanvas>
+              {(uiState === 'restoring' || uiState === 'beads') && (
+                <span className="sr-only" aria-live="polite">젤리가 감정을 반영하고 있습니다</span>
+              )}
+            </>
           )}
         </div>
 
@@ -330,7 +336,11 @@ export default function HomePage() {
         {(uiState === 'idle' || uiState === 'report') && (
           <div className="w-full flex flex-col items-center gap-3 px-[20px] pb-6">
             {/* Emotional Message Card */}
-            <div className={`w-full max-w-md ${uiState === 'report' ? 'animate-fade-in' : ''}`}>
+            <div
+              role={uiState === 'report' ? 'status' : undefined}
+              aria-live={uiState === 'report' ? 'polite' : undefined}
+              className={`w-full max-w-md ${uiState === 'report' ? 'animate-fade-in' : ''}`}
+            >
               <div
                 className="glass-card rounded-3xl px-5 py-4"
                 style={{ transition: 'all 800ms linear' }}
@@ -359,9 +369,10 @@ export default function HomePage() {
               <button
                 onClick={() => setUiState('input')}
                 disabled={uiState === 'report'}
+                aria-label="감정 표현하기"
                 className="w-full py-4 rounded-full bg-primary text-white font-gowun text-base font-semibold shadow-lg hover:scale-[0.98] active:scale-95 transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-default"
               >
-                <span className="material-symbols-outlined text-xl" style={{ fontVariationSettings: "'FILL' 1" }}>edit_note</span>
+                <span className="material-symbols-outlined text-xl" style={{ fontVariationSettings: "'FILL' 1" }} aria-hidden="true">edit_note</span>
                 감정 표현하기
               </button>
             </div>

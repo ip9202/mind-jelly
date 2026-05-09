@@ -216,7 +216,7 @@ export default function DiaryPage() {
       {/* TopAppBar */}
       <header className="sticky top-0 z-50 flex justify-between items-center w-full px-[20px] h-16 bg-surface/85 backdrop-blur-[8px]">
         <div className="flex items-center gap-2">
-          <span className="material-symbols-outlined text-primary">
+          <span className="material-symbols-outlined text-primary" aria-hidden="true">
             bubble_chart
           </span>
           <h1 className="font-dongle text-[32px] leading-none text-primary pt-2">
@@ -226,9 +226,9 @@ export default function DiaryPage() {
         <NavMenu activeTab="history" />
       </header>
 
-      <main className="px-[20px] mt-[16px] space-y-[24px]">
+      <main id="main-content" className="px-[20px] mt-[16px] space-y-[24px]">
         {/* Calendar Section */}
-        <section className="glass-card rounded-[20px] p-[16px] shadow-sm relative overflow-hidden">
+        <section role="group" aria-label="달력" className="glass-card rounded-[20px] p-[16px] shadow-sm relative overflow-hidden">
           <div className="flex justify-between items-center mb-[8px]">
             <span className="text-primary font-dongle text-[28px] font-normal">
               {formatMonthKo(currentYear, currentMonth)}
@@ -292,7 +292,7 @@ export default function DiaryPage() {
             })}
           </div>
           {/* 장식 젤리 */}
-          <div className="absolute -bottom-2 -right-2 opacity-20">
+          <div className="absolute -bottom-2 -right-2 opacity-20" aria-hidden="true">
             <span className="material-symbols-outlined text-[64px]">pets</span>
           </div>
         </section>
@@ -306,7 +306,7 @@ export default function DiaryPage() {
           {dayEntries.length === 0 ? (
             /* 빈 상태 */
             <div className="glass-card rounded-[20px] p-[32px] shadow-sm text-center">
-              <span className="material-symbols-outlined text-on-surface-variant text-[48px] opacity-40">
+              <span className="material-symbols-outlined text-on-surface-variant text-[48px] opacity-40" aria-hidden="true">
                 edit_note
               </span>
               <p className="text-on-surface-variant text-[14px] mt-[8px]">
@@ -317,7 +317,7 @@ export default function DiaryPage() {
               </p>
             </div>
           ) : (
-            <div className="relative pl-8 space-y-[12px] before:content-[''] before:absolute before:left-[15px] before:top-2 before:bottom-2 before:w-[2px] before:bg-outline-variant/30">
+            <div aria-live="polite" className="relative pl-8 space-y-[12px] before:content-[''] before:absolute before:left-[15px] before:top-2 before:bottom-2 before:w-[2px] before:bg-outline-variant/30">
               {dayEntries.map((entry) => (
                 <TimelineEntry key={entry.id} entry={entry} />
               ))}
@@ -417,7 +417,7 @@ function TimelineEntry({ entry }: { entry: DiaryEntry }) {
   const ui = EMOTION_UI[entry.emotion];
 
   return (
-    <div className="glass-card rounded-[20px] p-[16px] shadow-sm relative transition-all active:scale-[0.98]">
+    <article aria-label={`${ui.label} 감정 기록`} className="glass-card rounded-[20px] p-[16px] shadow-sm relative transition-all active:scale-[0.98]">
       <div
         className={`absolute -left-10 top-1/2 -translate-y-1/2 flex items-center justify-center w-6 h-6 ${ui.bg} rounded-full border-4 border-surface shadow-sm`}
       >
@@ -441,6 +441,7 @@ function TimelineEntry({ entry }: { entry: DiaryEntry }) {
           <span
             className={`material-symbols-outlined text-${ui.bg.replace('bg-', '')}`}
             style={{ fontVariationSettings: "'FILL' 1" }}
+            aria-hidden="true"
           >
             {entry.emotion === 'joy'
               ? 'sentiment_satisfied'
@@ -450,7 +451,7 @@ function TimelineEntry({ entry }: { entry: DiaryEntry }) {
           </span>
         </div>
       </div>
-    </div>
+    </article>
   );
 }
 
