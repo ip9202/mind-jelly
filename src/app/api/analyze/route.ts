@@ -87,12 +87,14 @@ export async function POST(request: Request): Promise<Response> {
       ...(baseUrl && { baseURL: baseUrl }),
     });
     const completion = await openai.chat.completions.create({
-      model: 'glm-4.5-flash',
+      model: 'glm-4.7-flash',
       messages: [
         { role: 'system', content: SYSTEM_PROMPT },
         { role: 'user', content: text },
       ],
       temperature: 0.3,
+      // Z.AI 확장 파라미터: 추론 비활성화로 응답 속도 향상
+      ...({ thinking: { type: 'disabled' } } as Record<string, unknown>),
     });
 
     const content = completion.choices[0]?.message?.content;
