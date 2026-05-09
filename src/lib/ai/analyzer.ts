@@ -5,8 +5,8 @@
 import type { EmotionResult } from '@/types/emotion';
 import { analysisResponseSchema } from '@/lib/ai/schemas';
 
-// @MX:NOTE: API 호출 타임아웃 (15초, 추론 비활성화로 충분)
-const API_TIMEOUT_MS = 15_000;
+// @MX:NOTE: API 호출 타임아웃 (25초, 모델 폴백 체인 대응)
+const API_TIMEOUT_MS = 25_000;
 
 // @MX:WARN: AbortController 타임아웃 사용 - 메모리 누수 방지를 위해 반드시 abort 필요
 // @MX:REASON: 타임아웃 없는 fetch는 무한 대기 가능, AbortController로 자원 해제 보장
