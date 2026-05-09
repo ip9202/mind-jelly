@@ -26,7 +26,7 @@ const EMOTION_KO: Record<EmotionType, string> = {
  * 텍스트 기반 감정 입력 컴포넌트
  * M1-T6: textarea + 분석 요청 + 결과 표시
  */
-export function EmotionInput() {
+export function EmotionInput({ onCompleteAction }: { onCompleteAction?: () => void }) {
   const [text, setText] = useState('');
   const [result, setResult] = useState<{ emotion: EmotionType; confidence: number } | null>(null);
   const resetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -73,10 +73,11 @@ export function EmotionInput() {
       incrementBeadCount(5);
       setResult(analysisResult);
 
-      // 2초 후 자동 초기화
+      // 2초 후 자동 초기화 및 부모에 완료 알림
       resetTimerRef.current = setTimeout(() => {
         setResult(null);
         setText('');
+        onCompleteAction?.();
       }, AUTO_RESET_MS);
     } catch (error) {
       const message =
@@ -95,7 +96,7 @@ export function EmotionInput() {
   };
 
   return (
-    <div className={`bg-white/30 backdrop-blur-[12px] border border-white/20 rounded-lg p-6 flex flex-col gap-4 shadow-[0_8px_32px_0_rgba(120,85,94,0.08)] transition-all duration-500 ease-in-out ${isAnalyzing ? 'translate-y-[120%] opacity-0 pointer-events-none' : ''}`}>
+    <div className="bg-white/30 backdrop-blur-[12px] border border-white/20 rounded-3xl p-5 flex flex-col gap-3 shadow-[0_8px_32px_0_rgba(120,85,94,0.08)]">
 
       {/* 결과 표시 */}
       {result && (
@@ -123,8 +124,8 @@ export function EmotionInput() {
       )}
 
       {/* 제목 */}
-      <h2 className="text-lg font-bold text-center text-primary">
-        오늘 기분은 어때요?
+      <h2 className="text-sm font-semibold text-center text-primary font-gowun">
+        오늘 하루, 마음에 남은 이야기
       </h2>
 
       {/* 텍스트 입력 */}
@@ -132,7 +133,7 @@ export function EmotionInput() {
         <textarea
           value={text}
           onChange={handleTextChange}
-          placeholder="오늘 감정을 적어보세요..."
+          placeholder="감정을 자유롭게 적어보세요..."
           maxLength={MAX_TEXT_LENGTH}
           disabled={isAnalyzing}
           className="w-full h-28 bg-white/60 border-none rounded-xl p-4 text-on-surface resize-none text-base placeholder:text-on-surface-variant/40 focus:ring-2 focus:ring-[#ffd1dc] focus:outline-none transition-all disabled:opacity-50"

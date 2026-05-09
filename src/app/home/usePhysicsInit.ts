@@ -66,7 +66,7 @@ export function usePhysicsInit(options: UsePhysicsInitOptions): UsePhysicsInitRe
       const W = 800;
       const H = 600;
       const cx = W / 2;
-      const cy = H * 0.3;
+      const cy = H * 0.4;
 
       // 젤리 바디 생성
       const jellyBody = Matter.Bodies.circle(cx, cy, 40, {

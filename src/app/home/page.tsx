@@ -1,8 +1,7 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import Link from 'next/link';
-import BottomNav from '@/components/layout/BottomNav';
+import NavMenu from '@/components/layout/NavMenu';
 import { useEffect, useState, useRef, useSyncExternalStore, useMemo } from 'react';
 import { jellyStore } from '@/stores/jellyStore';
 import { tossStore } from '@/stores/tossStore';
@@ -36,14 +35,17 @@ export default function HomePage() {
   const mounted = useSyncExternalStore(emptySubscribe, () => true, () => false);
   const [matterReady, setMatterReady] = useState(false);
   const [matterError, setMatterError] = useState<string | null>(null);
-  const [jellyPos, setJellyPos] = useState({ x: 400, y: 200 });
+  const [jellyPos, setJellyPos] = useState({ x: 400, y: 240 });
   const matterRef = useRef<typeof import('matter-js') | null>(null);
+  const [uiState, setUiState] = useState<'idle' | 'input'>('idle');
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
 
   const currentState = jellyStore((s) => s.currentState);
   const beadCount = jellyStore((s) => s.beadCount);
   const lastEmotion = jellyStore((s) => s.lastEmotion);
   const emotionColor = jellyStore((s) => s.emotionColor);
   const emotionHistory = jellyStore((s) => s.emotionHistory);
+  const isAnalyzing = jellyStore((s) => s.isAnalyzing);
 
   // M4-T5: Toss WebView 분기 처리
   const isWebView = tossStore((s) => s.isWebView);
@@ -68,25 +70,28 @@ export default function HomePage() {
       });
   }, []);
 
-  // 모바일 키보드 닫힘 후 스크롤 복원
+  // 모바일 키보드 높이 추적 (입력 모드)
   useEffect(() => {
-    const resetScroll = () => {
+    if (uiState !== 'input') return;
+
+    const vv = window.visualViewport;
+    if (!vv) return;
+
+    const updateKeyboard = () => {
+      const kbHeight = Math.max(0, window.innerHeight - vv.height);
+      setKeyboardHeight(kbHeight);
       window.scrollTo(0, 0);
       document.documentElement.scrollTop = 0;
       document.body.scrollTop = 0;
     };
 
-    // visualViewport로 키보드 상태 변화 감지
-    const vv = window.visualViewport;
-    if (vv) {
-      vv.addEventListener('resize', resetScroll);
-      vv.addEventListener('scroll', resetScroll);
-      return () => {
-        vv.removeEventListener('resize', resetScroll);
-        vv.removeEventListener('scroll', resetScroll);
-      };
-    }
-  }, []);
+    vv.addEventListener('resize', updateKeyboard);
+    vv.addEventListener('scroll', updateKeyboard);
+    return () => {
+      vv.removeEventListener('resize', updateKeyboard);
+      vv.removeEventListener('scroll', updateKeyboard);
+    };
+  }, [uiState]);
 
   // 감정 분포 계산 (최근 분석 기록 기준)
   const emotionDistribution = useMemo(() => {
@@ -120,11 +125,11 @@ export default function HomePage() {
             <span className="material-symbols-outlined text-primary text-3xl" style={{ fontVariationSettings: "'FILL' 1" }}>bubble_chart</span>
             <h1 className="font-dongle text-4xl leading-none text-primary tracking-tight">Mind Jelly</h1>
           </div>
+          <NavMenu activeTab="jelly" />
         </header>
         <main className="flex-1 flex items-center justify-center">
           <div className="text-on-surface-variant font-body-md animate-pulse">로딩중...</div>
         </main>
-        <BottomNav activeTab="jelly" />
       </div>
     );
   }
@@ -151,58 +156,64 @@ export default function HomePage() {
             </span>
           )}
         </div>
-        {!isWebView && (
-          <Link href="/settings" className="w-10 h-10 flex items-center justify-center rounded-full hover:opacity-80 transition-opacity active:scale-95 duration-200">
-            <span className="material-symbols-outlined text-primary text-2xl">settings</span>
-          </Link>
+        {uiState === 'input' && !isAnalyzing ? (
+          <button
+            onClick={() => setUiState('idle')}
+            className="font-gowun text-sm text-on-surface-variant hover:text-primary transition-colors"
+          >
+            취소
+          </button>
+        ) : (
+          <NavMenu activeTab="jelly" />
         )}
       </header>
 
       {/* Emotion Status Header */}
-      <div className="fixed top-16 left-0 w-full z-40 px-[20px] py-2">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span
-              className="inline-block w-3 h-3 rounded-full"
-              style={{ backgroundColor: currentTheme.jellyColor, transition: 'background-color 800ms linear' }}
-            />
-            <span className="font-jakarta text-sm font-semibold text-text-primary">
-              {currentTheme.label}
-            </span>
-            {lastConfidence !== null && (
-              <span className="font-jakarta text-xs text-on-surface-variant">
-                {Math.round(lastConfidence * 100)}%
-              </span>
-            )}
-          </div>
-          <div className="flex gap-1">
-            {emotionDistribution.map(({ emotion }) => (
+      {uiState === 'idle' && (
+        <div className="fixed top-16 left-0 w-full z-40 px-[20px] py-2">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
               <span
-                key={emotion}
-                className="inline-block w-5 h-5 rounded-full border border-white/50"
-                style={{
-                  backgroundColor: EMOTION_COLORS[emotion],
-                  opacity: emotion === lastEmotion ? 1 : 0.4,
-                  transition: 'opacity 800ms linear',
-                }}
+                className="inline-block w-3 h-3 rounded-full"
+                style={{ backgroundColor: currentTheme.jellyColor, transition: 'background-color 800ms linear' }}
               />
-            ))}
+              <span className="font-jakarta text-sm font-semibold text-text-primary">
+                {currentTheme.label}
+              </span>
+              {lastConfidence !== null && (
+                <span className="font-jakarta text-xs text-on-surface-variant">
+                  {Math.round(lastConfidence * 100)}%
+                </span>
+              )}
+            </div>
+            <div className="flex gap-1">
+              {emotionDistribution.map(({ emotion }) => (
+                <span
+                  key={emotion}
+                  className="inline-block w-5 h-5 rounded-full border border-white/50"
+                  style={{
+                    backgroundColor: EMOTION_COLORS[emotion],
+                    opacity: emotion === lastEmotion ? 1 : 0.4,
+                    transition: 'opacity 800ms linear',
+                  }}
+                />
+              ))}
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Main Canvas Area */}
-      <main className="relative w-full flex-1 flex flex-col items-center justify-center overflow-hidden pt-28 pb-32">
+      <main className="relative w-full flex-1 flex flex-col items-center overflow-hidden transition-all duration-500">
+
         {/* Decorative Atmosphere */}
         <div className="absolute inset-0 pointer-events-none">
-          {/* Clouds */}
           <div className="absolute top-[15%] left-[10%] opacity-40">
             <span className="material-symbols-outlined text-6xl text-white">cloud</span>
           </div>
           <div className="absolute top-[25%] right-[15%] opacity-30">
             <span className="material-symbols-outlined text-5xl text-white">cloud</span>
           </div>
-          {/* Twinkles */}
           <div className="absolute top-[20%] left-[40%] star-sparkle">
             <span className="material-symbols-outlined text-white text-sm">auto_awesome</span>
           </div>
@@ -214,93 +225,118 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* Emotion Beads Canvas (decorative, actual beads rendered by physics engine) */}
+        {/* Emotion Beads Canvas (decorative) */}
         <div className="absolute inset-0 pointer-events-none">
-          {/* Bead: Joy */}
           <div className="absolute top-[30%] left-[25%] w-6 h-6 rounded-full bg-yellow-200 border-2 border-yellow-300 shadow-sm flex items-center justify-center animate-pulse pointer-events-auto cursor-pointer hover:scale-110 transition-transform">
             <div className="flex gap-0.5">
               <div className="w-1 h-1 bg-on-surface-variant rounded-full"></div>
               <div className="w-1 h-1 bg-on-surface-variant rounded-full"></div>
             </div>
           </div>
-          {/* Bead: Sadness */}
           <div className="absolute top-[45%] right-[20%] w-4 h-4 rounded-full bg-jelly-sad border-2 border-blue-200 shadow-sm flex items-center justify-center pointer-events-auto cursor-pointer hover:scale-110 transition-transform">
             <div className="w-1 h-0.5 bg-on-surface-variant rounded-full"></div>
           </div>
-          {/* Bead: Anger */}
           <div className="absolute bottom-[45%] left-[30%] w-5 h-5 rounded-full bg-jelly-anger border-2 border-red-200 shadow-sm flex items-center justify-center pointer-events-auto cursor-pointer hover:scale-110 transition-transform">
             <div className="flex gap-0.5">
               <div className="w-1 h-1 bg-white rounded-full"></div>
               <div className="w-1 h-1 bg-white rounded-full"></div>
             </div>
           </div>
-          {/* Bead: Disgust */}
           <div className="absolute top-[20%] right-[40%] w-4 h-4 rounded-full bg-green-200 border-2 border-green-300 shadow-sm flex items-center justify-center pointer-events-auto cursor-pointer hover:scale-110 transition-transform">
             <div className="w-1.5 h-1.5 border-t border-on-surface-variant rounded-full"></div>
           </div>
         </div>
 
-        {/* Physics Engine Canvas */}
-        {matterError ? (
-          <div className="flex-1 flex items-center justify-center p-4">
-            <p className="text-on-surface-variant text-center text-sm">{matterError}</p>
-          </div>
-        ) : (
-          <PhysicsCanvas width={800} height={600}>
-            {(engine) => {
-              initPhysics(engine);
-
-              return (
-                <>
-                  <JellyRenderer
-                    bodies={bodies}
-                    face={currentState}
-                    animation={0}
-                    emotionColor={emotionColor}
-                    emotion={emotionHistory.length > 0 ? lastEmotion : null}
-                  />
-                  {engineRef.current && (
-                    <BeadGroup count={beadCount} engine={engineRef.current} emotion={lastEmotion} />
-                  )}
-                </>
-              );
-            }}
-          </PhysicsCanvas>
-        )}
-
-        {/* Emotional Message Card */}
-        <div className="w-[calc(100%-40px)] max-w-md mt-4">
-          <div
-            className="glass-card rounded-3xl px-5 py-4"
-            style={{ transition: 'all 800ms linear' }}
-          >
-            <div className="flex items-center gap-2 mb-2">
-              <span className="material-symbols-outlined text-primary text-lg" style={{ fontVariationSettings: "'FILL' 1" }}>auto_awesome</span>
-              <span className="font-jakarta text-xs font-semibold text-text-primary">오늘의 감정 리포트</span>
+        {/* Jelly Container - takes remaining space, jelly centered within */}
+        <div
+          className={`flex-1 flex items-center justify-center ${uiState === 'idle' ? 'pt-28' : 'pt-16'}`}
+          style={{
+            minHeight: uiState === 'idle' ? '280px' : '160px',
+            transform: uiState === 'input' ? 'scale(0.65)' : 'scale(1)',
+            transition: 'transform 500ms cubic-bezier(0.4, 0, 0.2, 1)',
+            transformOrigin: 'center top',
+          }}
+        >
+          {matterError ? (
+            <div className="flex items-center justify-center p-4">
+              <p className="text-on-surface-variant text-center text-sm">{matterError}</p>
             </div>
-            <p className="font-gowun text-sm text-text-primary leading-relaxed">
-              {currentTheme.message}
-            </p>
-            <div className="flex items-center gap-2 mt-3">
-              <span
-                className="inline-block w-2 h-2 rounded-full"
-                style={{ backgroundColor: currentTheme.jellyColor, transition: 'background-color 800ms linear' }}
-              />
-              <span className="font-jakarta text-xs text-on-surface-variant">
-                모은 구슬 {beadCount}개
-              </span>
-            </div>
-          </div>
+          ) : (
+            <PhysicsCanvas width={800} height={600}>
+              {(engine) => {
+                initPhysics(engine);
+                return (
+                  <>
+                    <JellyRenderer
+                      bodies={bodies}
+                      face={currentState}
+                      animation={0}
+                      emotionColor={emotionColor}
+                      emotion={emotionHistory.length > 0 ? lastEmotion : null}
+                    />
+                    {engineRef.current && (
+                      <BeadGroup count={beadCount} engine={engineRef.current} emotion={lastEmotion} />
+                    )}
+                  </>
+                );
+              }}
+            </PhysicsCanvas>
+          )}
         </div>
+
+        {/* Bottom Content Area (idle only: message card + CTA) */}
+        {uiState === 'idle' && (
+          <div className="w-full flex flex-col items-center gap-3 px-[20px] pb-6">
+            {/* Emotional Message Card */}
+            <div className="w-full max-w-md">
+              <div
+                className="glass-card rounded-3xl px-5 py-4"
+                style={{ transition: 'all 800ms linear' }}
+              >
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="material-symbols-outlined text-primary text-lg" style={{ fontVariationSettings: "'FILL' 1" }}>auto_awesome</span>
+                  <span className="font-jakarta text-xs font-semibold text-text-primary">오늘의 감정 리포트</span>
+                </div>
+                <p className="font-gowun text-sm text-text-primary leading-relaxed">
+                  {currentTheme.message}
+                </p>
+                <div className="flex items-center gap-2 mt-3">
+                  <span
+                    className="inline-block w-2 h-2 rounded-full"
+                    style={{ backgroundColor: currentTheme.jellyColor, transition: 'background-color 800ms linear' }}
+                  />
+                  <span className="font-jakarta text-xs text-on-surface-variant">
+                    모은 구슬 {beadCount}개
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* CTA Button */}
+            <div className="w-full max-w-md">
+              <button
+                onClick={() => setUiState('input')}
+                className="w-full py-4 rounded-full bg-primary text-white font-gowun text-base font-semibold shadow-lg hover:scale-[0.98] active:scale-95 transition-all duration-300 flex items-center justify-center gap-2"
+              >
+                <span className="material-symbols-outlined text-xl" style={{ fontVariationSettings: "'FILL' 1" }}>edit_note</span>
+                감정 표현하기
+              </button>
+            </div>
+          </div>
+        )}
       </main>
 
-      {/* Bottom Sheet (Collapsed) - Emotion Input */}
-      <section className="fixed bottom-24 left-1/2 -translate-x-1/2 w-[calc(100%-40px)] max-w-md z-40">
-        <EmotionInput />
-      </section>
-
-      {/* Bottom Navigation */}
-      <BottomNav activeTab="jelly" />
+      {/* EmotionInput Bottom Sheet (input mode only) */}
+      {uiState === 'input' && (
+        <section
+          className="fixed left-1/2 -translate-x-1/2 w-[calc(100%-40px)] max-w-md z-40"
+          style={{ bottom: (uiState === 'input' ? keyboardHeight : 0) + 24 }}
+        >
+          <div className="animate-slide-up">
+            <EmotionInput onCompleteAction={() => setUiState('idle')} />
+          </div>
+        </section>
+      )}
     </div>
   );
 }

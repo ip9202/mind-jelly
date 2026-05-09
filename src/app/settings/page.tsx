@@ -1,11 +1,11 @@
 'use client';
 
 import Link from 'next/link';
-import BottomNav from '@/components/layout/BottomNav';
+import NavMenu from '@/components/layout/NavMenu';
 
 export default function SettingsPage() {
   return (
-    <div className="bg-background text-on-surface font-body-md min-h-screen pb-32 overflow-x-hidden">
+    <div className="bg-background text-on-surface font-body-md min-h-screen overflow-x-hidden">
       {/* Top AppBar */}
       <header className="bg-surface/85 backdrop-blur-[8px] fixed top-0 left-0 z-40 w-full">
         <div className="flex justify-between items-center w-full px-[20px] h-16">
@@ -13,7 +13,7 @@ export default function SettingsPage() {
             <span className="material-symbols-outlined">arrow_back</span>
           </Link>
           <h1 className="font-dongle text-5xl text-primary tracking-tight leading-none">설정</h1>
-          <div className="w-8"></div>
+          <NavMenu activeTab="garden" />
         </div>
       </header>
 
@@ -117,8 +117,6 @@ export default function SettingsPage() {
           <p className="font-dongle text-2xl text-primary">Mind Jelly with Love</p>
         </div>
       </main>
-
-      <BottomNav activeTab="garden" />
 
       {/* Background Illustration */}
       <div className="fixed top-0 left-0 w-full h-full -z-10 pointer-events-none opacity-20">

@@ -80,7 +80,7 @@ export function PhysicsCanvas({ width, height, children }: PhysicsCanvasProps) {
   return (
     <div
       ref={containerRef}
-      className="relative w-full max-w-[800px] mx-auto overflow-hidden"
+      className="relative w-full max-w-[800px] mx-auto overflow-visible bg-transparent"
       style={{ aspectRatio: `${width}/${height}` }}
     >
       <div
@@ -95,7 +95,7 @@ export function PhysicsCanvas({ width, height, children }: PhysicsCanvasProps) {
           ref={canvasRef}
           width={width}
           height={height}
-          className="block"
+          className="block bg-transparent border-0 outline-none"
         />
         {renderChildren()}
       </div>

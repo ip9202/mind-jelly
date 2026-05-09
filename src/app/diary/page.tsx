@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import BottomNav from '@/components/layout/BottomNav';
+import NavMenu from '@/components/layout/NavMenu';
 import { diaryStore } from '@/stores/diaryStore';
 import type { DiaryEntry } from '@/types/diary';
 import type { EmotionType } from '@/types/emotion';
@@ -212,7 +212,7 @@ export default function DiaryPage() {
   }, [selectedDate, entries, today]);
 
   return (
-    <div className="text-on-background min-h-screen pb-24 font-gowun">
+    <div className="text-on-background min-h-screen pb-6 font-gowun">
       {/* TopAppBar */}
       <header className="sticky top-0 z-50 flex justify-between items-center w-full px-[20px] h-16 bg-surface/85 backdrop-blur-[8px]">
         <div className="flex items-center gap-2">
@@ -223,11 +223,7 @@ export default function DiaryPage() {
             오늘의 감정 일기
           </h1>
         </div>
-        <button className="hover:opacity-80 transition-opacity active:scale-95 transition-all duration-300 ease-out">
-          <span className="material-symbols-outlined text-primary">
-            settings
-          </span>
-        </button>
+        <NavMenu activeTab="history" />
       </header>
 
       <main className="px-[20px] mt-[16px] space-y-[24px]">
@@ -410,7 +406,6 @@ export default function DiaryPage() {
         </section>
       </main>
 
-      <BottomNav activeTab="history" />
     </div>
   );
 }
