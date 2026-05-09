@@ -159,30 +159,26 @@ describe('POST /api/analyze', () => {
     expect(data).toHaveProperty('emotionKo');
   });
 
-  it('API 429 과부하 시 mock 분석 결과를 반환한다', async () => {
+  it('API 429 과부하 시 503 안내 메시지를 반환한다', async () => {
     mockFetch.mockResolvedValueOnce({
       ok: false,
       status: 429,
     });
 
-    const response = await POST(createRequest({ text: '기분이 좋아' }));
-    expect(response.status).toBe(200);
+    const response = await POST(createRequest({ text: '테스트' }));
+    expect(response.status).toBe(503);
     const data = await response.json();
-    expect(data).toHaveProperty('emotion');
-    expect(data).toHaveProperty('confidence');
-    expect(data).toHaveProperty('emotionKo');
+    expect(data.error).toContain('잠시 후');
   });
 
-  it('API 500 에러 시에도 mock 분석 결과를 반환한다', async () => {
+  it('API 500 에러 시에도 503 안내 메시지를 반환한다', async () => {
     mockFetch.mockResolvedValueOnce({
       ok: false,
       status: 500,
     });
 
     const response = await POST(createRequest({ text: '테스트' }));
-    expect(response.status).toBe(200);
-    const data = await response.json();
-    expect(data).toHaveProperty('emotion');
+    expect(response.status).toBe(503);
   });
 
   it('API 응답이 JSON이 아니면 500을 반환한다', async () => {
