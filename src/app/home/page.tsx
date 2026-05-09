@@ -5,6 +5,7 @@ import Link from 'next/link';
 import BottomNav from '@/components/layout/BottomNav';
 import { useEffect, useState, useRef, useSyncExternalStore } from 'react';
 import { jellyStore } from '@/stores/jellyStore';
+import { tossStore } from '@/stores/tossStore';
 import { setupCollisionDetection } from '@/lib/physics/collisions';
 import { applyMagneticField } from '@/lib/physics/forces';
 import type { Engine } from 'matter-js';
@@ -45,6 +46,10 @@ export default function HomePage() {
   const beadCount = jellyStore((s) => s.beadCount);
   const lastEmotion = jellyStore((s) => s.lastEmotion);
 
+  // M4-T5: Toss WebView 분기 처리
+  const isWebView = tossStore((s) => s.isWebView);
+  const userInfo = tossStore((s) => s.userInfo);
+
   useEffect(() => {
     import('matter-js').then((M) => {
       matterRef.current = M;
@@ -74,10 +79,18 @@ export default function HomePage() {
         <div className="flex items-center gap-2">
           <span className="material-symbols-outlined text-primary text-3xl" style={{ fontVariationSettings: "'FILL' 1" }}>bubble_chart</span>
           <h1 className="font-dongle text-4xl leading-none text-primary tracking-tight">Mind Jelly</h1>
+          {/* M4-T5: WebView 인사말 */}
+          {isWebView && userInfo && (
+            <span className="font-gowun text-sm text-on-surface-variant ml-2">
+              {userInfo.name}님, 반가워요!
+            </span>
+          )}
         </div>
-        <Link href="/settings" className="w-10 h-10 flex items-center justify-center rounded-full hover:opacity-80 transition-opacity active:scale-95 duration-200">
-          <span className="material-symbols-outlined text-primary text-2xl">settings</span>
-        </Link>
+        {!isWebView && (
+          <Link href="/settings" className="w-10 h-10 flex items-center justify-center rounded-full hover:opacity-80 transition-opacity active:scale-95 duration-200">
+            <span className="material-symbols-outlined text-primary text-2xl">settings</span>
+          </Link>
+        )}
       </header>
 
       {/* Main Canvas Area */}
@@ -251,10 +264,7 @@ export default function HomePage() {
 
       {/* Bottom Sheet (Collapsed) - Emotion Input */}
       <section className="fixed bottom-24 left-1/2 -translate-x-1/2 w-[calc(100%-40px)] max-w-md z-40">
-        <div className="bg-white/90 backdrop-blur-xl rounded-t-[28px] rounded-b-lg shadow-xl p-6">
-          <div className="w-12 h-1.5 bg-surface-container-high rounded-full mx-auto mb-6"></div>
-          <EmotionInput />
-        </div>
+        <EmotionInput />
       </section>
 
       {/* Bottom Navigation */}

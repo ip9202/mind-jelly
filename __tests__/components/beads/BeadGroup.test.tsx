@@ -2,9 +2,31 @@
 import { render } from '@testing-library/react';
 import { BeadGroup } from '@/components/beads/BeadGroup';
 
+// Matter.js 모킹
+jest.mock('matter-js', () => ({
+  Engine: {
+    create: jest.fn(),
+  },
+  Bodies: {
+    circle: jest.fn(() => ({ id: 1, position: { x: 0, y: 0 }, circleRadius: 5 })),
+  },
+  Composite: {
+    add: jest.fn(),
+    remove: jest.fn(),
+    allBodies: jest.fn(() => []),
+  },
+  Body: {
+    setPosition: jest.fn(),
+  },
+}));
+
 describe('BeadGroup', () => {
   const mockEngine = {
-    world: {},
+    world: {
+      bodies: [],
+      add: jest.fn(),
+      remove: jest.fn(),
+    },
   };
 
   it('컴포넌트가 렌더링되어야 함', () => {
@@ -55,7 +77,6 @@ describe('BeadGroup', () => {
         </svg>
       );
 
-      // 자기장 시각화 요소 확인
       expect(container.querySelector('svg')).toBeInTheDocument();
     });
   });

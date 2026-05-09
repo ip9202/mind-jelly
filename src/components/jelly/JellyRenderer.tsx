@@ -1,18 +1,30 @@
 'use client';
 
+import { hexToRgba } from '@/lib/utils/color';
+import { JELLY_COLOR } from '@/lib/constants/emotion';
+
 interface JellyRendererProps {
   bodies: Array<{ position: { x: number; y: number }; circleRadius?: number }>;
   face: 'idle' | 'anticipation' | 'eating' | 'satisfied';
   animation: number;
+  // M2: 감정 기반 색상 (기본값: JELLY_COLOR)
+  emotionColor?: string;
 }
 
-export function JellyRenderer({ bodies, face }: JellyRendererProps) {
+export function JellyRenderer({ bodies, face, emotionColor }: JellyRendererProps) {
   if (bodies.length === 0) return null;
 
   const jelly = bodies[0];
   const cx = jelly.position.x;
   const cy = jelly.position.y;
   const r = jelly.circleRadius || 40;
+
+  // M2: 감정 색상 (기본값: JELLY_COLOR)
+  const currentColor = emotionColor || JELLY_COLOR;
+  const glowColor = hexToRgba(currentColor, 0.4);
+
+  // @MX:NOTE: M2 800ms 트랜지션 (GPU 컴포지팅, 60fps 유지)
+  const colorTransition = 'background-color 800ms ease-in-out';
 
   return (
     <div
@@ -27,16 +39,22 @@ export function JellyRenderer({ bodies, face }: JellyRendererProps) {
     >
       {/* 글로우 효과 */}
       <div
+        data-testid="jelly-glow"
         className="absolute inset-0 rounded-full scale-125 blur-3xl"
-        style={{ backgroundColor: 'rgba(255, 209, 220, 0.3)' }}
+        style={{
+          backgroundColor: glowColor,
+          transition: colorTransition,
+        }}
       />
       {/* 젤리 바디 */}
       <div
+        data-testid="jelly-body"
         className="relative w-full h-full rounded-full flex items-center justify-center"
         style={{
-          backgroundColor: '#FFD1DC',
+          backgroundColor: currentColor,
           boxShadow: 'inset -8px -8px 20px rgba(0,0,0,0.05), inset 8px 8px 20px rgba(255,255,255,0.6)',
           border: '4px solid rgba(255, 255, 255, 0.4)',
+          transition: colorTransition,
         }}
       >
         {/* 표정 */}

@@ -2,6 +2,8 @@ import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 
 import type { JellyState, JellyFace } from '@/types/physics';
+import type { EmotionType, AnalysisResponse } from '@/types/emotion';
+import { EMOTION_COLORS, JELLY_COLOR } from '@/lib/constants/emotion';
 
 // 상태 전이 맵 (유효한 전이만 정의)
 const TRANSITION_MAP: Record<string, string[]> = {
@@ -40,7 +42,15 @@ interface JellyStoreState {
   beadCount: number;
 
   // 마지막 감정 타입
-  lastEmotion: string;
+  lastEmotion: EmotionType;
+
+  // M1: 감정 분석 상태
+  isAnalyzing: boolean;
+  analysisError: string | null;
+  emotionHistory: AnalysisResponse[];
+
+  // M2: 감정 기반 색상
+  emotionColor: string;
 
   // 액션: 상태 전이
   transitionState: (newState: JellyState) => boolean;
@@ -68,7 +78,15 @@ interface JellyStoreState {
   decrementBeadCount: (amount?: number) => void;
 
   // 액션: 마지막 감정 설정
-  setLastEmotion: (emotion: string) => void;
+  setLastEmotion: (emotion: EmotionType) => void;
+
+  // M1 액션: 감정 분석 상태
+  setAnalyzing: (value: boolean) => void;
+  setAnalysisError: (error: string | null) => void;
+  addEmotionResult: (result: AnalysisResponse) => void;
+
+  // M2 액션: 감정 색상
+  setEmotionColor: (color: string) => void;
 }
 
 /**
@@ -99,6 +117,13 @@ export const jellyStore = create<JellyStoreState>()(
       beadCount: 0,
 
       lastEmotion: 'joy',
+
+      isAnalyzing: false,
+      analysisError: null,
+      emotionHistory: [],
+
+      // M2: 감정 기반 색상 (초기값: 기본 젤리 색상)
+      emotionColor: JELLY_COLOR,
 
       // 상태 전이 (가드 조건 검증)
       transitionState: (newState: JellyState) => {
@@ -168,8 +193,32 @@ export const jellyStore = create<JellyStoreState>()(
       },
 
       // 마지막 감정 설정
-      setLastEmotion: (emotion: string) => {
+      setLastEmotion: (emotion: EmotionType) => {
         set({ lastEmotion: emotion });
+      },
+
+      // M1: 분석 중 상태 설정
+      setAnalyzing: (value: boolean) => {
+        set({ isAnalyzing: value });
+      },
+
+      // M1: 분석 에러 설정
+      setAnalysisError: (error: string | null) => {
+        set({ analysisError: error });
+      },
+
+      // M2: 감정 색상 직접 설정
+      setEmotionColor: (color: string) => {
+        set({ emotionColor: color });
+      },
+
+      // M1: 감정 분석 결과 추가
+      // M2: emotionColor도 감정에 맞게 자동 업데이트
+      addEmotionResult: (result: AnalysisResponse) => {
+        set((state) => ({
+          emotionHistory: [...state.emotionHistory, result],
+          emotionColor: EMOTION_COLORS[result.emotion],
+        }));
       },
     }),
     {
