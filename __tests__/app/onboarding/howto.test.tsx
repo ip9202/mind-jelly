@@ -55,7 +55,7 @@ describe('HowtoPage', () => {
   it('각 단계 설명을 렌더링한다', () => {
     render(<HowtoPage />);
 
-    expect(screen.getByText(/감정 구슬을/)).toBeInTheDocument();
+    expect(screen.getByText(/오늘 기분을/)).toBeInTheDocument();
     expect(screen.getByText(/젤리가 맛있게/)).toBeInTheDocument();
     expect(screen.getByText(/마음이 한결/)).toBeInTheDocument();
   });

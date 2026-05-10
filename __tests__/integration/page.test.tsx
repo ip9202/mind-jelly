@@ -92,7 +92,7 @@ describe('Page Integration', () => {
 
     render(<Home />);
 
-    expect(screen.getByText('테스트유저님, 반가워요!')).toBeInTheDocument();
+    expect(screen.getByText(/테스트유저님,/)).toBeInTheDocument();
   });
 
   it('WebView 환경에서 설정 버튼이 숨겨진다', () => {

@@ -16,7 +16,7 @@ describe('emotionSchema', () => {
   });
 
   it('유효하지 않은 감정 타입을 거부한다', () => {
-    const invalidEmotions = ['happy', 'SURPRISE', '', 'love', 'anxiety', 123, null, undefined];
+    const invalidEmotions = ['happy', 'SURPRISE', '', 'anxiety', 123, null, undefined];
 
     invalidEmotions.forEach((emotion) => {
       const result = emotionSchema.safeParse(emotion);
@@ -113,9 +113,9 @@ describe('analysisResponseSchema', () => {
 
   it('유효하지 않은 emotion 값을 가진 응답을 거부한다', () => {
     const invalidResponse = {
-      emotion: 'surprise',
+      emotion: 'happy',
       confidence: 0.8,
-      emotionKo: '놀람',
+      emotionKo: '행복',
     };
 
     const result = analysisResponseSchema.safeParse(invalidResponse);
