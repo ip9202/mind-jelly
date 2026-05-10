@@ -32,7 +32,7 @@ export default function HowtoPage() {
         {/* Heading Section */}
         <div className="text-center mb-12">
           <h2 className="font-dongle text-[48px] text-on-surface mb-0 leading-none">어떻게 하지?</h2>
-          <p className="font-gowun text-[16px] text-on-surface-variant">네 감정을 젤리에게 선물해줘.</p>
+          <p className="font-gamja text-[16px] text-on-surface-variant">네 감정을 젤리에게 선물해줘.</p>
         </div>
 
         {/* Visual Onboarding Steps */}
@@ -83,7 +83,7 @@ export default function HowtoPage() {
               <div className="w-10 h-10 rounded-full bg-primary-container text-on-primary-container font-dongle flex items-center justify-center mx-auto mb-4">
                 1
               </div>
-              <p className="font-gowun text-[16px] text-on-surface">
+              <p className="font-gamja text-[16px] text-on-surface">
                 오늘 기분을<br />적어봐
               </p>
             </div>
@@ -93,7 +93,7 @@ export default function HowtoPage() {
               <div className="w-10 h-10 rounded-full bg-primary-container text-on-primary-container font-dongle flex items-center justify-center mx-auto mb-4">
                 2
               </div>
-              <p className="font-gowun text-[16px] text-on-surface">
+              <p className="font-gamja text-[16px] text-on-surface">
                 젤리가 맛있게<br />먹어줄 거예요
               </p>
             </div>
@@ -103,7 +103,7 @@ export default function HowtoPage() {
               <div className="w-10 h-10 rounded-full bg-primary-container text-on-primary-container font-dongle flex items-center justify-center mx-auto mb-4">
                 3
               </div>
-              <p className="font-gowun text-[16px] text-on-surface">
+              <p className="font-gamja text-[16px] text-on-surface">
                 마음이 한결<br />가벼워져요
               </p>
             </div>
@@ -116,7 +116,7 @@ export default function HowtoPage() {
         <div className="max-w-md mx-auto">
           <Link
             href="/onboarding/ready"
-            className="w-full h-14 bg-primary text-on-primary rounded-full font-gowun text-xl shadow-lg shadow-primary/10 hover:opacity-90 active:scale-95 transition-all duration-300 flex items-center justify-center gap-2"
+            className="w-full h-14 bg-primary text-on-primary rounded-full font-gamja text-xl shadow-lg shadow-primary/10 hover:opacity-90 active:scale-95 transition-all duration-300 flex items-center justify-center gap-2"
           >
             <span>다음</span>
             <span className="material-symbols-outlined text-[20px]">arrow_forward</span>

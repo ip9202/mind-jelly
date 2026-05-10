@@ -65,9 +65,9 @@ export default function SplashPage() {
         <div className="w-full max-w-sm px-6 pb-4">
           <Link
             href="/onboarding/welcome"
-            className="w-full py-5 rounded-lg bg-gradient-to-r from-primary-container to-primary/20 text-on-primary-container font-jakarta shadow-lg shadow-primary/10 hover:shadow-xl transition-all duration-300 active:scale-95 flex items-center justify-center space-x-3 group block text-center"
+            className="w-full py-5 rounded-lg bg-gradient-to-r from-primary-container to-primary/20 text-on-primary-container font-gamja shadow-lg shadow-primary/10 hover:shadow-xl transition-all duration-300 active:scale-95 flex items-center justify-center space-x-3 group block text-center"
           >
-            <span className="font-jakarta text-[24px] font-bold">시작하기</span>
+            <span className="font-gamja text-[24px] font-bold">시작하기</span>
             <span className="material-symbols-outlined group-hover:translate-x-1 transition-transform">arrow_forward_ios</span>
           </Link>
           <p className="mt-6 text-center font-caption text-[13px] text-on-surface-variant/60">

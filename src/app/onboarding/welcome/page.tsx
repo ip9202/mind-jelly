@@ -44,7 +44,7 @@ export default function WelcomePage() {
             <h1 className="font-dongle leading-none text-primary text-[64px] whitespace-nowrap tracking-tight">
               안녕! 나는 마인드 젤리야
             </h1>
-            <p className="font-gowun text-lg text-text-primary/70 tracking-tight">
+            <p className="font-gamja text-lg text-text-primary/70 tracking-tight">
               너의 감정을 먹고 커가는 젤리 친구
             </p>
           </div>
@@ -65,7 +65,7 @@ export default function WelcomePage() {
           {/* Action Button */}
           <Link
             href="/onboarding/howto"
-            className="w-full h-14 bg-primary text-on-primary rounded-full font-gowun text-xl shadow-lg shadow-primary/10 hover:opacity-90 active:scale-95 transition-all duration-300 flex items-center justify-center gap-2"
+            className="w-full h-14 bg-primary text-on-primary rounded-full font-gamja text-xl shadow-lg shadow-primary/10 hover:opacity-90 active:scale-95 transition-all duration-300 flex items-center justify-center gap-2"
           >
             <span>다음</span>
             <span className="material-symbols-outlined text-[20px]">arrow_forward</span>
