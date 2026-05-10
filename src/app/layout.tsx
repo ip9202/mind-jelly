@@ -55,12 +55,7 @@ export default function RootLayout({
           href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
           rel="stylesheet"
         />
-        {/* 앱인토스: 다크모드 미지원, 항상 라이트모드 강제 */}
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `(function(){try{document.documentElement.classList.remove('dark');localStorage.removeItem('mind-jelly-theme')}catch(e){}})()`,
-          }}
-        />
+        {/* 다크모드 강제 해제는 ThemeInitializer 클라이언트 컴포넌트에서 처리 */}
       </head>
       <body className="min-h-full flex flex-col" suppressHydrationWarning>
         <a href="#main-content" className="skip-nav">본문으로 바로가기</a>
