@@ -15,7 +15,7 @@ export default function ReadyPage() {
   };
 
   return (
-    <div className="bg-bg-base min-h-screen flex flex-col font-body-md text-on-background overflow-hidden">
+    <div className="bg-welcome-gradient min-h-screen flex flex-col font-body-md text-on-background overflow-hidden">
       {/* Header (Suppressed Navigation as per Destination Rule) */}
       <header className="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-[20px] h-16 backdrop-blur-md bg-white/10">
         <div className="text-primary tracking-tight">
@@ -98,7 +98,7 @@ export default function ReadyPage() {
       <footer className="fixed bottom-0 left-0 w-full p-[20px] flex flex-col items-center">
         <button
           onClick={handleStart}
-          className="w-full max-w-sm bg-primary text-on-primary py-5 rounded-lg shadow-lg active:scale-95 transition-all duration-300 text-[24px] hover:opacity-90 font-gowun block text-center"
+          className="w-full max-w-sm h-14 bg-primary text-on-primary rounded-full font-gowun text-xl shadow-lg shadow-primary/10 hover:opacity-90 active:scale-95 transition-all duration-300 flex items-center justify-center"
         >
           시작!
         </button>

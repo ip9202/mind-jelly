@@ -65,9 +65,10 @@ export default function WelcomePage() {
           {/* Action Button */}
           <Link
             href="/onboarding/howto"
-            className="w-full py-5 rounded-lg bg-gradient-to-r from-primary-container to-primary/40 text-on-primary-container font-gowun text-xl shadow-sm hover:opacity-90 active:scale-95 transition-all duration-300 block text-center"
+            className="w-full h-14 bg-primary text-on-primary rounded-full font-gowun text-xl shadow-lg shadow-primary/10 hover:opacity-90 active:scale-95 transition-all duration-300 flex items-center justify-center gap-2"
           >
-            다음
+            <span>다음</span>
+            <span className="material-symbols-outlined text-[20px]">arrow_forward</span>
           </Link>
         </div>
       </main>

@@ -16,7 +16,7 @@ export default function HowtoPage() {
         </button>
       </header>
 
-      <main className="min-h-screen pt-24 pb-32 px-[20px] bg-pastel-gradient">
+      <main className="min-h-screen pt-24 pb-32 px-[20px] bg-welcome-gradient">
         {/* Progress Indicator */}
         <div className="flex justify-center mb-10">
           <div className="flex items-center gap-2">
@@ -116,10 +116,10 @@ export default function HowtoPage() {
         <div className="max-w-md mx-auto">
           <Link
             href="/onboarding/ready"
-            className="w-full h-14 bg-primary text-on-primary rounded-full font-dongle text-[24px] hover:opacity-90 active:scale-[0.98] transition-all flex items-center justify-center gap-2 font-gowun"
+            className="w-full h-14 bg-primary text-on-primary rounded-full font-gowun text-xl shadow-lg shadow-primary/10 hover:opacity-90 active:scale-95 transition-all duration-300 flex items-center justify-center gap-2"
           >
             <span>다음</span>
-            <span className="material-symbols-outlined">arrow_forward</span>
+            <span className="material-symbols-outlined text-[20px]">arrow_forward</span>
           </Link>
         </div>
       </footer>
