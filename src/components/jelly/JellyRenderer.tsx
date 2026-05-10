@@ -69,7 +69,20 @@ export function JellyRenderer({ bodies, face, emotionColor, emotion, jellyShape 
         >
           <defs>
             <clipPath id={JELLY_CLIP_PATH_ID} clipPathUnits="objectBoundingBox">
-              <path d={shapeConfig.path} />
+              {/* @MX:NOTE: SMIL animate로 경계 자체를 흔들어 젤리 질감 구현 */}
+              <path d={shapeConfig.path}>
+                {shapeConfig.pathAlt && (
+                  <animate
+                    attributeName="d"
+                    dur="3.7s"
+                    repeatCount="indefinite"
+                    calcMode="spline"
+                    keyTimes="0;0.5;1"
+                    keySplines="0.42 0 0.58 1;0.42 0 0.58 1"
+                    values={`${shapeConfig.path};${shapeConfig.pathAlt};${shapeConfig.path}`}
+                  />
+                )}
+              </path>
             </clipPath>
           </defs>
         </svg>
