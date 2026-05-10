@@ -155,9 +155,9 @@ body {
   border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
-/* Jelly float animation */
+/* Jelly float animation - 4방향 부유 + 크기 변화 */
 .jelly-float {
-  animation: floating 4s ease-in-out infinite;
+  animation: jelly-float 4s ease-in-out infinite;
 }
 
 @keyframes floating {
@@ -167,6 +167,27 @@ body {
   50% {
     transform: translateY(-15px);
   }
+}
+
+/* 다방향 부유 애니메이션 - 단순 상하 운동을 대체 */
+@keyframes jelly-float {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  25% { transform: translate(15px, -8px) scale(1.03); }
+  50% { transform: translate(-10px, -18px) scale(0.97); }
+  75% { transform: translate(-15px, -5px) scale(1.02); }
+}
+
+/* 블롭 형태 미세 진동 - CSS 변수 기반 border-radius 전환 */
+@keyframes jelly-wobble {
+  0%, 100% { border-radius: var(--jelly-br1); }
+  50% { border-radius: var(--jelly-br2); }
+}
+
+/* 형태 변형 애니메이션 - 크기/회전 모핑 */
+@keyframes jelly-morph {
+  0%, 100% { transform: scale(1) rotate(0deg); }
+  33% { transform: scale(1.05, 0.95) rotate(1deg); }
+  66% { transform: scale(0.95, 1.05) rotate(-1deg); }
 }
 
 /* Gradient splash background */

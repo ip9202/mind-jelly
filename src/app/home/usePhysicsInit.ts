@@ -148,6 +148,13 @@ export function usePhysicsInit(options: UsePhysicsInitOptions): UsePhysicsInitRe
               y: (cy - jelly.position.y) * springK,
             });
 
+            // 수평 둥둥 떠다니는 힘 - sin파로 좌우 드리프트
+            const driftForce = Math.sin(Date.now() * 0.001) * 0.00004;
+            Matter.Body.applyForce(jelly, jelly.position, {
+              x: driftForce,
+              y: 0,
+            });
+
             // 자기장 힘 적용 (REQ-EVT-002, REQ-STA-005)
             const beadBodies = allBodies.filter((b) => b.label === 'bead');
             if (beadBodies.length > 0) {

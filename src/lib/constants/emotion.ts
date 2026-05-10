@@ -43,12 +43,19 @@ export const BEAD_SIZES = [12, 18, 24] as const;
 // @MX:REASON: 홈 화면 배경, 젤리 표정, 메시지 카드 등 3개 이상 모듈에서 참조
 // @MX:SPEC: Stitch 디자인 스펙 기반 감정별 UI 테마
 
+// @MX:NOTE: 감정별 블롭 형태 (CSS 8값 border-radius로 유기적 형태 표현)
+export const JELLY_DEFAULT_SHAPE: { borderRadius: string; borderRadiusAlt: string } = {
+  borderRadius: '63% 37% 55% 45% / 38% 58% 42% 62%',
+  borderRadiusAlt: '45% 55% 60% 40% / 55% 42% 58% 45%',
+};
+
 export const EMOTION_THEME: Record<EmotionType, {
   jellyColor: string;
   bgGradientStart: string;
   bgGradientEnd: string;
   label: string;
   message: string;
+  shape: { borderRadius: string; borderRadiusAlt?: string };
   face: { eyes: string; mouth: string };
 }> = {
   joy: {
@@ -57,7 +64,12 @@ export const EMOTION_THEME: Record<EmotionType, {
     bgGradientEnd: '#FFD1DC',
     label: '평온',
     message: '마음이 평온한 상태예요',
-    face: { eyes: '• •', mouth: 'smile' },
+    // 둥근형: 부드럽고 풍만한 형태
+    shape: {
+      borderRadius: '65% 35% 58% 42% / 40% 60% 35% 65%',
+      borderRadiusAlt: '42% 58% 50% 50% / 55% 38% 62% 45%',
+    },
+    face: { eyes: 'happy', mouth: 'smile' },
   },
   sadness: {
     jellyColor: '#AEC6CF',
@@ -65,7 +77,12 @@ export const EMOTION_THEME: Record<EmotionType, {
     bgGradientEnd: '#AEC6CF',
     label: '우울',
     message: '마음에 먹구름이 끼어있어요',
-    face: { eyes: 'u u', mouth: 'wave' },
+    // 처진형: 아래쪽으로 늘어진 형태
+    shape: {
+      borderRadius: '45% 55% 70% 30% / 35% 40% 60% 65%',
+      borderRadiusAlt: '55% 45% 60% 40% / 40% 50% 50% 55%',
+    },
+    face: { eyes: 'sad', mouth: 'wave' },
   },
   anger: {
     jellyColor: '#FFB3A7',
@@ -73,7 +90,12 @@ export const EMOTION_THEME: Record<EmotionType, {
     bgGradientEnd: '#FFB3A7',
     label: '분노',
     message: '마음에 뜨거운 감정이 올라왔어요',
-    face: { eyes: '/ \\', mouth: 'wavy' },
+    // 각진형: 팽팽하고 긴장된 형태
+    shape: {
+      borderRadius: '40% 60% 35% 65% / 60% 38% 65% 35%',
+      borderRadiusAlt: '55% 45% 50% 50% / 45% 55% 50% 50%',
+    },
+    face: { eyes: 'angry', mouth: 'wavy' },
   },
   fear: {
     jellyColor: '#E6E6FA',
@@ -81,7 +103,12 @@ export const EMOTION_THEME: Record<EmotionType, {
     bgGradientEnd: '#E6E6FA',
     label: '불안',
     message: '마음에 불안이 감도는 느낌이에요',
-    face: { eyes: 'o o', mouth: 'o-mouth' },
+    // 떨리는형: 불안정하고 미세하게 흔들리는 형태
+    shape: {
+      borderRadius: '58% 42% 48% 52% / 52% 58% 42% 48%',
+      borderRadiusAlt: '42% 58% 55% 45% / 48% 42% 58% 52%',
+    },
+    face: { eyes: 'scared', mouth: 'o-mouth' },
   },
   disgust: {
     jellyColor: '#B5D8C7',
@@ -89,6 +116,11 @@ export const EMOTION_THEME: Record<EmotionType, {
     bgGradientEnd: '#B5D8C7',
     label: '불쾌',
     message: '마음에 거슬리는 느낌이 있어요',
-    face: { eyes: '•  •', mouth: 'flat' },
+    // 비대칭형: 한쪽으로 치우친 형태
+    shape: {
+      borderRadius: '70% 30% 55% 45% / 40% 65% 35% 60%',
+      borderRadiusAlt: '50% 50% 65% 35% / 60% 40% 55% 45%',
+    },
+    face: { eyes: 'squint', mouth: 'flat' },
   },
 };

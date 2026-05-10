@@ -1,9 +1,9 @@
 import { create } from 'zustand';
-import { devtools } from 'zustand/middleware';
+import { devtools, persist } from 'zustand/middleware';
 
 import type { JellyState, JellyFace } from '@/types/physics';
 import type { EmotionType, AnalysisResponse } from '@/types/emotion';
-import { EMOTION_COLORS, JELLY_COLOR } from '@/lib/constants/emotion';
+import { JELLY_COLOR } from '@/lib/constants/emotion';
 import { diaryStore } from '@/stores/diaryStore';
 
 // 상태 전이 맵 (유효한 전이만 정의)
@@ -107,7 +107,8 @@ interface JellyStoreState {
 // @MX:SPEC: SPEC-JELLY-001 REQ-UBI-003, REQ-STA-001~004, REQ-UNW-004
 export const jellyStore = create<JellyStoreState>()(
   devtools(
-    (set, get) => ({
+    persist(
+      (set, get) => ({
       // 초기 상태
       currentState: 'idle',
 
@@ -222,12 +223,11 @@ export const jellyStore = create<JellyStoreState>()(
       },
 
       // M1: 감정 분석 결과 추가
-      // M2: emotionColor도 감정에 맞게 자동 업데이트
+      // emotionColor는 구슬 섭취 완료 후 page.tsx에서 적용
       // diaryStore에도 일기 엔트리로 자동 저장
       addEmotionResult: (result: AnalysisResponse) => {
         set((state) => ({
           emotionHistory: [...state.emotionHistory, result],
-          emotionColor: EMOTION_COLORS[result.emotion],
         }));
 
         // diaryStore에 일기 엔트리로 저장
@@ -247,6 +247,31 @@ export const jellyStore = create<JellyStoreState>()(
         set({ lastInputText: text });
       },
     }),
+    {
+      name: 'jelly-storage',
+      // @MX:NOTE: 감정 관련 필드 + 상태 머신/구슬 개수 저장 (REQ-UBI-003)
+      // @MX:REASON: 리프레시 후에도 사용자 경험 유지
+      partialize: (state) => ({
+        lastEmotion: state.lastEmotion,
+        emotionColor: state.emotionColor,
+        emotionHistory: state.emotionHistory,
+        currentState: state.currentState,
+        beadCount: state.beadCount,
+      }),
+      migrate: (persistedState: unknown, version: number) => {
+        // 버전 0 (기존) → 1 마이그레이션
+        const state = persistedState as JellyStoreState | undefined;
+        if (version === 0 && state) {
+          return {
+            ...state,
+            currentState: state.currentState || 'idle',
+            beadCount: state.beadCount ?? 0,
+          };
+        }
+        return state;
+      },
+    },
+    ),
     {
       name: 'jellyStore',
     },

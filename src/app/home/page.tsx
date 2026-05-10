@@ -115,9 +115,13 @@ export default function HomePage() {
   useEffect(() => {
     if (uiState === 'beads' && currentState === 'satisfied') {
       // 구슬을 모두 먹은 후 젤리 감정 변형 적용
-      setJellyVisualEmotion(lastEmotion);
-      setJellyVisualColor(EMOTION_COLORS[lastEmotion]);
-      jellyStore.getState().setEmotionColor(EMOTION_COLORS[lastEmotion]);
+      // setState를 effect 본문에서 직접 호출하지 않도록 타이머로 딜스패 적용
+      setTimeout(() => {
+        setJellyVisualEmotion(lastEmotion);
+        setJellyVisualColor(EMOTION_COLORS[lastEmotion]);
+        jellyStore.getState().setEmotionColor(EMOTION_COLORS[lastEmotion]);
+      }, 0);
+
       const timer = setTimeout(() => {
         setUiState('report');
       }, SATISFIED_DISPLAY_MS);
@@ -292,22 +296,22 @@ export default function HomePage() {
 
         {/* Emotion Beads Canvas (decorative) */}
         <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
-          <div className="absolute top-[30%] left-[25%] w-6 h-6 rounded-full bg-yellow-200 border-2 border-yellow-300 shadow-sm flex items-center justify-center animate-pulse pointer-events-auto cursor-pointer hover:scale-110 transition-transform">
+          <div className="absolute top-[30%] left-[25%] w-6 h-6 rounded-full bg-yellow-200 border-2 border-yellow-300 shadow-sm flex items-center justify-center jelly-float pointer-events-auto cursor-pointer hover:scale-110 transition-transform" style={{ animationDelay: '0s' }}>
             <div className="flex gap-0.5">
               <div className="w-1 h-1 bg-on-surface-variant rounded-full"></div>
               <div className="w-1 h-1 bg-on-surface-variant rounded-full"></div>
             </div>
           </div>
-          <div className="absolute top-[45%] right-[20%] w-4 h-4 rounded-full bg-jelly-sad border-2 border-blue-200 shadow-sm flex items-center justify-center pointer-events-auto cursor-pointer hover:scale-110 transition-transform">
+          <div className="absolute top-[45%] right-[20%] w-4 h-4 rounded-full bg-jelly-sad border-2 border-blue-200 shadow-sm flex items-center justify-center jelly-float pointer-events-auto cursor-pointer hover:scale-110 transition-transform" style={{ animationDelay: '1s' }}>
             <div className="w-1 h-0.5 bg-on-surface-variant rounded-full"></div>
           </div>
-          <div className="absolute bottom-[45%] left-[30%] w-5 h-5 rounded-full bg-jelly-anger border-2 border-red-200 shadow-sm flex items-center justify-center pointer-events-auto cursor-pointer hover:scale-110 transition-transform">
+          <div className="absolute bottom-[45%] left-[30%] w-5 h-5 rounded-full bg-jelly-anger border-2 border-red-200 shadow-sm flex items-center justify-center jelly-float pointer-events-auto cursor-pointer hover:scale-110 transition-transform" style={{ animationDelay: '2s' }}>
             <div className="flex gap-0.5">
               <div className="w-1 h-1 bg-white rounded-full"></div>
               <div className="w-1 h-1 bg-white rounded-full"></div>
             </div>
           </div>
-          <div className="absolute top-[20%] right-[40%] w-4 h-4 rounded-full bg-green-200 border-2 border-green-300 shadow-sm flex items-center justify-center pointer-events-auto cursor-pointer hover:scale-110 transition-transform">
+          <div className="absolute top-[20%] right-[40%] w-4 h-4 rounded-full bg-green-200 border-2 border-green-300 shadow-sm flex items-center justify-center jelly-float pointer-events-auto cursor-pointer hover:scale-110 transition-transform" style={{ animationDelay: '1.5s' }}>
             <div className="w-1.5 h-1.5 border-t border-on-surface-variant rounded-full"></div>
           </div>
         </div>

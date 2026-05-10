@@ -17,11 +17,6 @@ interface BeadInfo {
   color: string;
 }
 
-type BeadBody = Matter.Body & {
-  plugin?: Record<string, unknown>;
-  gravityScale?: number;
-};
-
 /**
  * 구슬 그룹 관리 컴포넌트
  * count가 증가할 때만 새 구슬을 생성하고, 물리엔진에서 제거된 구슬은 자동 필터링
@@ -60,13 +55,10 @@ export function BeadGroup({ count, engine, emotion }: BeadGroupProps) {
         friction: 0.1,
         restitution: 0.7,
         density: 0.001,
-      }) as BeadBody;
+      });
 
-      // 중력 배율 0.5 (가벼운 부유감, REQ-UBI-002)
-      bead.plugin = { ...bead.plugin, gravityScale: 0.5 };
-      if ('gravityScale' in bead) {
-        bead.gravityScale = 0.5;
-      }
+      // @MX:NOTE: [AUTO] 중력 스케일 제거 - usePhysicsInit의 부유력으로만 떠다니는 효과 구현
+      // @MX:REASON: gravityScale(0.5) + 부유력(-0.6) = 순상향력 버그 (REQ-UBI-002)
 
       Matter.Composite.add(engine.world, bead);
       newInfos.set(bead.id, { id: bead.id, radius: size / 2, color });

@@ -7,11 +7,12 @@ import type { EmotionResult } from '@/types/emotion';
 import { emotionSchema, analysisResponseSchema } from '@/lib/ai/schemas';
 import { mockAnalyze } from '@/lib/ai/mockAnalyzer';
 
-// @MX:NOTE: 전체 작업 타임아웃 (재시도 포함 25초)
-const API_TIMEOUT_MS = 25_000;
+// @MX:NOTE: 전체 작업 타임아웃 (재시도 포함 95초)
+const API_TIMEOUT_MS = 95_000;
 
-// @MX:NOTE: 모델당 타임아웃 - 폴백 체인 총 시간이 클라이언트 타임아웃(25s) 내이어야 함
-const PER_MODEL_TIMEOUT_MS = 8_000;
+// @MX:NOTE: 모델별 타임아웃 - glm-4.5-flash 권장 60-120초, 폴백 glm-4-plus는 더 빠름
+const FLASH_TIMEOUT_MS = 60_000;
+const FALLBACK_TIMEOUT_MS = 30_000;
 
 // @MX:NOTE: 503 재시도 대기 시간
 const RETRY_DELAY_MS = 3_000;
@@ -119,17 +120,17 @@ export async function analyzeEmotion(text: string): Promise<EmotionResult> {
         await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY_MS));
       }
 
-      // 1차: glm-4.5-flash (빠른 응답, 8s 타임아웃)
+      // 1차: glm-4.5-flash (빠른 응답, 60s 타임아웃)
       const ctrl1 = new AbortController();
-      const timer1 = setTimeout(() => ctrl1.abort(), PER_MODEL_TIMEOUT_MS);
+      const timer1 = setTimeout(() => ctrl1.abort(), FLASH_TIMEOUT_MS);
       let result = await callModel(text, 'glm-4.5-flash', apiKey, baseUrl, ctrl1.signal);
       clearTimeout(timer1);
 
-      // 2차: glm-4-plus 폴백 (안정적, 8s 타임아웃)
+      // 2차: glm-4-plus 폴백 (안정적, 30s 타임아웃)
       if (!result.ok) {
         console.warn(`glm-4.5-flash 1차 실패(${result.status}), glm-4-plus 2차 폴백`);
         const ctrl2 = new AbortController();
-        const timer2 = setTimeout(() => ctrl2.abort(), PER_MODEL_TIMEOUT_MS);
+        const timer2 = setTimeout(() => ctrl2.abort(), FALLBACK_TIMEOUT_MS);
         result = await callModel(text, 'glm-4-plus', apiKey, baseUrl, ctrl2.signal);
         clearTimeout(timer2);
       }
