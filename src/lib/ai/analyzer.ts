@@ -27,11 +27,15 @@ const EMOTION_KO: Record<EmotionType, string> = {
   anger: '분노',
   fear: '공포',
   disgust: '혐오',
+  surprise: '놀람',
+  love: '사랑',
+  gratitude: '감사',
+  hope: '희망',
 };
 
 // @MX:NOTE: 시스템 프롬프트 - 반드시 5가지 감정 중 하나만 반환
 const SYSTEM_PROMPT =
-  'Analyze the emotion of the Korean text. Return ONLY this JSON, no other text: {"emotion":"joy","confidence":0.9}. Emotion MUST be exactly one of: joy, sadness, anger, fear, disgust. Never use "neutral" or any other value. If unsure, pick the closest match.';
+  'Analyze the emotion of the Korean text. Return ONLY this JSON, no other text: {"emotion":"joy","confidence":0.9}. Emotion MUST be exactly one of: joy, sadness, anger, fear, disgust, surprise, love, gratitude, hope. Never use "neutral" or any other value. If unsure, pick the closest match.';
 
 // @MX:WARN: API 키가 클라이언트 번들에 노출됨 - NEXT_PUBLIC_ 접두사 필요
 // @MX:REASON: Static Export 환경에서 서버 사이드 env 접근 불가, 빌드타임 인라인

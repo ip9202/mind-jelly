@@ -74,9 +74,11 @@ export default function HomePage() {
   const isAnalyzing = jellyStore((s) => s.isAnalyzing);
   const jellyName = jellyStore((s) => s.jellyName);
 
-  // M4-T5: Toss WebView 분기 처리
-  const isWebView = tossStore((s) => s.isWebView);
+  // M4-T5: Toss WebView 사용자 정보 (감정 리포트 개인화)
   const userInfo = tossStore((s) => s.userInfo);
+
+  // 감정 리포트에 표시할 사용자 이름 (WebView > 온보딩 jellyName)
+  const userName = userInfo?.name || (jellyName && jellyName !== '내 젤리' ? jellyName : null);
 
   // 물리 엔진 초기화 훅
   const { engineRef, initPhysics } = usePhysicsInit({
@@ -165,11 +167,11 @@ export default function HomePage() {
 
   // 감정 분포 계산 (최근 분석 기록 기준)
   const emotionDistribution = useMemo(() => {
-    const emotions: EmotionType[] = ['joy', 'sadness', 'anger', 'fear', 'disgust'];
+    const emotions: EmotionType[] = ['joy', 'sadness', 'anger', 'fear', 'disgust', 'surprise', 'love', 'gratitude', 'hope'];
     if (emotionHistory.length === 0) {
       return emotions.map((e) => ({ emotion: e, count: e === 'joy' ? 1 : 0 }));
     }
-    const counts: Record<EmotionType, number> = { joy: 0, sadness: 0, anger: 0, fear: 0, disgust: 0 };
+    const counts: Record<EmotionType, number> = { joy: 0, sadness: 0, anger: 0, fear: 0, disgust: 0, surprise: 0, love: 0, gratitude: 0, hope: 0 };
     emotionHistory.forEach((r) => { counts[r.emotion] = (counts[r.emotion] || 0) + 1; });
     return emotions.map((e) => ({ emotion: e, count: counts[e] }));
   }, [emotionHistory]);
@@ -219,15 +221,6 @@ export default function HomePage() {
         <div className="flex items-center gap-2">
           <span className="material-symbols-outlined text-primary text-3xl" style={{ fontVariationSettings: "'FILL' 1" }}>bubble_chart</span>
           <h1 className="font-dongle text-4xl leading-none text-primary tracking-tight">Mind Jelly</h1>
-          {jellyName && (
-            <span className="font-gowun text-sm text-on-surface-variant ml-1">{jellyName}</span>
-          )}
-          {/* M4-T5: WebView 인사말 */}
-          {isWebView && userInfo && (
-            <span className="font-gowun text-sm text-on-surface-variant ml-2">
-              {userInfo.name}님, 반가워요!
-            </span>
-          )}
         </div>
         {uiState === 'input' && !isAnalyzing ? (
           <button
@@ -380,8 +373,10 @@ export default function HomePage() {
                   <span className="material-symbols-outlined text-primary text-lg" style={{ fontVariationSettings: "'FILL' 1" }}>auto_awesome</span>
                   <span className="font-jakarta text-xs font-semibold text-text-primary">오늘의 감정 리포트</span>
                 </div>
-                <p className="font-gowun text-sm text-text-primary leading-relaxed">
-                  {currentTheme.message}
+                <p className="font-gamja text-base text-text-primary leading-relaxed">
+                  {userName
+                    ? `${userName}님, ${currentTheme.message}`
+                    : currentTheme.message}
                 </p>
                 <div className="flex items-center gap-2 mt-3">
                   <span

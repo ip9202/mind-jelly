@@ -6,7 +6,7 @@
 // @MX:ANCHOR: 감정 타입 (다수 모듈에서 사용)
 // @MX:REASON: EmotionInput, analyzer, API route, jellyStore 등에서 참조
 // @MX:SPEC: SPEC-JELLY-002 M1
-export type EmotionType = 'joy' | 'sadness' | 'anger' | 'fear' | 'disgust';
+export type EmotionType = 'joy' | 'sadness' | 'anger' | 'fear' | 'disgust' | 'surprise' | 'love' | 'gratitude' | 'hope';
 
 // @MX:NOTE: 감정 분석 결과
 export interface EmotionResult {

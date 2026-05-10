@@ -56,24 +56,28 @@
   --color-outline-variant: #d3c3c5;
 
   /* Jelly emotion colors */
-  --color-jelly-base: #FFD1DC;
-  --color-jelly-anger: #FFB3A7;
-  --color-jelly-sad: #AEC6CF;
-  --color-jelly-tired: #E6E6FA;
-  --color-jelly-fear: #E6E6FA;
-  --color-jelly-disgust: #B5D8C7;
+  --color-jelly-base: #FFB7C5;
+  --color-jelly-anger: #F28B82;
+  --color-jelly-sad: #7EB8D8;
+  --color-jelly-tired: #B39DDB;
+  --color-jelly-fear: #B39DDB;
+  --color-jelly-disgust: #81C784;
+  --color-jelly-surprise: #FFD93D;
+  --color-jelly-love: #FF6B8A;
+  --color-jelly-gratitude: #FFB347;
+  --color-jelly-hope: #5BC0EB;
 
   /* Emotion background gradients */
   --color-emotion-bg-joy-start: #FFF0F3;
-  --color-emotion-bg-joy-end: #FFD1DC;
-  --color-emotion-bg-sadness-start: #EEF2F5;
-  --color-emotion-bg-sadness-end: #AEC6CF;
-  --color-emotion-bg-anger-start: #FFF0ED;
-  --color-emotion-bg-anger-end: #FFB3A7;
-  --color-emotion-bg-fear-start: #F0EEF5;
-  --color-emotion-bg-fear-end: #E6E6FA;
-  --color-emotion-bg-disgust-start: #EEF5EF;
-  --color-emotion-bg-disgust-end: #B5D8C7;
+  --color-emotion-bg-joy-end: #FFB7C5;
+  --color-emotion-bg-sadness-start: #E8F1F7;
+  --color-emotion-bg-sadness-end: #7EB8D8;
+  --color-emotion-bg-anger-start: #FDECEA;
+  --color-emotion-bg-anger-end: #F28B82;
+  --color-emotion-bg-fear-start: #EDE7F6;
+  --color-emotion-bg-fear-end: #B39DDB;
+  --color-emotion-bg-disgust-start: #E8F5E9;
+  --color-emotion-bg-disgust-end: #81C784;
 
   /* Background variations */
   --color-bg-base: #FAF8F5;

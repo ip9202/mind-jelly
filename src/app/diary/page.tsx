@@ -41,6 +41,30 @@ const EMOTION_UI: Record<
     label: '혐오',
     dot: 'bg-jelly-tired',
   },
+  surprise: {
+    bg: 'bg-jelly-surprise',
+    icon: 'sentiment_surprised',
+    label: '놀람',
+    dot: 'bg-jelly-surprise',
+  },
+  love: {
+    bg: 'bg-jelly-love',
+    icon: 'favorite',
+    label: '사랑',
+    dot: 'bg-jelly-love',
+  },
+  gratitude: {
+    bg: 'bg-jelly-gratitude',
+    icon: 'sentiment_very_satisfied',
+    label: '감사',
+    dot: 'bg-jelly-gratitude',
+  },
+  hope: {
+    bg: 'bg-jelly-hope',
+    icon: 'wb_sunny',
+    label: '희망',
+    dot: 'bg-jelly-hope',
+  },
 };
 
 // 요일 헤더
@@ -179,6 +203,10 @@ export default function DiaryPage() {
       'anger',
       'fear',
       'disgust',
+      'surprise',
+      'love',
+      'gratitude',
+      'hope',
     ];
 
     return Array.from({ length: 7 }, (_, i) => {
@@ -390,7 +418,7 @@ export default function DiaryPage() {
 
           {/* 범례 */}
           <div className="mt-[16px] flex justify-center gap-[24px]">
-            {(['joy', 'sadness', 'anger', 'fear'] as EmotionType[]).map(
+            {(['joy', 'sadness', 'anger', 'fear', 'disgust', 'surprise', 'love', 'gratitude', 'hope'] as EmotionType[]).map(
               (emotion) => (
                 <div key={emotion} className="flex items-center gap-1">
                   <div
@@ -423,32 +451,15 @@ function TimelineEntry({ entry }: { entry: DiaryEntry }) {
       >
         <span className="w-1.5 h-1.5 bg-white rounded-full" />
       </div>
-      <div className="flex justify-between items-start">
-        <div className="flex items-center gap-[8px]">
-          <span className="material-symbols-outlined text-secondary">
-            {ui.icon}
-          </span>
-          <div>
-            <p className="font-bold text-on-surface">{entry.text}</p>
-            <p className="text-[13px] text-on-surface-variant">
-              {formatTimeKo(entry.createdAt)}
-            </p>
-          </div>
-        </div>
-        <div
-          className={`w-10 h-10 ${ui.bg}/40 rounded-full flex items-center justify-center`}
-        >
-          <span
-            className={`material-symbols-outlined text-${ui.bg.replace('bg-', '')}`}
-            style={{ fontVariationSettings: "'FILL' 1" }}
-            aria-hidden="true"
-          >
-            {entry.emotion === 'joy'
-              ? 'sentiment_satisfied'
-              : entry.emotion === 'anger'
-                ? 'mood_bad'
-                : 'mood'}
-          </span>
+      <div className="flex items-center gap-[8px]">
+        <span className="material-symbols-outlined text-secondary">
+          {ui.icon}
+        </span>
+        <div>
+          <p className="font-bold text-on-surface">{entry.text}</p>
+          <p className="text-[13px] text-on-surface-variant">
+            {formatTimeKo(entry.createdAt)}
+          </p>
         </div>
       </div>
     </article>

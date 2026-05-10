@@ -10,11 +10,15 @@ import type { EmotionType } from '@/types/emotion';
 // @MX:NOTE: 기본 감정 색상 매핑
 // @MX:SPEC: REQ-EVT-005
 export const EMOTION_COLORS = {
-  joy: '#FFD93D', // 기쁨: 밝은 노란색
-  sadness: '#6BCB77', // 슬픔: 차분한 초록색
-  anger: '#FF6B6B', // 분노: 강렬한 빨간색
-  fear: '#4D96FF', // 공포: 시원한 파란색
-  disgust: '#A8E6CF', // 혐오: 연한 민트색
+  joy: '#FFB7C5', // 평온: 벚꽃핑크
+  sadness: '#7EB8D8', // 우울: 하늘파랑
+  anger: '#F28B82', // 분노: 산호빨강
+  fear: '#B39DDB', // 불안: 보라라벤더
+  disgust: '#81C784', // 혐오: 청록그린
+  surprise: '#FFD93D', // 놀람: 앰버옐로우
+  love: '#FF6B8A', // 사랑: 따뜻한핑크
+  gratitude: '#FFB347', // 감사: 오렌지골드
+  hope: '#5BC0EB', // 희망: 하늘시안
 } as const;
 
 // @MX:NOTE: 구슬 색상 팔레트 (랜덤 선택용)
@@ -59,9 +63,9 @@ export const EMOTION_THEME: Record<EmotionType, {
   face: { eyes: string; mouth: string };
 }> = {
   joy: {
-    jellyColor: '#FFD1DC',
+    jellyColor: '#FFB7C5',
     bgGradientStart: '#FFF0F3',
-    bgGradientEnd: '#FFD1DC',
+    bgGradientEnd: '#FFB7C5',
     label: '평온',
     message: '마음이 평온한 상태예요',
     // 둥근형: 부드럽고 풍만한 형태
@@ -72,9 +76,9 @@ export const EMOTION_THEME: Record<EmotionType, {
     face: { eyes: 'happy', mouth: 'smile' },
   },
   sadness: {
-    jellyColor: '#AEC6CF',
-    bgGradientStart: '#EEF2F5',
-    bgGradientEnd: '#AEC6CF',
+    jellyColor: '#7EB8D8',
+    bgGradientStart: '#E8F1F7',
+    bgGradientEnd: '#7EB8D8',
     label: '우울',
     message: '마음에 먹구름이 끼어있어요',
     // 처진형: 아래쪽으로 늘어진 형태
@@ -85,9 +89,9 @@ export const EMOTION_THEME: Record<EmotionType, {
     face: { eyes: 'sad', mouth: 'wave' },
   },
   anger: {
-    jellyColor: '#FFB3A7',
-    bgGradientStart: '#FFF0ED',
-    bgGradientEnd: '#FFB3A7',
+    jellyColor: '#F28B82',
+    bgGradientStart: '#FDECEA',
+    bgGradientEnd: '#F28B82',
     label: '분노',
     message: '마음에 뜨거운 감정이 올라왔어요',
     // 각진형: 팽팽하고 긴장된 형태
@@ -98,9 +102,9 @@ export const EMOTION_THEME: Record<EmotionType, {
     face: { eyes: 'angry', mouth: 'wavy' },
   },
   fear: {
-    jellyColor: '#E6E6FA',
-    bgGradientStart: '#F0EEF5',
-    bgGradientEnd: '#E6E6FA',
+    jellyColor: '#B39DDB',
+    bgGradientStart: '#EDE7F6',
+    bgGradientEnd: '#B39DDB',
     label: '불안',
     message: '마음에 불안이 감도는 느낌이에요',
     // 떨리는형: 불안정하고 미세하게 흔들리는 형태
@@ -111,9 +115,9 @@ export const EMOTION_THEME: Record<EmotionType, {
     face: { eyes: 'scared', mouth: 'o-mouth' },
   },
   disgust: {
-    jellyColor: '#B5D8C7',
-    bgGradientStart: '#EEF5EF',
-    bgGradientEnd: '#B5D8C7',
+    jellyColor: '#81C784',
+    bgGradientStart: '#E8F5E9',
+    bgGradientEnd: '#81C784',
     label: '불쾌',
     message: '마음에 거슬리는 느낌이 있어요',
     // 비대칭형: 한쪽으로 치우친 형태
@@ -122,5 +126,57 @@ export const EMOTION_THEME: Record<EmotionType, {
       borderRadiusAlt: '50% 50% 65% 35% / 60% 40% 55% 45%',
     },
     face: { eyes: 'squint', mouth: 'flat' },
+  },
+  surprise: {
+    jellyColor: '#FFD93D',
+    bgGradientStart: '#FFFDE7',
+    bgGradientEnd: '#FFD93D',
+    label: '놀람',
+    message: '마음에 깜짝 놀랄 일이 생겼어요',
+    // 약간 불규칙한 둥근형
+    shape: {
+      borderRadius: '60% 40% 55% 45% / 45% 55% 40% 60%',
+      borderRadiusAlt: '45% 55% 60% 40% / 55% 45% 50% 50%',
+    },
+    face: { eyes: 'wide', mouth: 'o' },
+  },
+  love: {
+    jellyColor: '#FF6B8A',
+    bgGradientStart: '#FFF0F3',
+    bgGradientEnd: '#FF6B8A',
+    label: '사랑',
+    message: '마음에 따뜻한 사랑이 가득해요',
+    // 부드러운 하트형
+    shape: {
+      borderRadius: '68% 32% 62% 38% / 38% 62% 38% 62%',
+      borderRadiusAlt: '38% 62% 45% 55% / 60% 40% 55% 45%',
+    },
+    face: { eyes: 'heart', mouth: 'smile' },
+  },
+  gratitude: {
+    jellyColor: '#FFB347',
+    bgGradientStart: '#FFF8E1',
+    bgGradientEnd: '#FFB347',
+    label: '감사',
+    message: '마음에 감사한 마음이 피어났어요',
+    // 포근한 둥근형
+    shape: {
+      borderRadius: '62% 38% 58% 42% / 42% 58% 38% 62%',
+      borderRadiusAlt: '48% 52% 52% 48% / 52% 48% 55% 45%',
+    },
+    face: { eyes: 'crescent', mouth: 'grin' },
+  },
+  hope: {
+    jellyColor: '#5BC0EB',
+    bgGradientStart: '#E1F5FE',
+    bgGradientEnd: '#5BC0EB',
+    label: '희망',
+    message: '마음에 밝은 희망이 빛나고 있어요',
+    // 위로 뻗는 타원형
+    shape: {
+      borderRadius: '50% 50% 55% 45% / 38% 55% 45% 62%',
+      borderRadiusAlt: '45% 55% 48% 52% / 55% 42% 58% 45%',
+    },
+    face: { eyes: 'sparkle', mouth: 'beam' },
   },
 };

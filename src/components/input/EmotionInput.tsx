@@ -20,6 +20,10 @@ const EMOTION_KO: Record<EmotionType, string> = {
   anger: '분노',
   fear: '공포',
   disgust: '혐오',
+  surprise: '놀람',
+  love: '사랑',
+  gratitude: '감사',
+  hope: '희망',
 };
 
 /**

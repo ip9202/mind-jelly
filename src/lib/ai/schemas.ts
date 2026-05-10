@@ -7,7 +7,7 @@ import { z } from 'zod';
 // @MX:ANCHOR: 감정 타입 검증 스키마
 // @MX:REASON: analyzer, API route, EmotionInput 등에서 응답 검증에 사용
 // @MX:SPEC: SPEC-JELLY-002 M1-T2
-export const emotionSchema = z.enum(['joy', 'sadness', 'anger', 'fear', 'disgust']);
+export const emotionSchema = z.enum(['joy', 'sadness', 'anger', 'fear', 'disgust', 'surprise', 'love', 'gratitude', 'hope']);
 
 // @MX:NOTE: 감정 분석 응답 검증 스키마
 export const analysisResponseSchema = z.object({
