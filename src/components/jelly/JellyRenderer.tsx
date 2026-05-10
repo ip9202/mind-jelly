@@ -2,7 +2,9 @@
 
 import { hexToRgba } from '@/lib/utils/color';
 import { JELLY_COLOR, EMOTION_THEME, JELLY_DEFAULT_SHAPE } from '@/lib/constants/emotion';
+import { JELLY_SHAPE_CONFIGS } from '@/lib/constants/jellyShapes';
 import type { EmotionType } from '@/types/emotion';
+import type { JellyShape } from '@/types/physics';
 
 interface JellyRendererProps {
   bodies: Array<{ position: { x: number; y: number }; circleRadius?: number }>;
@@ -12,9 +14,14 @@ interface JellyRendererProps {
   emotionColor?: string;
   // 감정 표정 (활성화 시 face prop 대신 감정 표정 렌더링)
   emotion?: EmotionType | null;
+  // 사용자가 선택한 젤리 외형 모양 (기본값: 'circle')
+  jellyShape?: JellyShape;
 }
 
-export function JellyRenderer({ bodies, face, emotionColor, emotion }: JellyRendererProps) {
+// @MX:NOTE: clipPath ID는 단일 젤리 인스턴스 가정으로 고정
+const JELLY_CLIP_PATH_ID = 'jelly-shape-clip';
+
+export function JellyRenderer({ bodies, face, emotionColor, emotion, jellyShape }: JellyRendererProps) {
   if (bodies.length === 0) return null;
 
   const jelly = bodies[0];
@@ -35,7 +42,13 @@ export function JellyRenderer({ bodies, face, emotionColor, emotion }: JellyRend
   const borderRadiusAlt = currentShape.borderRadiusAlt || borderRadius;
 
   // @MX:NOTE: 800ms 트랜지션 (GPU 컴포지팅, 60fps 유지)
-  const transitionStyle = 'background-color 800ms ease-in-out, border-radius 800ms ease-in-out, box-shadow 800ms ease-in-out';
+  const transitionStyle = 'background-color 800ms ease-in-out, border-radius 800ms ease-in-out, box-shadow 800ms ease-in-out, clip-path 800ms ease-in-out';
+
+  // 사용자가 선택한 모양 (circle은 clipPath 없이 border-radius만 사용)
+  const selectedShape: JellyShape = jellyShape || 'circle';
+  const shapeConfig = JELLY_SHAPE_CONFIGS[selectedShape];
+  const useClipPath = selectedShape !== 'circle';
+  const clipPathStyle = useClipPath ? `url(#${JELLY_CLIP_PATH_ID})` : undefined;
 
   return (
     <div
@@ -48,6 +61,20 @@ export function JellyRenderer({ bodies, face, emotionColor, emotion }: JellyRend
         height: r * 5,
       }}
     >
+      {/* clipPath 정의 (objectBoundingBox 좌표계 0~1) */}
+      {useClipPath && (
+        <svg
+          aria-hidden
+          style={{ position: 'absolute', width: 0, height: 0, overflow: 'hidden' }}
+        >
+          <defs>
+            <clipPath id={JELLY_CLIP_PATH_ID} clipPathUnits="objectBoundingBox">
+              <path d={shapeConfig.path} />
+            </clipPath>
+          </defs>
+        </svg>
+      )}
+
       {/* 글로우 효과 - 감정별 색상 외곽광 */}
       <div
         data-testid="jelly-glow"
@@ -55,7 +82,8 @@ export function JellyRenderer({ bodies, face, emotionColor, emotion }: JellyRend
         style={{
           borderRadius,
           backgroundColor: glowColor,
-          transition: 'background-color 800ms ease-in-out, border-radius 800ms ease-in-out',
+          clipPath: clipPathStyle,
+          transition: 'background-color 800ms ease-in-out, border-radius 800ms ease-in-out, clip-path 800ms ease-in-out',
         }}
       />
 
@@ -68,6 +96,7 @@ export function JellyRenderer({ bodies, face, emotionColor, emotion }: JellyRend
           '--jelly-br1': borderRadius,
           '--jelly-br2': borderRadiusAlt,
           borderRadius,
+          clipPath: clipPathStyle,
           backgroundColor: currentColor,
           opacity: 0.88,
           // 글래스모피즘 효과

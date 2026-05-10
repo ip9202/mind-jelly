@@ -72,6 +72,7 @@ export default function HomePage() {
   const emotionHistory = jellyStore((s) => s.emotionHistory);
   const isAnalyzing = jellyStore((s) => s.isAnalyzing);
   const jellyName = jellyStore((s) => s.jellyName);
+  const jellyShape = jellyStore((s) => s.jellyShape);
 
   // M4-T5: Toss WebView 사용자 정보 (감정 리포트 개인화)
   const userInfo = tossStore((s) => s.userInfo);
@@ -324,6 +325,7 @@ export default function HomePage() {
                         animation={0}
                         emotionColor={jellyVisualColor}
                         emotion={jellyVisualEmotion}
+                        jellyShape={jellyShape}
                       />
                       {engineRef.current && (
                         <BeadGroup count={beadCount} engine={engineRef.current} emotion={lastEmotion} />

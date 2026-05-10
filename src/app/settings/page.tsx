@@ -6,6 +6,8 @@ import NavMenu from '@/components/layout/NavMenu';
 import { getMyProfile, setNickname } from '@/lib/supabase/db';
 import { diaryStore } from '@/stores/diaryStore';
 import { jellyStore } from '@/stores/jellyStore';
+import { JELLY_SHAPE_CONFIGS } from '@/lib/constants/jellyShapes';
+import type { JellyShape } from '@/types/physics';
 
 function ProfileSection() {
   const supabaseUserId = diaryStore((s) => s.supabaseUserId);
@@ -120,6 +122,64 @@ function ProfileSection() {
   );
 }
 
+function JellyShapeSection() {
+  const jellyShape = jellyStore((s) => s.jellyShape);
+  const setJellyShape = jellyStore((s) => s.setJellyShape);
+
+  // objectBoundingBox 0~1 path를 viewBox 0~100 path로 변환
+  const scalePath = (path: string) =>
+    path.replace(/(\d+\.\d+)/g, (n) => String(parseFloat(n) * 100));
+
+  const shapes = Object.keys(JELLY_SHAPE_CONFIGS) as JellyShape[];
+
+  return (
+    <section className="space-y-[8px]">
+      <h2 className="font-dongle text-5xl text-primary leading-none px-2">젤리 모양</h2>
+      <div className="glass-card rounded-lg p-[24px] shadow-[0_4px_20px_0_rgba(0,0,0,0.05)] border border-white/40">
+        <div className="grid grid-cols-3 gap-[12px]">
+          {shapes.map((shape) => {
+            const config = JELLY_SHAPE_CONFIGS[shape];
+            const isSelected = jellyShape === shape;
+            return (
+              <button
+                key={shape}
+                onClick={() => setJellyShape(shape)}
+                aria-label={`젤리 모양: ${config.label}`}
+                aria-pressed={isSelected}
+                className={`flex flex-col items-center gap-[6px] p-[12px] rounded-xl transition-all active:scale-95 ${
+                  isSelected
+                    ? 'bg-primary-container ring-2 ring-primary'
+                    : 'bg-surface-container/50 hover:bg-surface-container'
+                }`}
+              >
+                <svg width="44" height="44" viewBox="0 0 100 100" aria-hidden>
+                  <path
+                    d={scalePath(config.path)}
+                    fill={isSelected ? 'var(--color-primary)' : 'var(--color-on-surface-variant)'}
+                    opacity={isSelected ? 0.85 : 0.4}
+                  />
+                </svg>
+                <span
+                  className={`font-gowun text-[13px] ${
+                    isSelected
+                      ? 'text-on-primary-container font-bold'
+                      : 'text-on-surface-variant'
+                  }`}
+                >
+                  {config.label}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+        <p className="font-gowun text-[12px] text-on-surface-variant mt-[16px] text-center">
+          젤리의 기본 모양을 선택해보세요
+        </p>
+      </div>
+    </section>
+  );
+}
+
 export default function SettingsPage() {
   return (
     <div className="bg-background text-on-surface font-body-md min-h-screen overflow-x-hidden">
@@ -137,30 +197,8 @@ export default function SettingsPage() {
       <main className="mt-20 px-[20px] space-y-[12px]">
         <ProfileSection />
 
-        {/* Jelly Appearance Section */}
-        <section className="space-y-[8px]">
-          <h2 className="font-dongle text-5xl text-primary leading-none px-2">색상 테마</h2>
-          <div className="glass-card rounded-lg p-[24px] shadow-[0_4px_20px_0_rgba(0,0,0,0.05)] border border-white/40">
-            <div className="flex items-center gap-[24px]">
-              <div className="relative w-24 h-24 flex items-center justify-center">
-                <div className="w-20 h-20 bg-jelly-base rounded-full blur-[2px] jelly-float shadow-[inset_-4px_-8px_15px_rgba(255,255,255,0.6),0_8px_15px_rgba(0,0,0,0.05)] relative overflow-hidden">
-                  <div className="absolute top-1/3 left-1/4 w-2 h-1.5 bg-on-primary-container rounded-full opacity-60"></div>
-                  <div className="absolute top-1/3 right-1/4 w-2 h-1.5 bg-on-primary-container rounded-full opacity-60"></div>
-                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 w-4 h-1.5 bg-on-primary-container/40 rounded-full"></div>
-                </div>
-              </div>
-              <div className="grid grid-cols-3 gap-[16px] flex-1">
-                <button className="w-10 h-10 rounded-full bg-jelly-base ring-4 ring-primary-container border-2 border-white shadow-sm"></button>
-                <button className="w-10 h-10 rounded-full bg-jelly-tired border-2 border-white shadow-sm hover:scale-105 transition-transform"></button>
-                <button className="w-10 h-10 rounded-full bg-secondary-container border-2 border-white shadow-sm hover:scale-105 transition-transform"></button>
-                <button className="w-10 h-10 rounded-full bg-jelly-sad border-2 border-white shadow-sm hover:scale-105 transition-transform"></button>
-                <button className="w-10 h-10 rounded-full bg-tertiary-fixed border-2 border-white shadow-sm hover:scale-105 transition-transform"></button>
-                <button className="w-10 h-10 rounded-full bg-jelly-anger border-2 border-white shadow-sm hover:scale-105 transition-transform"></button>
-              </div>
-            </div>
-            <p className="text-on-surface-variant mt-[16px] text-center font-gamja text-lg">젤리의 기분에 맞춰 색상을 변경해보세요</p>
-          </div>
-        </section>
+        {/* Jelly Shape Section */}
+        <JellyShapeSection />
 
         {/* Notifications Section */}
         <section className="space-y-[8px]">

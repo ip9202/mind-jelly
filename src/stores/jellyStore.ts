@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 
-import type { JellyState, JellyFace } from '@/types/physics';
+import type { JellyState, JellyFace, JellyShape } from '@/types/physics';
 import type { EmotionType, AnalysisResponse } from '@/types/emotion';
 import { JELLY_COLOR } from '@/lib/constants/emotion';
 import { diaryStore } from '@/stores/diaryStore';
@@ -59,6 +59,9 @@ interface JellyStoreState {
   // 젤리 이름 (온보딩에서 설정, 영속 저장)
   jellyName: string;
 
+  // 젤리 외형 모양 (설정 페이지에서 변경, 영속 저장)
+  jellyShape: JellyShape;
+
   // 액션: 상태 전이
   transitionState: (newState: JellyState) => boolean;
 
@@ -100,6 +103,9 @@ interface JellyStoreState {
 
   // 액션: 젤리 이름 설정
   setJellyName: (name: string) => void;
+
+  // 액션: 젤리 모양 설정
+  setJellyShape: (shape: JellyShape) => void;
 }
 
 /**
@@ -143,6 +149,9 @@ export const jellyStore = create<JellyStoreState>()(
 
       // 젤리 이름 (온보딩에서 설정)
       jellyName: '',
+
+      // 젤리 외형 모양 (기본값: 원형)
+      jellyShape: 'circle',
 
       // 상태 전이 (가드 조건 검증)
       transitionState: (newState: JellyState) => {
@@ -260,6 +269,11 @@ export const jellyStore = create<JellyStoreState>()(
       setJellyName: (name: string) => {
         set({ jellyName: name });
       },
+
+      // 젤리 모양 설정
+      setJellyShape: (shape: JellyShape) => {
+        set({ jellyShape: shape });
+      },
     }),
     {
       name: 'jelly-storage',
@@ -269,6 +283,7 @@ export const jellyStore = create<JellyStoreState>()(
         lastEmotion: state.lastEmotion,
         emotionColor: state.emotionColor,
         currentState: state.currentState,
+        jellyShape: state.jellyShape,
       }),
       migrate: (persistedState: unknown, version: number) => {
         // 버전 0 (기존) → 1 마이그레이션

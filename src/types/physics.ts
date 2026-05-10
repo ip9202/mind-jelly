@@ -54,3 +54,7 @@ export interface JellyFace {
 
 // @MX:NOTE: 상태별 페이스 표현 맵
 export type JellyFaceMap = Record<JellyState, JellyFace>;
+
+// @MX:NOTE: 젤리 외형 모양 타입 (사용자 설정 가능, 두루뭉술한 형태)
+// @MX:REASON: 설정 페이지에서 사용자가 젤리 기본 모양을 선택할 수 있도록 6종 형태 제공
+export type JellyShape = 'circle' | 'star' | 'square' | 'triangle' | 'pentagon' | 'hexagon';
