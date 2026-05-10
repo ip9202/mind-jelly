@@ -121,6 +121,7 @@ function SearchTab({ supabaseUserId }: { supabaseUserId: string }) {
   }, [supabaseUserId]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     void loadRecent();
   }, [loadRecent]);
 
@@ -313,6 +314,7 @@ function ListTab({ supabaseUserId }: { supabaseUserId: string }) {
   }, [supabaseUserId]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     void load();
   }, [load]);
 

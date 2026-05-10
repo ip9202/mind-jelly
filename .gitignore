@@ -12,6 +12,11 @@
 
 # testing
 /coverage
+/test-results
+/playwright-report
+
+# moai logs
+.moai/logs/
 
 # next.js
 /.next/

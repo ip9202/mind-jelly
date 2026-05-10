@@ -171,8 +171,9 @@ export default function HomePage() {
   // 감정 테마 (동적 배경용)
   const currentTheme = EMOTION_THEME[lastEmotion];
 
-  // 감정이 바뀔 때마다 조언 1개 랜덤 선택 (useMemo로 effect 없이 계산)
+  // 감정이 바뀔 때마다 조언 1개 랜덤 선택
   const adviceIndex = useMemo(
+    // eslint-disable-next-line react-hooks/purity
     () => Math.floor(Math.random() * EMOTION_THEME[lastEmotion].advice.length),
     [lastEmotion],
   );
