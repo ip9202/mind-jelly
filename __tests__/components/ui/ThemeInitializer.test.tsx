@@ -1,35 +1,15 @@
 /**
  * ThemeInitializer 컴포넌트 테스트
- * 클라이언트에서 themeStore.initTheme() 호출
+ * 앱인토스: 항상 라이트모드 강제, dark 클래스 제거
  */
 import { render } from '@testing-library/react';
 import { ThemeInitializer } from '@/components/ui/ThemeInitializer';
-import { themeStore } from '@/stores/themeStore';
-
-// window.matchMedia 모킹 (themeStore.initTheme에서 사용)
-Object.defineProperty(window, 'matchMedia', {
-  writable: true,
-  value: jest.fn().mockImplementation((query: string) => ({
-    matches: false,
-    media: query,
-    onchange: null,
-    addListener: jest.fn(),
-    removeListener: jest.fn(),
-    addEventListener: jest.fn(),
-    removeEventListener: jest.fn(),
-    dispatchEvent: jest.fn(),
-  })),
-});
 
 describe('ThemeInitializer', () => {
   beforeEach(() => {
-    // 스토어 초기화
-    themeStore.setState({
-      theme: 'system',
-      resolvedTheme: 'light',
-    });
     jest.clearAllMocks();
     localStorage.clear();
+    document.documentElement.classList.remove('dark');
   });
 
   it('아무것도 렌더링하지 않는다', () => {
@@ -38,19 +18,17 @@ describe('ThemeInitializer', () => {
     expect(container.innerHTML).toBe('');
   });
 
-  it('마운트 시 initTheme을 호출한다', () => {
-    const initSpy = jest.spyOn(themeStore.getState(), 'initTheme');
-
+  it('마운트 시 dark 클래스를 제거한다', () => {
+    document.documentElement.classList.add('dark');
     render(<ThemeInitializer />);
 
-    expect(initSpy).toHaveBeenCalledTimes(1);
-
-    initSpy.mockRestore();
+    expect(document.documentElement.classList.contains('dark')).toBe(false);
   });
 
-  it('컴포넌트가 null을 반환한다', () => {
-    const { container } = render(<ThemeInitializer />);
+  it('localStorage에서 테마 설정을 제거한다', () => {
+    localStorage.setItem('mind-jelly-theme', 'dark');
+    render(<ThemeInitializer />);
 
-    expect(container.childNodes).toHaveLength(0);
+    expect(localStorage.getItem('mind-jelly-theme')).toBeNull();
   });
 });

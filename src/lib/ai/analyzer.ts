@@ -10,8 +10,8 @@ import { mockAnalyze } from '@/lib/ai/mockAnalyzer';
 // @MX:NOTE: 전체 작업 타임아웃 (재시도 포함 95초)
 const API_TIMEOUT_MS = 95_000;
 
-// @MX:NOTE: 모델별 타임아웃 - glm-4.5-flash 권장 60-120초, 폴백 glm-4-plus는 더 빠름
-const FLASH_TIMEOUT_MS = 60_000;
+// @MX:NOTE: 모델별 타임아웃 - glm-4-plus 기본 (안정적), glm-4.5-flash 폴백 (빠름)
+const PRIMARY_TIMEOUT_MS = 60_000;
 const FALLBACK_TIMEOUT_MS = 30_000;
 
 // @MX:NOTE: 503 재시도 대기 시간
@@ -120,18 +120,18 @@ export async function analyzeEmotion(text: string): Promise<EmotionResult> {
         await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY_MS));
       }
 
-      // 1차: glm-4.5-flash (빠른 응답, 60s 타임아웃)
+      // 1차: glm-4-plus (기본 모델, 안정적)
       const ctrl1 = new AbortController();
-      const timer1 = setTimeout(() => ctrl1.abort(), FLASH_TIMEOUT_MS);
-      let result = await callModel(text, 'glm-4.5-flash', apiKey, baseUrl, ctrl1.signal);
+      const timer1 = setTimeout(() => ctrl1.abort(), PRIMARY_TIMEOUT_MS);
+      let result = await callModel(text, 'glm-4-plus', apiKey, baseUrl, ctrl1.signal);
       clearTimeout(timer1);
 
-      // 2차: glm-4-plus 폴백 (안정적, 30s 타임아웃)
+      // 2차: glm-4.5-flash 폴백 (빠른 응답)
       if (!result.ok) {
-        console.warn(`glm-4.5-flash 1차 실패(${result.status}), glm-4-plus 2차 폴백`);
+        console.warn(`glm-4-plus 1차 실패(${result.status}), glm-4.5-flash 2차 폴백`);
         const ctrl2 = new AbortController();
         const timer2 = setTimeout(() => ctrl2.abort(), FALLBACK_TIMEOUT_MS);
-        result = await callModel(text, 'glm-4-plus', apiKey, baseUrl, ctrl2.signal);
+        result = await callModel(text, 'glm-4.5-flash', apiKey, baseUrl, ctrl2.signal);
         clearTimeout(timer2);
       }
 
@@ -141,7 +141,7 @@ export async function analyzeEmotion(text: string): Promise<EmotionResult> {
         if (result.status === 503 && attempt === 0) {
           continue;
         }
-        console.warn(`Z.AI API 최종 실패 (glm-4.5-flash + glm-4-plus 모두 실패) ${result.status}`);
+        console.warn(`Z.AI API 최종 실패 (glm-4-plus + glm-4.5-flash 모두 실패) ${result.status}`);
         throw new Error('AI 서비스가 혼잡합니다. 잠시 후 다시 이용해 주세요.');
       }
 

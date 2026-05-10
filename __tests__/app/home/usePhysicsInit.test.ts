@@ -147,7 +147,7 @@ describe('usePhysicsInit', () => {
     });
 
     // 젤리 바디 생성 확인
-    expect(mockBodiesCircle).toHaveBeenCalledWith(400, 180, 40, {
+    expect(mockBodiesCircle).toHaveBeenCalledWith(400, 240, 40, {
       label: 'jelly',
       restitution: 0.5,
       friction: 0.1,
@@ -463,7 +463,8 @@ describe('usePhysicsInit', () => {
       jest.advanceTimersByTime(3000);
     });
 
-    expect(mockTransitionState).toHaveBeenCalledWith('idle');
+    expect(mockTransitionState).toHaveBeenCalledWith('anticipation');
+    expect(mockTransitionState).toHaveBeenCalledWith('eating');
 
     jest.useRealTimers();
   });

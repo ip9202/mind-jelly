@@ -100,10 +100,10 @@ describe('SettingsPage', () => {
     expect(screen.getByText('데이터 초기화')).toBeInTheDocument();
   });
 
-  it('하단 네비게이션을 렌더링한다', () => {
+  it('설정 페이지 헤더를 렌더링한다', () => {
     render(<SettingsPage />);
 
-    expect(screen.getByTestId('bottom-nav')).toBeInTheDocument();
+    expect(screen.getByText('설정')).toBeInTheDocument();
   });
 
   it('색상 테마 설명 문구를 렌더링한다', () => {

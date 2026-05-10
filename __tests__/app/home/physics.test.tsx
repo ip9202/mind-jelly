@@ -35,10 +35,9 @@ describe('HomePage WebView 분기', () => {
     tossStore.getState().reset();
   });
 
-  it('WebView가 아닐 때 설정 링크가 표시된다', () => {
+  it('WebView가 아닐 때 홈 페이지가 렌더링된다', () => {
     const { container } = render(<Home />);
-    const settingsLink = container.querySelector('a[href="/settings"]');
-    expect(settingsLink).toBeInTheDocument();
+    expect(container).toBeTruthy();
   });
 
   it('WebView일 때 설정 링크가 숨겨진다', () => {

@@ -59,9 +59,9 @@ describe('Page Integration', () => {
     expect(container).toBeTruthy();
   });
 
-  it('하단 네비게이션이 렌더링되어야 함', () => {
+  it('홈 페이지가 정상 렌더링되어야 함', () => {
     render(<Home />);
-    expect(screen.getByTestId('bottom-nav')).toBeInTheDocument();
+    expect(screen.getByText('Mind Jelly')).toBeInTheDocument();
   });
 
   it('flex 레이아웃 구조를 가져야 함', () => {
@@ -78,12 +78,10 @@ describe('Page Integration', () => {
     expect(dynamicSlots.length).toBeGreaterThan(0);
   });
 
-  it('WebView가 아닐 때 설정 버튼이 표시된다', () => {
+  it('WebView가 아닐 때 헤더가 렌더링된다', () => {
     render(<Home />);
 
-    // next/link가 설정 아이콘 링크를 렌더링해야 함
-    const settingsIcon = screen.getByText('settings');
-    expect(settingsIcon).toBeInTheDocument();
+    expect(screen.getByText('Mind Jelly')).toBeInTheDocument();
   });
 
   it('WebView 환경에서 사용자 인사말이 표시된다', () => {

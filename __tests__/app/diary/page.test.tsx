@@ -107,10 +107,10 @@ describe('DiaryPage', () => {
     expect(screen.getByText('불안')).toBeInTheDocument();
   });
 
-  it('하단 네비게이션을 렌더링한다', () => {
+  it('감정 일기 헤더를 렌더링한다', () => {
     render(<DiaryPage />);
 
-    expect(screen.getByTestId('bottom-nav')).toBeInTheDocument();
+    expect(screen.getByText('오늘의 감정 일기')).toBeInTheDocument();
   });
 
   it('월 이동 버튼이 렌더링된다', () => {

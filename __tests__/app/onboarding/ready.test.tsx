@@ -5,32 +5,25 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
-// next/link 모킹
-jest.mock('next/link', () => {
-  return function MockLink({
-    children,
-    href,
-    className,
-  }: {
-    children: React.ReactNode;
-    href: string;
-    className?: string;
-  }) {
-    return (
-      <a href={href} className={className}>
-        {children}
-      </a>
-    );
-  };
-});
+// next/navigation 모킹
+const mockPush = jest.fn();
+jest.mock('next/navigation', () => ({
+  useRouter: () => ({ push: mockPush, replace: jest.fn() }),
+}));
+
+// jellyStore 모킹
+const mockSetJellyName = jest.fn();
+jest.mock('@/stores/jellyStore', () => ({
+  jellyStore: {
+    getState: () => ({ setJellyName: mockSetJellyName }),
+  },
+}));
 
 import ReadyPage from '@/app/onboarding/ready/page';
 
 describe('ReadyPage', () => {
-  it('페이지 타이틀을 렌더링한다', () => {
-    render(<ReadyPage />);
-
-    expect(screen.getByText('Mind Jelly')).toBeInTheDocument();
+  beforeEach(() => {
+    jest.clearAllMocks();
   });
 
   it('인사말을 렌더링한다', () => {
@@ -39,11 +32,34 @@ describe('ReadyPage', () => {
     expect(screen.getByText('준비 완료! 시작해볼까?')).toBeInTheDocument();
   });
 
-  it('시작 버튼이 /home으로 연결된다', () => {
+  it('시작 버튼이 렌더링된다', () => {
     render(<ReadyPage />);
 
-    const link = screen.getByRole('link', { name: '시작!' });
-    expect(link).toHaveAttribute('href', '/home');
+    expect(screen.getByRole('button', { name: '시작!' })).toBeInTheDocument();
+  });
+
+  it('시작 버튼 클릭 시 jellyName을 저장하고 /home으로 이동한다', async () => {
+    const user = userEvent.setup();
+    render(<ReadyPage />);
+
+    const input = screen.getByPlaceholderText('젤리 이름 지어주기');
+    await user.type(input, '몽실이');
+
+    const button = screen.getByRole('button', { name: '시작!' });
+    await user.click(button);
+
+    expect(mockSetJellyName).toHaveBeenCalledWith('몽실이');
+    expect(mockPush).toHaveBeenCalledWith('/home');
+  });
+
+  it('빈 이름일 때 기본값 "내 젤리"로 저장된다', async () => {
+    const user = userEvent.setup();
+    render(<ReadyPage />);
+
+    const button = screen.getByRole('button', { name: '시작!' });
+    await user.click(button);
+
+    expect(mockSetJellyName).toHaveBeenCalledWith('내 젤리');
   });
 
   it('젤리 이름 입력 필드를 렌더링한다', () => {
@@ -63,24 +79,10 @@ describe('ReadyPage', () => {
     expect(input).toHaveValue('몽실이');
   });
 
-  it('입력 안내 문구를 렌더링한다', () => {
-    render(<ReadyPage />);
-
-    expect(
-      screen.getByText('나만의 소중한 젤리에게 이름을 선물해주세요.'),
-    ).toBeInTheDocument();
-  });
-
   it('진행률 표시 3/3을 렌더링한다', () => {
     render(<ReadyPage />);
 
     expect(screen.getByText('3/3')).toBeInTheDocument();
-  });
-
-  it('파티 햇 아이콘을 표시한다', () => {
-    render(<ReadyPage />);
-
-    expect(screen.getByText('celebration')).toBeInTheDocument();
   });
 
   it('젤리 캐릭터 영역이 렌더링된다', () => {

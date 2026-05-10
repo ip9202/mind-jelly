@@ -41,8 +41,9 @@ describe('jellyStore M2 확장 - emotionColor', () => {
     });
   });
 
-  describe('addEmotionResult 시 emotionColor 자동 업데이트', () => {
-    it('joy 분석 결과 추가 시 emotionColor가 joy 색상으로 변경된다', () => {
+  describe('addEmotionResult 시 emotionHistory 업데이트', () => {
+    // emotionColor는 구슬 섭취 완료 후 page.tsx에서 setEmotionColor로 적용
+    it('분석 결과가 emotionHistory에 추가된다', () => {
       const result: AnalysisResponse = {
         emotion: 'joy',
         confidence: 0.95,
@@ -51,59 +52,11 @@ describe('jellyStore M2 확장 - emotionColor', () => {
 
       jellyStore.getState().addEmotionResult(result);
 
-      expect(jellyStore.getState().emotionColor).toBe(EMOTION_COLORS.joy);
-      expect(jellyStore.getState().lastEmotion).toBe('joy');
+      expect(jellyStore.getState().emotionHistory).toHaveLength(1);
+      expect(jellyStore.getState().emotionHistory[0].emotion).toBe('joy');
     });
 
-    it('sadness 분석 결과 추가 시 emotionColor가 sadness 색상으로 변경된다', () => {
-      const result: AnalysisResponse = {
-        emotion: 'sadness',
-        confidence: 0.9,
-        emotionKo: '슬픔',
-      };
-
-      jellyStore.getState().addEmotionResult(result);
-
-      expect(jellyStore.getState().emotionColor).toBe(EMOTION_COLORS.sadness);
-    });
-
-    it('anger 분석 결과 추가 시 emotionColor가 anger 색상으로 변경된다', () => {
-      const result: AnalysisResponse = {
-        emotion: 'anger',
-        confidence: 0.85,
-        emotionKo: '분노',
-      };
-
-      jellyStore.getState().addEmotionResult(result);
-
-      expect(jellyStore.getState().emotionColor).toBe(EMOTION_COLORS.anger);
-    });
-
-    it('fear 분석 결과 추가 시 emotionColor가 fear 색상으로 변경된다', () => {
-      const result: AnalysisResponse = {
-        emotion: 'fear',
-        confidence: 0.8,
-        emotionKo: '공포',
-      };
-
-      jellyStore.getState().addEmotionResult(result);
-
-      expect(jellyStore.getState().emotionColor).toBe(EMOTION_COLORS.fear);
-    });
-
-    it('disgust 분석 결과 추가 시 emotionColor가 disgust 색상으로 변경된다', () => {
-      const result: AnalysisResponse = {
-        emotion: 'disgust',
-        confidence: 0.75,
-        emotionKo: '혐오',
-      };
-
-      jellyStore.getState().addEmotionResult(result);
-
-      expect(jellyStore.getState().emotionColor).toBe(EMOTION_COLORS.disgust);
-    });
-
-    it('연속된 분석 결과에서 emotionColor가 마지막 감정 색상을 반영한다', () => {
+    it('연속된 분석 결과가 모두 history에 누적된다', () => {
       const results: AnalysisResponse[] = [
         { emotion: 'joy', confidence: 0.9, emotionKo: '기쁨' },
         { emotion: 'sadness', confidence: 0.8, emotionKo: '슬픔' },
@@ -112,8 +65,21 @@ describe('jellyStore M2 확장 - emotionColor', () => {
 
       results.forEach((r) => jellyStore.getState().addEmotionResult(r));
 
-      expect(jellyStore.getState().emotionColor).toBe(EMOTION_COLORS.anger);
       expect(jellyStore.getState().emotionHistory).toHaveLength(3);
+      expect(jellyStore.getState().emotionHistory[2].emotion).toBe('anger');
+    });
+
+    it('addEmotionResult는 emotionColor를 변경하지 않는다', () => {
+      const result: AnalysisResponse = {
+        emotion: 'joy',
+        confidence: 0.95,
+        emotionKo: '기쁨',
+      };
+
+      const beforeColor = jellyStore.getState().emotionColor;
+      jellyStore.getState().addEmotionResult(result);
+
+      expect(jellyStore.getState().emotionColor).toBe(beforeColor);
     });
   });
 });
