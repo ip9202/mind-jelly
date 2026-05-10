@@ -150,6 +150,41 @@ export async function getMyFriends(userId: string) {
   return data ?? [];
 }
 
+/** 받은 친구 요청 (대기 중) */
+// @MX:NOTE: [AUTO] pending 상태인 친구 요청 목록을 requester 정보와 함께 조회
+export async function getPendingFriendRequests(userId: string) {
+  const { data, error } = await supabase
+    .from('friendships')
+    .select('*, requester:users!requester_id(id, nickname, invite_code, avatar_emotion)')
+    .eq('receiver_id', userId)
+    .eq('status', 'pending');
+  if (error) throw error;
+  return data ?? [];
+}
+
+/** 친구 요청 거절 (삭제) */
+export async function rejectFriendRequest(requesterId: string, myId: string) {
+  const { error } = await supabase
+    .from('friendships')
+    .delete()
+    .eq('requester_id', requesterId)
+    .eq('receiver_id', myId);
+  if (error) throw error;
+}
+
+/** 보낸 친구 요청 상태 확인 */
+export async function checkFriendshipStatus(myId: string, targetId: string) {
+  const { data, error } = await supabase
+    .from('friendships')
+    .select('status')
+    .or(
+      `and(requester_id.eq.${myId},receiver_id.eq.${targetId}),and(requester_id.eq.${targetId},receiver_id.eq.${myId})`
+    )
+    .maybeSingle();
+  if (error && error.code !== 'PGRST116') throw error;
+  return data;
+}
+
 /** 친구의 공유 감정 피드 */
 export async function getFriendsFeed(friendIds: string[]) {
   if (friendIds.length === 0) return [];
