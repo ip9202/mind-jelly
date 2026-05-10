@@ -433,6 +433,20 @@ export default function DiaryPage() {
  */
 function TimelineEntry({ entry }: { entry: DiaryEntry }) {
   const ui = EMOTION_UI[entry.emotion];
+  const supabaseUserId = diaryStore((s) => s.supabaseUserId);
+  const [toggling, setToggling] = useState(false);
+
+  async function handleToggle() {
+    if (toggling || !supabaseUserId) return;
+    setToggling(true);
+    try {
+      await diaryStore.getState().toggleShare(entry.id, !entry.isShared);
+    } catch {
+      // 롤백은 store에서 처리됨
+    } finally {
+      setToggling(false);
+    }
+  }
 
   return (
     <article aria-label={`${ui.label} 감정 기록`} className="glass-card rounded-[20px] p-[16px] shadow-sm relative transition-all active:scale-[0.98]">
@@ -452,6 +466,29 @@ function TimelineEntry({ entry }: { entry: DiaryEntry }) {
           </p>
         </div>
       </div>
+      {supabaseUserId && (
+        <div className="flex justify-end mt-[8px]">
+          <button
+            onClick={handleToggle}
+            disabled={toggling}
+            aria-label={entry.isShared ? '친구에게 공개됨, 클릭하여 비공개 전환' : '비공개 상태, 클릭하여 친구에게 공개'}
+            className={`flex items-center gap-1 px-[10px] py-[4px] rounded-full text-[12px] font-gowun transition-all active:scale-95 ${
+              entry.isShared
+                ? 'bg-primary-container text-on-primary-container'
+                : 'bg-surface-container text-on-surface-variant'
+            } disabled:opacity-40`}
+          >
+            <span
+              className="material-symbols-outlined text-[14px]"
+              style={{ fontVariationSettings: '"FILL" 1, "wght" 400, "GRAD" 0, "opsz" 24' }}
+              aria-hidden="true"
+            >
+              {entry.isShared ? 'lock_open' : 'lock'}
+            </span>
+            {toggling ? '...' : entry.isShared ? '친구 공개' : '비공개'}
+          </button>
+        </div>
+      )}
     </article>
   );
 }

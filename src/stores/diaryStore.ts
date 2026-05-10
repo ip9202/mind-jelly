@@ -7,7 +7,7 @@
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 
-import { deleteDiaryEntry, getMyDiaryEntries, saveDiaryEntry } from '@/lib/supabase/db';
+import { deleteDiaryEntry, getMyDiaryEntries, saveDiaryEntry, toggleDiaryShare } from '@/lib/supabase/db';
 import type { EmotionType } from '@/types/emotion';
 import type { DiaryEntry, DiaryEntryInput } from '@/types/diary';
 
@@ -28,6 +28,9 @@ interface DiaryStoreState {
 
   // 엔트리 삭제 (localStorage + Supabase 동시 삭제)
   deleteEntry: (id: string) => Promise<void>;
+
+  // 친구 공유 여부 토글 (낙관적 업데이트, 실패 시 롤백)
+  toggleShare: (id: string, isShared: boolean) => Promise<void>;
 }
 
 // @MX:ANCHOR: 일기 데이터 단일 소스 (Supabase 전용, localStorage 미사용)
@@ -50,6 +53,7 @@ export const diaryStore = create<DiaryStoreState>()(
               confidence: row.confidence,
               emotionKo: row.emotion_ko,
               createdAt: row.created_at,
+              isShared: Boolean(row.is_shared),
             }));
             set({ entries, isLoading: false });
           } catch {
@@ -63,7 +67,7 @@ export const diaryStore = create<DiaryStoreState>()(
               ? crypto.randomUUID()
               : `${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
           const createdAt = new Date().toISOString();
-          const entry: DiaryEntry = { ...input, id, createdAt };
+          const entry: DiaryEntry = { ...input, id, createdAt, isShared: false };
 
           // localStorage 즉시 반영
           set(
@@ -72,16 +76,18 @@ export const diaryStore = create<DiaryStoreState>()(
             'addEntry',
           );
 
-          // Supabase 저장
+          // Supabase 저장 (로컬 id 동일하게 사용 → toggleShare 등 후속 작업의 id 일관성 보장)
           const { supabaseUserId } = get();
           if (supabaseUserId) {
             try {
               await saveDiaryEntry({
+                id,
                 userId: supabaseUserId,
                 text: input.text,
                 emotion: input.emotion,
                 confidence: input.confidence,
                 emotionKo: input.emotionKo,
+                isShared: false,
                 createdAt,
               });
             } catch {
@@ -134,6 +140,35 @@ export const diaryStore = create<DiaryStoreState>()(
             } catch {
               // 실패해도 localStorage는 이미 삭제
             }
+          }
+        },
+
+        toggleShare: async (id: string, isShared: boolean) => {
+          // 낙관적 업데이트: 로컬 상태 먼저 반영
+          set(
+            (state) => ({
+              entries: state.entries.map((e) =>
+                e.id === id ? { ...e, isShared } : e,
+              ),
+            }),
+            false,
+            'toggleShare',
+          );
+
+          try {
+            await toggleDiaryShare(id, isShared);
+          } catch (error) {
+            // 실패 시 이전 상태로 롤백
+            set(
+              (state) => ({
+                entries: state.entries.map((e) =>
+                  e.id === id ? { ...e, isShared: !isShared } : e,
+                ),
+              }),
+              false,
+              'toggleShare/rollback',
+            );
+            throw error;
           }
         },
     }),

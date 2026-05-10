@@ -55,6 +55,8 @@ export async function setNickname(userId: string, nickname: string) {
 
 /** 일기 저장 */
 export async function saveDiaryEntry(entry: {
+  // 로컬에서 생성한 ID 전달 시 Supabase row ID로 사용 (id 일치 보장)
+  id?: string;
   userId: string;
   text: string;
   emotion: string;
@@ -66,6 +68,7 @@ export async function saveDiaryEntry(entry: {
   const { data, error } = await supabase
     .from('diary_entries')
     .insert({
+      ...(entry.id ? { id: entry.id } : {}),
       user_id: entry.userId,
       text: entry.text,
       emotion: entry.emotion,

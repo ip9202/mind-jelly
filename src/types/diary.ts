@@ -24,7 +24,10 @@ export interface DiaryEntry {
 
   // 생성 시각 (ISO 8601)
   createdAt: string;
+
+  // 친구 공유 여부 (기본 false)
+  isShared: boolean;
 }
 
-// @MX:NOTE: 일기 엔트리 생성 시 입력값 (id, createdAt 자동 생성)
-export type DiaryEntryInput = Omit<DiaryEntry, 'id' | 'createdAt'>;
+// @MX:NOTE: 일기 엔트리 생성 시 입력값 (id, createdAt, isShared 자동 생성/기본값)
+export type DiaryEntryInput = Omit<DiaryEntry, 'id' | 'createdAt' | 'isShared'>;
