@@ -84,7 +84,7 @@ export default function HowtoPage() {
                 1
               </div>
               <p className="font-gowun text-[16px] text-on-surface">
-                감정 구슬을<br />골라봐
+                오늘 기분을<br />적어봐
               </p>
             </div>
 
