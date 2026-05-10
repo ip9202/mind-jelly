@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import NavMenu from '@/components/layout/NavMenu';
 import { diaryStore } from '@/stores/diaryStore';
 import type { DiaryEntry } from '@/types/diary';
@@ -129,6 +129,9 @@ function getMondayIndex(date: Date): Date {
 }
 
 export default function DiaryPage() {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
   const today = new Date();
   const [currentYear, setCurrentYear] = useState(today.getFullYear());
   const [currentMonth, setCurrentMonth] = useState(today.getMonth() + 1);
@@ -312,7 +315,7 @@ export default function DiaryPage() {
                   }`}
                 >
                   {day}
-                  {hasEntry && (
+                  {mounted && hasEntry && (
                     <div className="absolute -top-1 -right-1 w-2 h-2 bg-jelly-base rounded-full border border-white" />
                   )}
                 </button>
