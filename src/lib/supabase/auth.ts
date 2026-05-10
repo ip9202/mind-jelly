@@ -26,13 +26,25 @@ export async function initSupabaseSession(): Promise<string | null> {
     userId = data.user.id;
   }
 
-  // public.users 프로필 보장 (이미 있으면 무시)
+  // public.users 프로필 보장
   const { error } = await supabase
     .from('users')
     .upsert({ id: userId }, { onConflict: 'id', ignoreDuplicates: true });
 
   if (error) {
     console.error('[Supabase] 프로필 생성 실패:', error.message);
+  }
+
+  // invite_code 누락 시 생성 (기존 유저 대응)
+  const { data: profile } = await supabase
+    .from('users')
+    .select('invite_code')
+    .eq('id', userId)
+    .single();
+
+  if (profile && !profile.invite_code) {
+    const code = Math.random().toString(36).slice(2, 8).toUpperCase();
+    await supabase.from('users').update({ invite_code: code }).eq('id', userId);
   }
 
   return userId;
