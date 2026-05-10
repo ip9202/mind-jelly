@@ -2,7 +2,7 @@
 
 import dynamic from 'next/dynamic';
 import NavMenu from '@/components/layout/NavMenu';
-import { useEffect, useState, useRef, useSyncExternalStore } from 'react';
+import { useEffect, useState, useRef, useMemo, useSyncExternalStore } from 'react';
 import { jellyStore } from '@/stores/jellyStore';
 import { tossStore } from '@/stores/tossStore';
 import { usePhysicsInit } from './usePhysicsInit';
@@ -171,12 +171,11 @@ export default function HomePage() {
   // 감정 테마 (동적 배경용)
   const currentTheme = EMOTION_THEME[lastEmotion];
 
-  // 감정이 바뀔 때마다 조언 1개 랜덤 선택
-  const [adviceIndex, setAdviceIndex] = useState(0);
-  useEffect(() => {
-    const adviceList = EMOTION_THEME[lastEmotion].advice;
-    setAdviceIndex(Math.floor(Math.random() * adviceList.length));
-  }, [lastEmotion]);
+  // 감정이 바뀔 때마다 조언 1개 랜덤 선택 (useMemo로 effect 없이 계산)
+  const adviceIndex = useMemo(
+    () => Math.floor(Math.random() * EMOTION_THEME[lastEmotion].advice.length),
+    [lastEmotion],
+  );
 
   // 모바일 hydration 차단 방지: SSR에서도 전체 렌더링 (로딩 UI는 CSS로 처리)
   if (!mounted) {
@@ -243,7 +242,7 @@ export default function HomePage() {
                 {currentTheme.label}
               </span>
               {lastConfidence !== null && (
-                <span className="font-jakarta text-xs text-on-surface-variant">
+                <span className="font-gamja text-sm text-on-surface-variant">
                   {lastConfidence >= 0.8 ? '많이' : lastConfidence >= 0.5 ? '어느정도' : '살짝'}
                 </span>
               )}
