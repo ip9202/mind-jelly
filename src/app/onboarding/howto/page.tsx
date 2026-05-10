@@ -116,7 +116,7 @@ export default function HowtoPage() {
         <div className="max-w-md mx-auto">
           <Link
             href="/onboarding/ready"
-            className="w-full h-14 bg-primary text-on-primary rounded-full font-gamja text-xl shadow-lg shadow-primary/10 hover:opacity-90 active:scale-95 transition-all duration-300 flex items-center justify-center gap-2"
+            className="w-full h-14 bg-primary text-white rounded-full font-gowun text-base font-semibold shadow-lg hover:scale-[0.98] active:scale-95 transition-all duration-300 flex items-center justify-center gap-2"
           >
             <span>다음</span>
             <span className="material-symbols-outlined text-[20px]">arrow_forward</span>

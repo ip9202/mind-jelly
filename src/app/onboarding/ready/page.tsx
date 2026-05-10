@@ -98,7 +98,7 @@ export default function ReadyPage() {
       <footer className="fixed bottom-0 left-0 w-full p-[20px] flex flex-col items-center">
         <button
           onClick={handleStart}
-          className="w-full max-w-sm h-14 bg-primary text-on-primary rounded-full font-gamja text-xl shadow-lg shadow-primary/10 hover:opacity-90 active:scale-95 transition-all duration-300 flex items-center justify-center"
+          className="w-full max-w-sm h-14 bg-primary text-white rounded-full font-gowun text-base font-semibold shadow-lg hover:scale-[0.98] active:scale-95 transition-all duration-300 flex items-center justify-center"
         >
           시작!
         </button>

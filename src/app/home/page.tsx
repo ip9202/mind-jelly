@@ -173,6 +173,13 @@ export default function HomePage() {
   // 감정 테마 (동적 배경용)
   const currentTheme = EMOTION_THEME[lastEmotion];
 
+  // 감정이 바뀔 때마다 조언 1개 랜덤 선택
+  const [adviceIndex, setAdviceIndex] = useState(0);
+  useEffect(() => {
+    const adviceList = EMOTION_THEME[lastEmotion].advice;
+    setAdviceIndex(Math.floor(Math.random() * adviceList.length));
+  }, [lastEmotion]);
+
   // 모바일 hydration 차단 방지: SSR에서도 전체 렌더링 (로딩 UI는 CSS로 처리)
   if (!mounted) {
     return (
@@ -357,16 +364,19 @@ export default function HomePage() {
                     : currentTheme.message}
                 </p>
                 <div className="flex items-center gap-2 mt-3">
-                  <span
-                    className="inline-block w-2 h-2 rounded-full"
-                    style={{ backgroundColor: EMOTION_COLORS[lastEmotion], transition: 'background-color 800ms linear' }}
-                  />
                   {beadsEaten > 0 && (
                     <span className="font-jakarta text-xs text-on-surface-variant">
                       모은 구슬 {beadsEaten}개
                     </span>
                   )}
                 </div>
+                <p
+                  className="font-gamja text-sm mt-2 leading-relaxed"
+                  style={{ color: EMOTION_COLORS[lastEmotion], transition: 'color 800ms linear' }}
+                >
+                  <span className="material-symbols-outlined text-sm align-middle mr-1" style={{ fontVariationSettings: "'FILL' 1", color: EMOTION_COLORS[lastEmotion] }} aria-hidden="true">tips_and_updates</span>
+                  {currentTheme.advice[adviceIndex]}
+                </p>
               </div>
             </div>
 
@@ -376,7 +386,7 @@ export default function HomePage() {
                 onClick={() => setUiState('input')}
                 disabled={uiState === 'report'}
                 aria-label="감정 표현하기"
-                className="w-full py-4 rounded-full bg-primary text-white font-gowun text-base font-semibold shadow-lg hover:scale-[0.98] active:scale-95 transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-default"
+                className="w-full h-14 rounded-full bg-primary text-white font-gowun text-base font-semibold shadow-lg hover:scale-[0.98] active:scale-95 transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-default"
               >
                 <span className="material-symbols-outlined text-xl" style={{ fontVariationSettings: "'FILL' 1" }} aria-hidden="true">edit_note</span>
                 감정 표현하기
