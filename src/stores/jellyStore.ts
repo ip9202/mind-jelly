@@ -269,7 +269,6 @@ export const jellyStore = create<JellyStoreState>()(
         lastEmotion: state.lastEmotion,
         emotionColor: state.emotionColor,
         currentState: state.currentState,
-        beadCount: state.beadCount,
       }),
       migrate: (persistedState: unknown, version: number) => {
         // 버전 0 (기존) → 1 마이그레이션
