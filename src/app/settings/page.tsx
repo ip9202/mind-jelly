@@ -162,36 +162,6 @@ export default function SettingsPage() {
           </div>
         </section>
 
-        {/* Sound Settings Section */}
-        <section className="space-y-[8px]">
-          <h2 className="font-dongle text-5xl text-primary leading-none px-2">소리 설정</h2>
-          <div className="glass-card rounded-lg p-[24px] shadow-[0_4px_20px_0_rgba(0,0,0,0.05)] border border-white/40 space-y-[24px]">
-            <div className="flex justify-between items-center">
-              <span className="font-gowun text-[16px] text-on-surface">배경 음악</span>
-              <button className="w-12 h-6 bg-primary-container rounded-full relative transition-colors">
-                <div className="absolute right-1 top-1 w-4 h-4 bg-white rounded-full shadow-sm"></div>
-              </button>
-            </div>
-            <div className="space-y-[4px]">
-              <div className="flex justify-between items-center text-[13px] font-gowun text-on-surface-variant">
-                <span>볼륨</span>
-                <span>70%</span>
-              </div>
-              <div className="h-2 w-full bg-primary-container/30 rounded-full relative">
-                <div className="h-full w-[70%] bg-primary rounded-full relative">
-                  <div className="absolute -right-2 -top-1.5 w-5 h-5 bg-white border-4 border-primary rounded-full shadow-md"></div>
-                </div>
-              </div>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="font-gowun text-[16px] text-on-surface">효과음</span>
-              <button className="w-12 h-6 bg-primary-container rounded-full relative transition-colors">
-                <div className="absolute right-1 top-1 w-4 h-4 bg-white rounded-full shadow-sm"></div>
-              </button>
-            </div>
-          </div>
-        </section>
-
         {/* Notifications Section */}
         <section className="space-y-[8px]">
           <h2 className="font-dongle text-5xl text-primary leading-none px-2">알림</h2>
