@@ -6,7 +6,7 @@ import { useEffect, useState, useRef, useSyncExternalStore, useMemo } from 'reac
 import { jellyStore } from '@/stores/jellyStore';
 import { tossStore } from '@/stores/tossStore';
 import { usePhysicsInit } from './usePhysicsInit';
-import { EMOTION_THEME, EMOTION_COLORS } from '@/lib/constants/emotion';
+import { EMOTION_THEME, EMOTION_COLORS, JELLY_COLOR } from '@/lib/constants/emotion';
 import type { EmotionType } from '@/types/emotion';
 
 const PhysicsCanvas = dynamic(
@@ -48,10 +48,28 @@ export default function HomePage() {
   const [uiState, setUiState] = useState<UiState>('idle');
   const [keyboardHeight, setKeyboardHeight] = useState(0);
 
+  // 구슬 섭취 완료 수 추적 (beadCount는 남은 구슬 수이므로 별도 추적 필요)
+  const [beadsEaten, setBeadsEaten] = useState(0);
+
+  // 젤리 시각적 감정 상태 (persist된 store에서 복원)
+  // @MX:NOTE: [AUTO] emotionColor 대신 EMOTION_CODES[lastEmotion] 사용
+  // @MX:REASON: persist에 저장된 emotionColor가 레거시 값일 수 있음
+  const [jellyVisualEmotion, setJellyVisualEmotion] = useState<EmotionType | null>(() => {
+    const { emotionHistory } = jellyStore.getState();
+    return emotionHistory.length > 0 ? emotionHistory[emotionHistory.length - 1].emotion : null;
+  });
+  const [jellyVisualColor, setJellyVisualColor] = useState<string>(() => {
+    const { emotionHistory, lastEmotion } = jellyStore.getState();
+    // emotionHistory가 있으면 최신 감정의 색상 사용, 없으면 기본 색상
+    if (emotionHistory.length > 0) {
+      return EMOTION_COLORS[lastEmotion];
+    }
+    return JELLY_COLOR;
+  });
+
   const currentState = jellyStore((s) => s.currentState);
   const beadCount = jellyStore((s) => s.beadCount);
   const lastEmotion = jellyStore((s) => s.lastEmotion);
-  const emotionColor = jellyStore((s) => s.emotionColor);
   const emotionHistory = jellyStore((s) => s.emotionHistory);
   const isAnalyzing = jellyStore((s) => s.isAnalyzing);
 
@@ -85,22 +103,27 @@ export default function HomePage() {
         setUiState('beads');
         // 젤리가 원래 크기로 복원된 후 구슬 생성
         jellyStore.getState().incrementBeadCount(5);
+        setBeadsEaten(5);
       }, RESTORE_DURATION_MS);
       return () => clearTimeout(timer);
     }
   }, [uiState]);
 
-  // 모든 구슬이 먹히면(satisfied) report 상태로 전환
+  // 모든 구슬이 먹히면(satisfied) 젤리 변형 적용 + report 상태로 전환
   // @MX:WARN: [AUTO] satisfiedTimerRef(usePhysicsInit) 500ms 지연 → 총 3.5초 대기
   // @MX:REASON: usePhysicsInit에서 마지막 구슬 충돌 후 500ms 뒤 satisfied 전이, 이후 3초 지속
   useEffect(() => {
     if (uiState === 'beads' && currentState === 'satisfied') {
+      // 구슬을 모두 먹은 후 젤리 감정 변형 적용
+      setJellyVisualEmotion(lastEmotion);
+      setJellyVisualColor(EMOTION_COLORS[lastEmotion]);
+      jellyStore.getState().setEmotionColor(EMOTION_COLORS[lastEmotion]);
       const timer = setTimeout(() => {
         setUiState('report');
       }, SATISFIED_DISPLAY_MS);
       return () => clearTimeout(timer);
     }
-  }, [uiState, currentState]);
+  }, [uiState, currentState, lastEmotion]);
 
   // 리포트 표시 후 idle로 복귀
   useEffect(() => {
@@ -217,7 +240,7 @@ export default function HomePage() {
             <div className="flex items-center gap-2">
               <span
                 className="inline-block w-3 h-3 rounded-full"
-                style={{ backgroundColor: currentTheme.jellyColor, transition: 'background-color 800ms linear' }}
+                style={{ backgroundColor: EMOTION_COLORS[lastEmotion], transition: 'background-color 800ms linear' }}
               />
               <span className="font-jakarta text-sm font-semibold text-text-primary">
                 {currentTheme.label}
@@ -315,8 +338,8 @@ export default function HomePage() {
                         bodies={bodies}
                         face={currentState}
                         animation={0}
-                        emotionColor={emotionColor}
-                        emotion={emotionHistory.length > 0 ? lastEmotion : null}
+                        emotionColor={jellyVisualColor}
+                        emotion={jellyVisualEmotion}
                       />
                       {engineRef.current && (
                         <BeadGroup count={beadCount} engine={engineRef.current} emotion={lastEmotion} />
@@ -355,11 +378,13 @@ export default function HomePage() {
                 <div className="flex items-center gap-2 mt-3">
                   <span
                     className="inline-block w-2 h-2 rounded-full"
-                    style={{ backgroundColor: currentTheme.jellyColor, transition: 'background-color 800ms linear' }}
+                    style={{ backgroundColor: EMOTION_COLORS[lastEmotion], transition: 'background-color 800ms linear' }}
                   />
-                  <span className="font-jakarta text-xs text-on-surface-variant">
-                    모은 구슬 {beadCount}개
-                  </span>
+                  {beadsEaten > 0 && (
+                    <span className="font-jakarta text-xs text-on-surface-variant">
+                      모은 구슬 {beadsEaten}개
+                    </span>
+                  )}
                 </div>
               </div>
             </div>
