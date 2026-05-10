@@ -1,7 +1,124 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import NavMenu from '@/components/layout/NavMenu';
+import { getMyProfile, setNickname } from '@/lib/supabase/db';
+import { diaryStore } from '@/stores/diaryStore';
+import { jellyStore } from '@/stores/jellyStore';
+
+function ProfileSection() {
+  const supabaseUserId = diaryStore((s) => s.supabaseUserId);
+  const jellyName = jellyStore((s) => s.jellyName);
+  const [nickname, setNicknameState] = useState('');
+  const [inviteCode, setInviteCode] = useState('');
+  const [editing, setEditing] = useState(false);
+  const [input, setInput] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    if (!supabaseUserId) return;
+    getMyProfile(supabaseUserId).then((profile) => {
+      if (profile) {
+        // Supabase nickname 우선, 없으면 jellyStore 이름 사용
+        const name = profile.nickname ?? jellyName ?? '';
+        setNicknameState(name);
+        setInviteCode(profile.invite_code);
+        setInput(name);
+      }
+    });
+  }, [supabaseUserId, jellyName]);
+
+  async function handleSave() {
+    if (!supabaseUserId) return;
+    if (!input.trim()) { setError('닉네임을 입력해주세요'); return; }
+    if (input.trim().length < 2) { setError('2자 이상 입력해주세요'); return; }
+    setSaving(true);
+    setError('');
+    try {
+      await setNickname(supabaseUserId, input.trim());
+      setNicknameState(input.trim());
+      jellyStore.getState().setJellyName(input.trim()); // 로컬 이름도 동기화
+      setEditing(false);
+    } catch {
+      setError('이미 사용 중인 닉네임입니다');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <section className="space-y-[8px]">
+      <h2 className="font-dongle text-5xl text-primary leading-none px-2">프로필</h2>
+      <div className="glass-card rounded-lg p-[24px] shadow-[0_4px_20px_0_rgba(0,0,0,0.05)] border border-white/40 space-y-[20px]">
+        {/* 닉네임 */}
+        <div className="space-y-[8px]">
+          <p className="font-gowun text-[13px] text-on-surface-variant">닉네임</p>
+          {editing ? (
+            <div className="space-y-[8px]">
+              <input
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                maxLength={12}
+                placeholder="2~12자 입력"
+                className="w-full bg-white/60 border border-primary-container rounded-lg px-[16px] py-[10px] font-gowun text-[16px] text-on-surface outline-none focus:border-primary transition-colors"
+              />
+              {error && <p className="font-gowun text-[13px] text-error">{error}</p>}
+              <div className="flex gap-[8px]">
+                <button
+                  onClick={handleSave}
+                  disabled={saving}
+                  className="flex-1 bg-primary text-on-primary font-gowun text-[15px] py-[10px] rounded-lg disabled:opacity-50"
+                >
+                  {saving ? '저장 중...' : '저장'}
+                </button>
+                <button
+                  onClick={() => { setEditing(false); setError(''); setInput(nickname); }}
+                  className="px-[20px] bg-surface-container font-gowun text-[15px] py-[10px] rounded-lg text-on-surface-variant"
+                >
+                  취소
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="flex items-center justify-between">
+              <span className="font-gowun text-[16px] text-on-surface">
+                {nickname || <span className="text-on-surface-variant">미설정</span>}
+              </span>
+              <button
+                onClick={() => setEditing(true)}
+                className="font-gowun text-[14px] text-primary"
+              >
+                {nickname ? '변경' : '설정'}
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* 초대코드 */}
+        <div className="space-y-[8px]">
+          <p className="font-gowun text-[13px] text-on-surface-variant">내 초대코드</p>
+          <div className="flex items-center justify-between">
+            <span className="font-dongle text-3xl text-primary tracking-[0.2em]">
+              {inviteCode || '------'}
+            </span>
+            <button
+              onClick={() => navigator.clipboard.writeText(inviteCode)}
+              className="flex items-center gap-1 font-gowun text-[14px] text-on-surface-variant"
+            >
+              <span className="material-symbols-outlined text-[18px]">content_copy</span>
+              복사
+            </button>
+          </div>
+          <p className="font-gowun text-[12px] text-on-surface-variant">
+            이 코드로 친구가 나를 찾을 수 있어요
+          </p>
+        </div>
+      </div>
+    </section>
+  );
+}
 
 export default function SettingsPage() {
   return (
@@ -18,6 +135,8 @@ export default function SettingsPage() {
       </header>
 
       <main className="mt-20 px-[20px] space-y-[12px]">
+        <ProfileSection />
+
         {/* Jelly Appearance Section */}
         <section className="space-y-[8px]">
           <h2 className="font-dongle text-5xl text-primary leading-none px-2">색상 테마</h2>

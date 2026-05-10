@@ -3,14 +3,54 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { jellyStore } from '@/stores/jellyStore';
+import { diaryStore } from '@/stores/diaryStore';
+import { setNickname, findUserByNickname } from '@/lib/supabase/db';
 
 export default function ReadyPage() {
   const [jellyName, setJellyName] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
 
-  const handleStart = () => {
-    const name = jellyName.trim() || '내 젤리';
+  const handleStart = async () => {
+    const name = jellyName.trim();
+
+    // 빈 이름 차단
+    if (!name) {
+      setError('젤리 이름을 입력해줘');
+      return;
+    }
+    if (name.length < 2) {
+      setError('2자 이상 입력해줘');
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+
+    // 중복 검사
+    const existing = await findUserByNickname(name);
+    if (existing) {
+      setError('이미 다른 젤리가 쓰고 있는 이름이야');
+      setLoading(false);
+      return;
+    }
+
+    // jellyStore (로컬 캐릭터 이름)
     jellyStore.getState().setJellyName(name);
+
+    // Supabase nickname 저장
+    const supabaseUserId = diaryStore.getState().supabaseUserId;
+    if (supabaseUserId) {
+      try {
+        await setNickname(supabaseUserId, name);
+      } catch {
+        setError('이름 저장에 실패했어. 다시 시도해줘');
+        setLoading(false);
+        return;
+      }
+    }
+
     router.push('/home');
   };
 
@@ -78,19 +118,21 @@ export default function ReadyPage() {
         </div>
 
         {/* Naming Input Section */}
-        <div className="w-full max-w-sm space-y-[16px]">
-          <div className="glass-panel p-1 rounded-xl shadow-sm border border-white/40 focus-within:ring-2 focus-within:ring-primary/40 transition-all duration-300">
+        <div className="w-full max-w-sm space-y-[12px]">
+          <div className={`glass-panel p-1 rounded-xl shadow-sm border transition-all duration-300 focus-within:ring-2 focus-within:ring-primary/40 ${error ? 'border-error/60' : 'border-white/40'}`}>
             <input
               className="w-full bg-transparent border-none focus:ring-0 px-[16px] py-4 font-gamja text-lg text-on-surface placeholder:text-outline-variant text-center"
-              placeholder="젤리 이름 지어주기"
+              placeholder="젤리 이름 지어주기 (필수)"
               type="text"
+              maxLength={12}
               value={jellyName}
-              onChange={(e) => setJellyName(e.target.value)}
+              onChange={(e) => { setJellyName(e.target.value); setError(''); }}
             />
           </div>
-          <p className="text-center text-outline font-gamja text-[13px]">
-            나만의 소중한 젤리에게 이름을 선물해줘.
-          </p>
+          {error
+            ? <p className="text-center font-gamja text-[13px] text-error">{error}</p>
+            : <p className="text-center text-outline font-gamja text-[13px]">나만의 소중한 젤리에게 이름을 선물해줘.</p>
+          }
         </div>
       </main>
 
@@ -98,9 +140,10 @@ export default function ReadyPage() {
       <footer className="fixed bottom-0 left-0 w-full p-[20px] flex flex-col items-center">
         <button
           onClick={handleStart}
-          className="w-full max-w-sm h-14 bg-primary text-white rounded-full font-gowun text-base font-semibold shadow-lg hover:scale-[0.98] active:scale-95 transition-all duration-300 flex items-center justify-center"
+          disabled={loading}
+          className="w-full max-w-sm h-14 bg-primary text-white rounded-full font-gowun text-base font-semibold shadow-lg hover:scale-[0.98] active:scale-95 transition-all duration-300 flex items-center justify-center disabled:opacity-60 disabled:scale-100"
         >
-          시작!
+          {loading ? '확인 중...' : '시작!'}
         </button>
 
         {/* Subtle Background Glow behind button */}

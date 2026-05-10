@@ -6,6 +6,8 @@
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 
+import { linkTossUser } from '@/lib/supabase/auth';
+import { diaryStore } from '@/stores/diaryStore';
 import type { TossUserInfo } from '@/types/toss';
 
 // @MX:ANCHOR: Toss WebView 상태의 단일 소스 오브 트루스
@@ -62,6 +64,13 @@ export const tossStore = create<TossStoreState>()(
 
       setUserInfo: (info: TossUserInfo | null) => {
         set({ userInfo: info });
+        if (info?.userId) {
+          // 현재 Supabase 익명 세션에 토스 ID 연결
+          const supabaseUserId = diaryStore.getState().supabaseUserId;
+          if (supabaseUserId) {
+            linkTossUser(supabaseUserId, info.userId).catch(() => {});
+          }
+        }
       },
 
       setBridgeReady: (ready: boolean) => {

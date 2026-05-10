@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@apps-in-toss/web-framework": "^2.5.0",
+    "@supabase/supabase-js": "^2.105.4",
     "@toss/tds-mobile": "^2.3.0",
     "matter-js": "^0.20.0",
     "next": "16.2.6",

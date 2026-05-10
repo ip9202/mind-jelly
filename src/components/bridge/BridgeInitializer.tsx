@@ -11,7 +11,11 @@
 
 import { useEffect } from 'react';
 
+import { initSupabaseSession } from '@/lib/supabase/auth';
+import { getMyProfile } from '@/lib/supabase/db';
 import { tossStore } from '@/stores/tossStore';
+import { diaryStore } from '@/stores/diaryStore';
+import { jellyStore } from '@/stores/jellyStore';
 import { detectWebView, connectBridge } from '@/lib/toss/bridge';
 
 export default function BridgeInitializer() {
@@ -19,6 +23,19 @@ export default function BridgeInitializer() {
     let cancelled = false;
 
     async function init() {
+      // Supabase 익명 세션 초기화 (토스 로그인 여부와 무관하게 항상 실행)
+      const supabaseUserId = await initSupabaseSession();
+      if (supabaseUserId && !cancelled) {
+        // 일기 데이터 로드
+        await diaryStore.getState().setUserId(supabaseUserId);
+
+        // Supabase nickname → jellyStore 동기화 (서버가 단일 소스)
+        const profile = await getMyProfile(supabaseUserId);
+        if (profile?.nickname && !cancelled) {
+          jellyStore.getState().setJellyName(profile.nickname);
+        }
+      }
+
       // WebView 감지
       const isWebView = detectWebView();
       tossStore.getState().setWebView(isWebView);

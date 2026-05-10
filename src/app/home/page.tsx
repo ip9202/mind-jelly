@@ -48,8 +48,7 @@ export default function HomePage() {
   const [uiState, setUiState] = useState<UiState>('idle');
   const [keyboardHeight, setKeyboardHeight] = useState(0);
 
-  // 구슬 섭취 완료 수 추적 (beadCount는 남은 구슬 수이므로 별도 추적 필요)
-  const [beadsEaten, setBeadsEaten] = useState(0);
+
 
   // 젤리 시각적 감정 상태 (persist된 store에서 복원)
   // @MX:NOTE: [AUTO] emotionColor 대신 EMOTION_CODES[lastEmotion] 사용
@@ -106,7 +105,6 @@ export default function HomePage() {
         setUiState('beads');
         // 젤리가 원래 크기로 복원된 후 구슬 생성
         jellyStore.getState().incrementBeadCount(5);
-        setBeadsEaten(5);
       }, RESTORE_DURATION_MS);
       return () => clearTimeout(timer);
     }
@@ -246,7 +244,7 @@ export default function HomePage() {
               </span>
               {lastConfidence !== null && (
                 <span className="font-jakarta text-xs text-on-surface-variant">
-                  {Math.round(lastConfidence * 100)}%
+                  {lastConfidence >= 0.8 ? '많이' : lastConfidence >= 0.5 ? '어느정도' : '살짝'}
                 </span>
               )}
             </div>
@@ -363,13 +361,6 @@ export default function HomePage() {
                     ? `${userName}님, ${currentTheme.message}`
                     : currentTheme.message}
                 </p>
-                <div className="flex items-center gap-2 mt-3">
-                  {beadsEaten > 0 && (
-                    <span className="font-jakarta text-xs text-on-surface-variant">
-                      모은 구슬 {beadsEaten}개
-                    </span>
-                  )}
-                </div>
                 <p
                   className="font-gamja text-sm mt-2 leading-relaxed"
                   style={{ color: EMOTION_COLORS[lastEmotion], transition: 'color 800ms linear' }}
