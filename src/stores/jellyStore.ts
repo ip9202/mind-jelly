@@ -263,15 +263,13 @@ export const jellyStore = create<JellyStoreState>()(
     }),
     {
       name: 'jelly-storage',
-      // @MX:NOTE: 감정 관련 필드 + 상태 머신/구슬 개수 저장 (REQ-UBI-003)
-      // @MX:REASON: 리프레시 후에도 사용자 경험 유지
+      // @MX:NOTE: 순수 UI 상태만 저장 (REQ-UBI-003)
+      // @MX:REASON: jellyName→Supabase users.nickname, emotionHistory→Supabase diary_entries로 이전
       partialize: (state) => ({
         lastEmotion: state.lastEmotion,
         emotionColor: state.emotionColor,
-        emotionHistory: state.emotionHistory,
         currentState: state.currentState,
         beadCount: state.beadCount,
-        jellyName: state.jellyName,
       }),
       migrate: (persistedState: unknown, version: number) => {
         // 버전 0 (기존) → 1 마이그레이션
