@@ -1,8 +1,19 @@
 'use client';
 
 import Link from 'next/link';
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { jellyStore } from '@/stores/jellyStore';
 
 export default function SplashPage() {
+  const router = useRouter();
+
+  useEffect(() => {
+    const { jellyName } = jellyStore.getState();
+    if (jellyName) {
+      router.replace('/home');
+    }
+  }, [router]);
   return (
     <>
       {/* Splash Screen Container */}

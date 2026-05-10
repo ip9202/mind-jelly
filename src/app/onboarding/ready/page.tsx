@@ -1,10 +1,18 @@
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { jellyStore } from '@/stores/jellyStore';
 
 export default function ReadyPage() {
   const [jellyName, setJellyName] = useState('');
+  const router = useRouter();
+
+  const handleStart = () => {
+    const name = jellyName.trim() || '내 젤리';
+    jellyStore.getState().setJellyName(name);
+    router.push('/home');
+  };
 
   return (
     <div className="bg-bg-base min-h-screen flex flex-col font-body-md text-on-background overflow-hidden">
@@ -16,10 +24,12 @@ export default function ReadyPage() {
             <span className="font-dongle text-4xl">Mind Jelly</span>
           </div>
         </div>
-        <div className="flex items-center gap-[8px]">
+        <div className="flex items-center gap-2">
           <span className="text-primary font-bold font-caption text-[13px]">3/3</span>
-          <div className="w-16 h-1.5 bg-surface-container rounded-full overflow-hidden">
-            <div className="w-full h-full bg-primary"></div>
+          <div className="flex gap-1">
+            <div className="h-1.5 w-4 rounded-full bg-primary"></div>
+            <div className="h-1.5 w-4 rounded-full bg-primary"></div>
+            <div className="h-1.5 w-4 rounded-full bg-primary"></div>
           </div>
         </div>
       </header>
@@ -86,31 +96,23 @@ export default function ReadyPage() {
 
       {/* Bottom Action Area */}
       <footer className="fixed bottom-0 left-0 w-full p-[20px] flex flex-col items-center">
-        <Link
-          href="/home"
+        <button
+          onClick={handleStart}
           className="w-full max-w-sm bg-primary text-on-primary py-5 rounded-lg shadow-lg active:scale-95 transition-all duration-300 text-[24px] hover:opacity-90 font-gowun block text-center"
         >
           시작!
-        </Link>
+        </button>
 
         {/* Subtle Background Glow behind button */}
         <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 w-64 h-32 bg-primary/20 blur-3xl -z-10"></div>
       </footer>
 
-      {/* Illustrative Celebration Elements */}
-      <div className="fixed left-4 md:left-20 w-32 h-32 pointer-events-none -rotate-12 opacity-80 top-28">
-        <img
-          alt="Confetti Burst"
-          className="w-full h-full object-contain"
-          src="https://lh3.googleusercontent.com/aida-public/AB6AXuAH5r473qp2QVsk_sN1gHTdMHa3PX7GFnK6x-ovN62G4Ugb0unC_yjctZB2DO8jUqYhGwiOU0wSQ8hooBCw1qaGosqUOZRbqZNqruEDdoBHlZ69Qb4ubBsmfIDCkOfvJ7L4epbCHup_uczslfAuLx9kE0eblrshBuBPPleGiRjap8YzFUntLMEtEPTJQvaqKeBC6ZnE1SQZPihddl56BK_jAHG8iP_47g_vihbbD6Q2oIZVSHm0MOT6dTD_lZLNHxJLicAJdfqLhlk"
-        />
+      {/* Illustrative Celebration Elements (CSS-only, no external images) */}
+      <div className="fixed left-4 md:left-20 w-32 h-32 pointer-events-none -rotate-12 opacity-60 top-28">
+        <div className="w-full h-full rounded-full bg-primary/20 blur-2xl"></div>
       </div>
-      <div className="fixed right-4 md:right-24 w-36 h-36 pointer-events-none rotate-12 opacity-80 top-32">
-        <img
-          alt="Party Streamers"
-          className="w-full h-full object-contain"
-          src="https://lh3.googleusercontent.com/aida-public/AB6AXuDET49Xp6SlxlaIfAItauUN2qV6xyx5rcx97hMUQUDoQy93EzFEtES_Kcxjt2-XEn8PDkJiUxvFodkscsrtEuLapMgwVW3WQJjBqoKBPrdae-dJM-bqbFMWYfAH9IeZ3ZagoB9vmPMri8m5ZYvVHXKmerbLxnfJs1-YrJ8rIly_HV17qDOv_ZUayWk5YZ9Hgi8uVLUvLU-HFohvDShaT0akhlvy1LCRlVn5CKNrcvSFYVnqRT-dF5SoX84Mir_ABY1IvQtmnR7zSYY"
-        />
+      <div className="fixed right-4 md:right-24 w-36 h-36 pointer-events-none rotate-12 opacity-60 top-32">
+        <div className="w-full h-full rounded-full bg-jelly-joy/20 blur-2xl"></div>
       </div>
     </div>
   );

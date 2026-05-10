@@ -18,10 +18,15 @@ export default function HowtoPage() {
 
       <main className="min-h-screen pt-24 pb-32 px-[20px] bg-pastel-gradient">
         {/* Progress Indicator */}
-        <div className="flex justify-center gap-2 mb-10">
-          <div className="h-1.5 w-8 rounded-full bg-primary/20"></div>
-          <div className="h-1.5 w-12 rounded-full bg-primary"></div>
-          <div className="h-1.5 w-8 rounded-full bg-primary/20"></div>
+        <div className="flex justify-center mb-10">
+          <div className="flex items-center gap-2">
+            <span className="text-primary font-bold font-caption text-[13px]">2/3</span>
+            <div className="flex gap-1">
+              <div className="h-1.5 w-4 rounded-full bg-primary"></div>
+              <div className="h-1.5 w-4 rounded-full bg-primary"></div>
+              <div className="h-1.5 w-4 rounded-full bg-primary/20"></div>
+            </div>
+          </div>
         </div>
 
         {/* Heading Section */}

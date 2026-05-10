@@ -72,6 +72,7 @@ export default function HomePage() {
   const lastEmotion = jellyStore((s) => s.lastEmotion);
   const emotionHistory = jellyStore((s) => s.emotionHistory);
   const isAnalyzing = jellyStore((s) => s.isAnalyzing);
+  const jellyName = jellyStore((s) => s.jellyName);
 
   // M4-T5: Toss WebView 분기 처리
   const isWebView = tossStore((s) => s.isWebView);
@@ -218,6 +219,9 @@ export default function HomePage() {
         <div className="flex items-center gap-2">
           <span className="material-symbols-outlined text-primary text-3xl" style={{ fontVariationSettings: "'FILL' 1" }}>bubble_chart</span>
           <h1 className="font-dongle text-4xl leading-none text-primary tracking-tight">Mind Jelly</h1>
+          {jellyName && (
+            <span className="font-gowun text-sm text-on-surface-variant ml-1">{jellyName}</span>
+          )}
           {/* M4-T5: WebView 인사말 */}
           {isWebView && userInfo && (
             <span className="font-gowun text-sm text-on-surface-variant ml-2">

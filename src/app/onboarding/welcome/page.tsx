@@ -53,10 +53,13 @@ export default function WelcomePage() {
         {/* Navigation & Progress */}
         <div className="w-full max-w-md flex flex-col items-center gap-10">
           {/* Progress Indicator */}
-          <div className="flex gap-2">
-            <div className="w-6 h-2 rounded-full bg-primary"></div>
-            <div className="w-2 h-2 rounded-full bg-primary/20"></div>
-            <div className="w-2 h-2 rounded-full bg-primary/20"></div>
+          <div className="flex items-center gap-2">
+            <span className="text-primary font-bold font-caption text-[13px]">1/3</span>
+            <div className="flex gap-1">
+              <div className="h-1.5 w-4 rounded-full bg-primary"></div>
+              <div className="h-1.5 w-4 rounded-full bg-primary/20"></div>
+              <div className="h-1.5 w-4 rounded-full bg-primary/20"></div>
+            </div>
           </div>
 
           {/* Action Button */}

@@ -56,6 +56,9 @@ interface JellyStoreState {
   // M2: 감정 기반 색상
   emotionColor: string;
 
+  // 젤리 이름 (온보딩에서 설정, 영속 저장)
+  jellyName: string;
+
   // 액션: 상태 전이
   transitionState: (newState: JellyState) => boolean;
 
@@ -94,6 +97,9 @@ interface JellyStoreState {
 
   // M2 액션: 감정 색상
   setEmotionColor: (color: string) => void;
+
+  // 액션: 젤리 이름 설정
+  setJellyName: (name: string) => void;
 }
 
 /**
@@ -134,6 +140,9 @@ export const jellyStore = create<JellyStoreState>()(
 
       // M2: 감정 기반 색상 (초기값: 기본 젤리 색상)
       emotionColor: JELLY_COLOR,
+
+      // 젤리 이름 (온보딩에서 설정)
+      jellyName: '',
 
       // 상태 전이 (가드 조건 검증)
       transitionState: (newState: JellyState) => {
@@ -246,6 +255,11 @@ export const jellyStore = create<JellyStoreState>()(
       setLastInputText: (text: string) => {
         set({ lastInputText: text });
       },
+
+      // 젤리 이름 설정
+      setJellyName: (name: string) => {
+        set({ jellyName: name });
+      },
     }),
     {
       name: 'jelly-storage',
@@ -257,6 +271,7 @@ export const jellyStore = create<JellyStoreState>()(
         emotionHistory: state.emotionHistory,
         currentState: state.currentState,
         beadCount: state.beadCount,
+        jellyName: state.jellyName,
       }),
       migrate: (persistedState: unknown, version: number) => {
         // 버전 0 (기존) → 1 마이그레이션
