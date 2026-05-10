@@ -19,6 +19,7 @@
 
 # production
 /build
+*.ait
 
 # misc
 .DS_Store
