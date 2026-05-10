@@ -2,7 +2,7 @@
 
 import dynamic from 'next/dynamic';
 import NavMenu from '@/components/layout/NavMenu';
-import { useEffect, useState, useRef, useSyncExternalStore, useMemo } from 'react';
+import { useEffect, useState, useRef, useSyncExternalStore } from 'react';
 import { jellyStore } from '@/stores/jellyStore';
 import { tossStore } from '@/stores/tossStore';
 import { usePhysicsInit } from './usePhysicsInit';
@@ -166,15 +166,6 @@ export default function HomePage() {
   }, [uiState]);
 
   // 감정 분포 계산 (최근 분석 기록 기준)
-  const emotionDistribution = useMemo(() => {
-    const emotions: EmotionType[] = ['joy', 'sadness', 'anger', 'fear', 'disgust', 'surprise', 'love', 'gratitude', 'hope'];
-    if (emotionHistory.length === 0) {
-      return emotions.map((e) => ({ emotion: e, count: e === 'joy' ? 1 : 0 }));
-    }
-    const counts: Record<EmotionType, number> = { joy: 0, sadness: 0, anger: 0, fear: 0, disgust: 0, surprise: 0, love: 0, gratitude: 0, hope: 0 };
-    emotionHistory.forEach((r) => { counts[r.emotion] = (counts[r.emotion] || 0) + 1; });
-    return emotions.map((e) => ({ emotion: e, count: counts[e] }));
-  }, [emotionHistory]);
 
   // 마지막 분석 신뢰도
   const lastConfidence = emotionHistory.length > 0 ? emotionHistory[emotionHistory.length - 1].confidence : null;
@@ -251,19 +242,6 @@ export default function HomePage() {
                   {Math.round(lastConfidence * 100)}%
                 </span>
               )}
-            </div>
-            <div className="flex gap-1">
-              {emotionDistribution.map(({ emotion }) => (
-                <span
-                  key={emotion}
-                  className="inline-block w-5 h-5 rounded-full border border-white/50"
-                  style={{
-                    backgroundColor: EMOTION_COLORS[emotion],
-                    opacity: emotion === lastEmotion ? 1 : 0.4,
-                    transition: 'opacity 800ms linear',
-                  }}
-                />
-              ))}
             </div>
           </div>
         </div>

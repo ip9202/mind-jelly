@@ -1,7 +1,7 @@
 // JellyRenderer 컴포넌트 테스트
 import { render } from '@testing-library/react';
 import { JellyRenderer } from '@/components/jelly/JellyRenderer';
-import { EMOTION_COLORS, JELLY_COLOR } from '@/lib/constants/emotion';
+import { EMOTION_COLORS } from '@/lib/constants/emotion';
 
 describe('JellyRenderer', () => {
   const mockBodies = [
@@ -88,7 +88,7 @@ describe('JellyRenderer', () => {
         <JellyRenderer bodies={singleBody} face="idle" animation={0} />
       );
 
-      const jellyBody = container.querySelector('[data-testid="jelly-body"]');
+      const jellyBody = container.querySelector<HTMLElement>('[data-testid="jelly-body"]');
       expect(jellyBody).toBeInTheDocument();
       expect(jellyBody?.style.backgroundColor).toBe('rgb(255, 209, 220)');
     });
@@ -103,8 +103,8 @@ describe('JellyRenderer', () => {
         />
       );
 
-      const jellyBody = container.querySelector('[data-testid="jelly-body"]');
-      expect(jellyBody?.style.backgroundColor).toBe('rgb(255, 217, 61)');
+      const jellyBody = container.querySelector<HTMLElement>('[data-testid="jelly-body"]');
+      expect(jellyBody?.style.backgroundColor).toBe('rgb(255, 183, 197)');
     });
 
     it('sadness 감정 색상이 적용되어야 한다', () => {
@@ -117,8 +117,8 @@ describe('JellyRenderer', () => {
         />
       );
 
-      const jellyBody = container.querySelector('[data-testid="jelly-body"]');
-      expect(jellyBody?.style.backgroundColor).toBe('rgb(107, 203, 119)');
+      const jellyBody = container.querySelector<HTMLElement>('[data-testid="jelly-body"]');
+      expect(jellyBody?.style.backgroundColor).toBe('rgb(126, 184, 216)');
     });
 
     it('anger 감정 색상이 적용되어야 한다', () => {
@@ -131,8 +131,8 @@ describe('JellyRenderer', () => {
         />
       );
 
-      const jellyBody = container.querySelector('[data-testid="jelly-body"]');
-      expect(jellyBody?.style.backgroundColor).toBe('rgb(255, 107, 107)');
+      const jellyBody = container.querySelector<HTMLElement>('[data-testid="jelly-body"]');
+      expect(jellyBody?.style.backgroundColor).toBe('rgb(242, 139, 130)');
     });
 
     it('fear 감정 색상이 적용되어야 한다', () => {
@@ -145,8 +145,8 @@ describe('JellyRenderer', () => {
         />
       );
 
-      const jellyBody = container.querySelector('[data-testid="jelly-body"]');
-      expect(jellyBody?.style.backgroundColor).toBe('rgb(77, 150, 255)');
+      const jellyBody = container.querySelector<HTMLElement>('[data-testid="jelly-body"]');
+      expect(jellyBody?.style.backgroundColor).toBe('rgb(179, 157, 219)');
     });
 
     it('disgust 감정 색상이 적용되어야 한다', () => {
@@ -159,8 +159,8 @@ describe('JellyRenderer', () => {
         />
       );
 
-      const jellyBody = container.querySelector('[data-testid="jelly-body"]');
-      expect(jellyBody?.style.backgroundColor).toBe('rgb(168, 230, 207)');
+      const jellyBody = container.querySelector<HTMLElement>('[data-testid="jelly-body"]');
+      expect(jellyBody?.style.backgroundColor).toBe('rgb(129, 199, 132)');
     });
 
     it('background-color에 800ms ease-in-out 트랜지션이 적용되어야 한다', () => {
@@ -168,7 +168,7 @@ describe('JellyRenderer', () => {
         <JellyRenderer bodies={singleBody} face="idle" animation={0} />
       );
 
-      const jellyBody = container.querySelector('[data-testid="jelly-body"]');
+      const jellyBody = container.querySelector<HTMLElement>('[data-testid="jelly-body"]');
       expect(jellyBody?.style.transition).toContain('background-color 800ms ease-in-out');
     });
 
@@ -182,7 +182,7 @@ describe('JellyRenderer', () => {
         />
       );
 
-      const glowDiv = container.querySelector('[data-testid="jelly-glow"]');
+      const glowDiv = container.querySelector<HTMLElement>('[data-testid="jelly-glow"]');
       expect(glowDiv).toBeInTheDocument();
       // rgba(255, 107, 107, 0.4) → JSDOM은 rgb(a) 형식으로 렌더링
       expect(glowDiv?.style.backgroundColor).toBe('rgba(255, 107, 107, 0.4)');
@@ -193,7 +193,7 @@ describe('JellyRenderer', () => {
         <JellyRenderer bodies={singleBody} face="idle" animation={0} />
       );
 
-      const glowDiv = container.querySelector('[data-testid="jelly-glow"]');
+      const glowDiv = container.querySelector<HTMLElement>('[data-testid="jelly-glow"]');
       expect(glowDiv?.style.transition).toContain('background-color 800ms ease-in-out');
     });
 
@@ -202,9 +202,66 @@ describe('JellyRenderer', () => {
         <JellyRenderer bodies={singleBody} face="idle" animation={0} />
       );
 
-      const glowDiv = container.querySelector('[data-testid="jelly-glow"]');
+      const glowDiv = container.querySelector<HTMLElement>('[data-testid="jelly-glow"]');
       // 기본: rgba(255, 209, 220, 0.4)
       expect(glowDiv?.style.backgroundColor).toBe('rgba(255, 209, 220, 0.4)');
+    });
+  });
+
+  describe('새로운 감정 face 타입 렌더링', () => {
+    const singleBody = [{ position: { x: 100, y: 100 }, circleRadius: 40 }];
+
+    it('surprise 감정(wide 눈 + o 입)이 렌더링되어야 한다', () => {
+      const { container } = render(
+        <JellyRenderer bodies={singleBody} face="idle" animation={0} emotion="surprise" />
+      );
+
+      // 젤리 바디가 렌더링되고 SVG 요소가 존재하는지 확인
+      const jellyBody = container.querySelector<HTMLElement>('[data-testid="jelly-body"]');
+      expect(jellyBody).toBeInTheDocument();
+
+      // wide 눈 + o 입 SVG 요소 확인
+      const svgElements = jellyBody?.querySelectorAll('svg');
+      expect(svgElements?.length).toBeGreaterThanOrEqual(2);
+    });
+
+    it('love 감정(heart 눈 + smile 입)이 렌더링되어야 한다', () => {
+      const { container } = render(
+        <JellyRenderer bodies={singleBody} face="idle" animation={0} emotion="love" />
+      );
+
+      const jellyBody = container.querySelector<HTMLElement>('[data-testid="jelly-body"]');
+      expect(jellyBody).toBeInTheDocument();
+
+      // heart 눈 + smile 입 SVG 요소 확인
+      const svgElements = jellyBody?.querySelectorAll('svg');
+      expect(svgElements?.length).toBeGreaterThanOrEqual(2);
+    });
+
+    it('gratitude 감정(crescent 눈 + grin 입)이 렌더링되어야 한다', () => {
+      const { container } = render(
+        <JellyRenderer bodies={singleBody} face="idle" animation={0} emotion="gratitude" />
+      );
+
+      const jellyBody = container.querySelector<HTMLElement>('[data-testid="jelly-body"]');
+      expect(jellyBody).toBeInTheDocument();
+
+      // crescent 눈 + grin 입 SVG 요소 확인
+      const svgElements = jellyBody?.querySelectorAll('svg');
+      expect(svgElements?.length).toBeGreaterThanOrEqual(2);
+    });
+
+    it('hope 감정(sparkle 눈 + beam 입)이 렌더링되어야 한다', () => {
+      const { container } = render(
+        <JellyRenderer bodies={singleBody} face="idle" animation={0} emotion="hope" />
+      );
+
+      const jellyBody = container.querySelector<HTMLElement>('[data-testid="jelly-body"]');
+      expect(jellyBody).toBeInTheDocument();
+
+      // sparkle 눈 + beam 입 SVG 요소 확인
+      const svgElements = jellyBody?.querySelectorAll('svg');
+      expect(svgElements?.length).toBeGreaterThanOrEqual(2);
     });
   });
 });

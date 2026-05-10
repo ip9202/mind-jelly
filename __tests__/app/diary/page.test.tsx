@@ -24,6 +24,10 @@ jest.mock('@/stores/diaryStore', () => {
       anger: 0,
       fear: 0,
       disgust: 0,
+      surprise: 0,
+      love: 0,
+      gratitude: 0,
+      hope: 0,
     }),
     deleteEntry: jest.fn(),
   };
@@ -96,15 +100,6 @@ describe('DiaryPage', () => {
     render(<DiaryPage />);
 
     expect(screen.getByText('이번 주 감정 흐름')).toBeInTheDocument();
-  });
-
-  it('감정 범례를 렌더링한다', () => {
-    render(<DiaryPage />);
-
-    expect(screen.getByText('평온')).toBeInTheDocument();
-    expect(screen.getByText('분노')).toBeInTheDocument();
-    expect(screen.getByText('우울')).toBeInTheDocument();
-    expect(screen.getByText('불안')).toBeInTheDocument();
   });
 
   it('감정 일기 헤더를 렌더링한다', () => {

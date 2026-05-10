@@ -40,7 +40,7 @@ export function BeadGroup({ count, engine, emotion }: BeadGroupProps) {
 
     if (count <= lastCreatedCountRef.current) return;
 
-    const color = EMOTION_COLORS[emotion as keyof typeof EMOTION_COLORS] || '#FFD93D';
+    const color = EMOTION_COLORS[emotion as keyof typeof EMOTION_COLORS] || '#FFD1DC';
     const newCount = count - lastCreatedCountRef.current;
     const newInfos = new Map<number, BeadInfo>();
 
@@ -112,7 +112,7 @@ export function BeadGroup({ count, engine, emotion }: BeadGroupProps) {
               cx={bead.position.x}
               cy={bead.position.y}
               r={info?.radius || 9}
-              fill={info?.color || '#FFD93D'}
+              fill={info?.color || '#FFD1DC'}
               opacity={0.9}
             />
           );

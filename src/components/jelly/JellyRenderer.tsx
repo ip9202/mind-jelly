@@ -223,6 +223,58 @@ function renderEmotionEyes(emotion: EmotionType, r: number) {
           <path d="M 30 8 Q 38 4 46 8" stroke={eyeColor} strokeWidth="1.5" fill="none" opacity="0.5" />
         </svg>
       );
+    case 'wide': // surprise: 커다란 둥근 눈 + 확장된 동공 + 반사광
+      return (
+        <svg width={w} height={h} viewBox="0 0 50 26">
+          {/* 커다란 흰자 */}
+          <circle cx="14" cy="13" r="9.5" stroke={eyeColor} strokeWidth="1.5" fill="white" opacity="0.9" />
+          <circle cx="36" cy="13" r="9.5" stroke={eyeColor} strokeWidth="1.5" fill="white" opacity="0.9" />
+          {/* 확장된 동공 */}
+          <circle cx="14" cy="14" r="5.5" fill={eyeColor} />
+          <circle cx="36" cy="14" r="5.5" fill={eyeColor} />
+          {/* 반사광 하이라이트 */}
+          <circle cx="17" cy="11" r="2" fill="white" />
+          <circle cx="39" cy="11" r="2" fill="white" />
+        </svg>
+      );
+    case 'heart': // love: 하트 모양 눈
+      return (
+        <svg width={w} height={h} viewBox="0 0 50 24">
+          {/* 왼쪽 하트 */}
+          <path
+            d="M 14 8 C 14 4, 8 2, 8 7 C 8 11, 14 16, 14 16 C 14 16, 20 11, 20 7 C 20 2, 14 4, 14 8 Z"
+            fill="#E8788A"
+          />
+          {/* 오른쪽 하트 */}
+          <path
+            d="M 36 8 C 36 4, 30 2, 30 7 C 30 11, 36 16, 36 16 C 36 16, 42 11, 42 7 C 42 2, 36 4, 36 8 Z"
+            fill="#E8788A"
+          />
+        </svg>
+      );
+    case 'crescent': // gratitude: 아래로 향한 우아한 초승달 눈
+      return (
+        <svg width={w} height={h} viewBox="0 0 50 20">
+          {/* 우아한 아래 곡선 눈 */}
+          <path d="M 6 6 Q 14 18 22 6" stroke={eyeColor} strokeWidth="2.5" fill="none" strokeLinecap="round" />
+          <path d="M 28 6 Q 36 18 44 6" stroke={eyeColor} strokeWidth="2.5" fill="none" strokeLinecap="round" />
+        </svg>
+      );
+    case 'sparkle': // hope: 반짝이는 별 모양 눈
+      return (
+        <svg width={w} height={h} viewBox="0 0 50 24">
+          {/* 왼쪽 반짝이 */}
+          <path
+            d="M 14 2 L 15.5 9 L 22 10 L 15.5 11 L 14 18 L 12.5 11 L 6 10 L 12.5 9 Z"
+            fill="#F4C542"
+          />
+          {/* 오른쪽 반짝이 */}
+          <path
+            d="M 36 2 L 37.5 9 L 44 10 L 37.5 11 L 36 18 L 34.5 11 L 28 10 L 34.5 9 Z"
+            fill="#F4C542"
+          />
+        </svg>
+      );
     default:
       return null;
   }
@@ -265,6 +317,32 @@ function renderEmotionMouth(emotion: EmotionType, r: number) {
       return (
         <svg width={w * 0.8} height={h * 0.4} viewBox="0 0 32 10">
           <line x1="6" y1="5" x2="26" y2="5" stroke={mouthColor} strokeWidth="2.5" strokeLinecap="round" />
+        </svg>
+      );
+    case 'o': // surprise: 작고 둥근 O자형 입
+      return (
+        <svg width={r * 0.4} height={r * 0.4} viewBox="0 0 20 20">
+          <circle cx="10" cy="10" r="5.5" stroke={mouthColor} strokeWidth="2" fill="none" />
+        </svg>
+      );
+    case 'grin': // gratitude: 넓은 미소 + 이 힌트
+      return (
+        <svg width={w * 1.3} height={h * 1.1} viewBox="0 0 48 24">
+          {/* 이 힌트 (반투명) */}
+          <path d="M 6 8 Q 24 12 42 8 L 42 10 Q 24 14 6 10 Z" fill={mouthColor} opacity="0.2" />
+          {/* 넓은 미소 곡선 */}
+          <path d="M 6 8 Q 24 24 42 8" stroke={mouthColor} strokeWidth="2.5" fill="none" strokeLinecap="round" />
+        </svg>
+      );
+    case 'beam': // hope: 아주 넓은 환한 미소 + 보조개
+      return (
+        <svg width={w * 1.4} height={h * 1.0} viewBox="0 0 52 22">
+          {/* 넓은 미소 곡선 */}
+          <path d="M 4 8 Q 26 24 48 8" stroke={mouthColor} strokeWidth="2.5" fill="none" strokeLinecap="round" />
+          {/* 왼쪽 보조개 */}
+          <path d="M 2 10 Q 4 14 6 10" stroke={mouthColor} strokeWidth="1.5" fill="none" strokeLinecap="round" opacity="0.6" />
+          {/* 오른쪽 보조개 */}
+          <path d="M 46 10 Q 48 14 50 10" stroke={mouthColor} strokeWidth="1.5" fill="none" strokeLinecap="round" opacity="0.6" />
         </svg>
       );
     default:

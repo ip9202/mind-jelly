@@ -1,10 +1,13 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useSyncExternalStore } from 'react';
 import NavMenu from '@/components/layout/NavMenu';
+import { EmotionFace } from '@/components/jelly/EmotionFace';
 import { diaryStore } from '@/stores/diaryStore';
 import type { DiaryEntry } from '@/types/diary';
 import type { EmotionType } from '@/types/emotion';
+
+const emptySubscribe = () => () => {};
 
 // 감정별 UI 매핑
 const EMOTION_UI: Record<
@@ -129,8 +132,7 @@ function getMondayIndex(date: Date): Date {
 }
 
 export default function DiaryPage() {
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
+  const mounted = useSyncExternalStore(emptySubscribe, () => true, () => false);
 
   const today = new Date();
   const [currentYear, setCurrentYear] = useState(today.getFullYear());
@@ -419,21 +421,6 @@ export default function DiaryPage() {
             </div>
           )}
 
-          {/* 범례 */}
-          <div className="mt-[16px] flex justify-center gap-[24px]">
-            {(['joy', 'sadness', 'anger', 'fear', 'disgust', 'surprise', 'love', 'gratitude', 'hope'] as EmotionType[]).map(
-              (emotion) => (
-                <div key={emotion} className="flex items-center gap-1">
-                  <div
-                    className={`w-2 h-2 rounded-full ${EMOTION_UI[emotion].dot}`}
-                  />
-                  <span className="text-on-surface-variant font-gamja text-[14px]">
-                    {EMOTION_UI[emotion].label}
-                  </span>
-                </div>
-              ),
-            )}
-          </div>
         </section>
       </main>
 
@@ -455,9 +442,9 @@ function TimelineEntry({ entry }: { entry: DiaryEntry }) {
         <span className="w-1.5 h-1.5 bg-white rounded-full" />
       </div>
       <div className="flex items-center gap-[8px]">
-        <span className="material-symbols-outlined text-secondary">
-          {ui.icon}
-        </span>
+        <div className={`shrink-0 flex items-center justify-center w-8 h-8 ${ui.bg} rounded-full`}>
+          <EmotionFace emotion={entry.emotion} size={22} />
+        </div>
         <div>
           <p className="font-bold text-on-surface">{entry.text}</p>
           <p className="text-[13px] text-on-surface-variant">

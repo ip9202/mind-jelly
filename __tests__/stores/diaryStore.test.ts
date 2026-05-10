@@ -262,6 +262,10 @@ describe('diaryStore', () => {
         anger: 0,
         fear: 0,
         disgust: 0,
+        surprise: 0,
+        love: 0,
+        gratitude: 0,
+        hope: 0,
       });
     });
   });
