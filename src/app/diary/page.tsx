@@ -334,7 +334,7 @@ export default function DiaryPage() {
             타임라인
           </h2>
 
-          {dayEntries.length === 0 ? (
+          {!mounted || dayEntries.length === 0 ? (
             /* 빈 상태 */
             <div className="glass-card rounded-[20px] p-[32px] shadow-sm text-center">
               <span className="material-symbols-outlined text-on-surface-variant text-[48px] opacity-40" aria-hidden="true">
@@ -362,7 +362,7 @@ export default function DiaryPage() {
             이번 주 감정 흐름
           </h2>
 
-          {weekChartData.every((d) => d === null) ? (
+          {!mounted || weekChartData.every((d) => d === null) ? (
             /* 빈 상태 */
             <div className="text-center py-[16px]">
               <p className="text-on-surface-variant text-[14px]">
