@@ -89,7 +89,7 @@ export default function ReadyPage() {
             />
           </div>
           <p className="text-center text-outline font-caption text-[13px]" style={{ fontFamily: "'Gamja Flower', cursive" }}>
-            나만의 소중한 젤리에게 이름을 선물해주세요.
+            나만의 소중한 젤리에게 이름을 선물해줘.
           </p>
         </div>
       </main>

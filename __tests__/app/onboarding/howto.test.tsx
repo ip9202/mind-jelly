@@ -35,13 +35,13 @@ describe('HowtoPage', () => {
   it('소제목을 렌더링한다', () => {
     render(<HowtoPage />);
 
-    expect(screen.getByText('어떻게 하나요?')).toBeInTheDocument();
+    expect(screen.getByText('어떻게 하지?')).toBeInTheDocument();
   });
 
   it('설명 문구를 렌더링한다', () => {
     render(<HowtoPage />);
 
-    expect(screen.getByText('당신의 감정을 젤리에게 선물하세요.')).toBeInTheDocument();
+    expect(screen.getByText('네 감정을 젤리에게 선물해줘.')).toBeInTheDocument();
   });
 
   it('3단계 카드를 렌더링한다', () => {

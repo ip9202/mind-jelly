@@ -31,8 +31,8 @@ export default function HowtoPage() {
 
         {/* Heading Section */}
         <div className="text-center mb-12">
-          <h2 className="font-dongle text-[48px] text-on-surface mb-0 leading-none">어떻게 하나요?</h2>
-          <p className="font-gowun text-[16px] text-on-surface-variant">당신의 감정을 젤리에게 선물하세요.</p>
+          <h2 className="font-dongle text-[48px] text-on-surface mb-0 leading-none">어떻게 하지?</h2>
+          <p className="font-gowun text-[16px] text-on-surface-variant">네 감정을 젤리에게 선물해줘.</p>
         </div>
 
         {/* Visual Onboarding Steps */}
@@ -84,7 +84,7 @@ export default function HowtoPage() {
                 1
               </div>
               <p className="font-gowun text-[16px] text-on-surface">
-                감정 구슬을<br />선택하세요
+                감정 구슬을<br />골라봐
               </p>
             </div>
 
