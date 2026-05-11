@@ -19,6 +19,19 @@ jest.mock('@/stores/jellyStore', () => ({
   },
 }));
 
+// diaryStore 모킹 (supabaseUserId 없음 가정)
+jest.mock('@/stores/diaryStore', () => ({
+  diaryStore: {
+    getState: () => ({ supabaseUserId: null }),
+  },
+}));
+
+// Supabase db 모킹: 닉네임 중복 없음
+jest.mock('@/lib/supabase/db', () => ({
+  findUserByNickname: jest.fn().mockResolvedValue(null),
+  setNickname: jest.fn().mockResolvedValue(undefined),
+}));
+
 import ReadyPage from '@/app/onboarding/ready/page';
 
 describe('ReadyPage', () => {
@@ -42,30 +55,35 @@ describe('ReadyPage', () => {
     const user = userEvent.setup();
     render(<ReadyPage />);
 
-    const input = screen.getByPlaceholderText('젤리 이름 지어주기');
+    const input = screen.getByPlaceholderText(/젤리 이름 지어주기/);
     await user.type(input, '몽실이');
 
     const button = screen.getByRole('button', { name: '시작!' });
     await user.click(button);
 
+    // 비동기 처리 대기 (findUserByNickname → setJellyName → router.push)
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
     expect(mockSetJellyName).toHaveBeenCalledWith('몽실이');
     expect(mockPush).toHaveBeenCalledWith('/home');
   });
 
-  it('빈 이름일 때 기본값 "내 젤리"로 저장된다', async () => {
+  it('빈 이름일 때 에러 메시지를 표시하고 진행하지 않는다', async () => {
     const user = userEvent.setup();
     render(<ReadyPage />);
 
     const button = screen.getByRole('button', { name: '시작!' });
     await user.click(button);
 
-    expect(mockSetJellyName).toHaveBeenCalledWith('내 젤리');
+    expect(mockSetJellyName).not.toHaveBeenCalled();
+    expect(mockPush).not.toHaveBeenCalled();
+    expect(screen.getByText('젤리 이름을 입력해줘')).toBeInTheDocument();
   });
 
   it('젤리 이름 입력 필드를 렌더링한다', () => {
     render(<ReadyPage />);
 
-    const input = screen.getByPlaceholderText('젤리 이름 지어주기');
+    const input = screen.getByPlaceholderText(/젤리 이름 지어주기/);
     expect(input).toBeInTheDocument();
   });
 
@@ -73,7 +91,7 @@ describe('ReadyPage', () => {
     const user = userEvent.setup();
     render(<ReadyPage />);
 
-    const input = screen.getByPlaceholderText('젤리 이름 지어주기');
+    const input = screen.getByPlaceholderText(/젤리 이름 지어주기/);
     await user.type(input, '몽실이');
 
     expect(input).toHaveValue('몽실이');

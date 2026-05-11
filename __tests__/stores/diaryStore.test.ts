@@ -115,14 +115,16 @@ describe('diaryStore', () => {
         emotionKo: '슬픔',
       });
       const allEntries = diaryStore.getState().entries;
-      allEntries[2] = { ...allEntries[2], createdAt: '2026-05-10T10:00:00.000Z' };
+      // addEntry prepends, so allEntries[0] is the most recent ('다른 날')
+      allEntries[0] = { ...allEntries[0], createdAt: '2026-05-10T10:00:00.000Z' };
       diaryStore.setState({ entries: [...allEntries] });
 
       const result = diaryStore.getState().getEntriesByDate(new Date('2026-05-09'));
 
       expect(result).toHaveLength(2);
-      expect(result[0].text).toBe('오전 감정');
-      expect(result[1].text).toBe('오후 감정');
+      // Store order: '오후 감정' (added second, prepended) then '오전 감정' (added first)
+      expect(result[0].text).toBe('오후 감정');
+      expect(result[1].text).toBe('오전 감정');
     });
 
     it('엔트리가 없는 날짜는 빈 배열을 반환해야 한다', () => {

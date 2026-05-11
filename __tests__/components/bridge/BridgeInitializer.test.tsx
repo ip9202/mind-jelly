@@ -14,6 +14,26 @@ jest.mock('@/lib/toss/bridge', () => ({
   connectBridge: () => mockConnectBridge(),
 }));
 
+// Supabase auth / db 모킹 (BridgeInitializer가 init 시 호출)
+jest.mock('@/lib/supabase/auth', () => ({
+  initSupabaseSession: jest.fn().mockResolvedValue(null),
+}));
+jest.mock('@/lib/supabase/db', () => ({
+  getMyProfile: jest.fn().mockResolvedValue(null),
+}));
+
+// diaryStore / jellyStore의 setUserId / setJellyName 호출 회피
+jest.mock('@/stores/diaryStore', () => ({
+  diaryStore: {
+    getState: () => ({ setUserId: jest.fn().mockResolvedValue(undefined) }),
+  },
+}));
+jest.mock('@/stores/jellyStore', () => ({
+  jellyStore: {
+    getState: () => ({ setJellyName: jest.fn() }),
+  },
+}));
+
 describe('BridgeInitializer', () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -28,26 +48,32 @@ describe('BridgeInitializer', () => {
     expect(container.innerHTML).toBe('');
   });
 
-  it('마운트 시 detectWebView를 호출한다', () => {
+  it('마운트 시 detectWebView를 호출한다', async () => {
     mockDetectWebView.mockReturnValue(false);
 
     render(<BridgeInitializer />);
+
+    await new Promise((resolve) => setTimeout(resolve, 0));
 
     expect(mockDetectWebView).toHaveBeenCalledTimes(1);
   });
 
-  it('WebView가 아닐 때 isWebView를 false로 설정한다', () => {
+  it('WebView가 아닐 때 isWebView를 false로 설정한다', async () => {
     mockDetectWebView.mockReturnValue(false);
 
     render(<BridgeInitializer />);
+
+    await new Promise((resolve) => setTimeout(resolve, 0));
 
     expect(tossStore.getState().isWebView).toBe(false);
   });
 
-  it('WebView가 아닐 때 connectBridge를 호출하지 않는다', () => {
+  it('WebView가 아닐 때 connectBridge를 호출하지 않는다', async () => {
     mockDetectWebView.mockReturnValue(false);
 
     render(<BridgeInitializer />);
+
+    await new Promise((resolve) => setTimeout(resolve, 0));
 
     expect(mockConnectBridge).not.toHaveBeenCalled();
   });

@@ -1,6 +1,6 @@
 /**
  * SettingsPage 컴포넌트 테스트
- * 설정 페이지 - 색상 테마, 소리, 알림, 정보
+ * 설정 페이지 - 프로필, 젤리 모양, 정보
  */
 import { render, screen } from '@testing-library/react';
 
@@ -23,11 +23,17 @@ jest.mock('next/link', () => {
   };
 });
 
-// BottomNav 모킹
-jest.mock('@/components/layout/BottomNav', () => {
-  const MockNav = () => <nav data-testid="bottom-nav">Nav</nav>;
+// NavMenu 모킹
+jest.mock('@/components/layout/NavMenu', () => {
+  const MockNav = () => <nav data-testid="nav-menu">Nav</nav>;
   return { __esModule: true, default: MockNav };
 });
+
+// Supabase db 모킹
+jest.mock('@/lib/supabase/db', () => ({
+  getMyProfile: jest.fn().mockResolvedValue(null),
+  setNickname: jest.fn().mockResolvedValue(undefined),
+}));
 
 import SettingsPage from '@/app/settings/page';
 
@@ -35,56 +41,32 @@ describe('SettingsPage', () => {
   it('설정 타이틀을 렌더링한다', () => {
     render(<SettingsPage />);
 
-    expect(screen.getByText('설정')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: '설정' })).toBeInTheDocument();
   });
 
   it('뒤로가기 링크가 /home으로 연결된다', () => {
     render(<SettingsPage />);
 
-    const link = screen.getByRole('link');
-    expect(link).toHaveAttribute('href', '/home');
+    const backLink = screen.getAllByRole('link').find((l) => l.getAttribute('href') === '/home');
+    expect(backLink).toBeDefined();
   });
 
-  it('색상 테마 섹션을 렌더링한다', () => {
+  it('프로필 섹션을 렌더링한다', () => {
     render(<SettingsPage />);
 
-    expect(screen.getByText('색상 테마')).toBeInTheDocument();
+    expect(screen.getByText('프로필')).toBeInTheDocument();
   });
 
-  it('소리 설정 섹션을 렌더링한다', () => {
+  it('젤리 모양 섹션을 렌더링한다', () => {
     render(<SettingsPage />);
 
-    expect(screen.getByText('소리 설정')).toBeInTheDocument();
-  });
-
-  it('알림 섹션을 렌더링한다', () => {
-    render(<SettingsPage />);
-
-    expect(screen.getByText('알림')).toBeInTheDocument();
+    expect(screen.getByText('젤리 모양')).toBeInTheDocument();
   });
 
   it('정보 섹션을 렌더링한다', () => {
     render(<SettingsPage />);
 
     expect(screen.getByText('정보')).toBeInTheDocument();
-  });
-
-  it('배경 음악 설정을 렌더링한다', () => {
-    render(<SettingsPage />);
-
-    expect(screen.getByText('배경 음악')).toBeInTheDocument();
-  });
-
-  it('효과음 설정을 렌더링한다', () => {
-    render(<SettingsPage />);
-
-    expect(screen.getByText('효과음')).toBeInTheDocument();
-  });
-
-  it('데일리 리마인더를 렌더링한다', () => {
-    render(<SettingsPage />);
-
-    expect(screen.getByText('데일리 리마인더')).toBeInTheDocument();
   });
 
   it('버전 정보를 렌더링한다', () => {
@@ -103,14 +85,14 @@ describe('SettingsPage', () => {
   it('설정 페이지 헤더를 렌더링한다', () => {
     render(<SettingsPage />);
 
-    expect(screen.getByText('설정')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: '설정' })).toBeInTheDocument();
   });
 
-  it('색상 테마 설명 문구를 렌더링한다', () => {
+  it('젤리 모양 설명 문구를 렌더링한다', () => {
     render(<SettingsPage />);
 
     expect(
-      screen.getByText('젤리의 기분에 맞춰 색상을 변경해보세요'),
+      screen.getByText(/젤리의 기본 모양을 선택해보세요/),
     ).toBeInTheDocument();
   });
 });
