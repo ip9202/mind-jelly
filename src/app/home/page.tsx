@@ -11,6 +11,9 @@ import { EMOTION_THEME, EMOTION_COLORS, JELLY_COLOR } from '@/lib/constants/emot
 import { isTouchOnJelly, shouldHandleTouch } from '@/lib/utils/touchHandler';
 import { createHeartParticles } from '@/components/jelly/HeartParticle';
 import { EmotionFace } from '@/components/jelly/EmotionFace';
+import { InterstitialAd } from '@/components/ads/InterstitialAd';
+import { BannerAd } from '@/components/ads/BannerAd';
+import { canShowInterstitial } from '@/lib/ad/adFrequencyControl';
 import type { EmotionType } from '@/types/emotion';
 
 const PhysicsCanvas = dynamic(
@@ -74,6 +77,7 @@ export default function HomePage() {
   const [jellyPos, setJellyPos] = useState({ x: 400, y: 240 });
   const matterRef = useRef<typeof import('matter-js') | null>(null);
   const [uiState, setUiState] = useState<UiState>('idle');
+  const [showInterstitial, setShowInterstitial] = useState(false);
   const [keyboardHeight, setKeyboardHeight] = useState(0);
 
   // SPEC-TOUCH-001: 하트 파티클 상태
@@ -206,10 +210,22 @@ export default function HomePage() {
         jellyStore.getState().setEmotionColor(EMOTION_COLORS[lastEmotion]);
       }, 0);
 
-      const timer = setTimeout(() => {
+      // 전면형 광고 타이머 설정
+      // 감정 선택 중(input)에는 광고 표시하지 않음 (REQ-AD-005)
+      const adTimer = setTimeout(() => {
+        if (uiState !== 'input' && canShowInterstitial()) {
+          setShowInterstitial(true);
+        }
+      }, 0);
+
+      const reportTimer = setTimeout(() => {
         setUiState('report');
       }, SATISFIED_DISPLAY_MS);
-      return () => clearTimeout(timer);
+
+      return () => {
+        clearTimeout(adTimer);
+        clearTimeout(reportTimer);
+      };
     }
   }, [uiState, currentState, lastEmotion]);
 
@@ -425,6 +441,18 @@ export default function HomePage() {
             </>
           )}
         </div>
+
+        {/* 전면형 광고 - satisfied→report 전환 시점에 표시 */}
+        {showInterstitial && (
+          <InterstitialAd
+            onClosed={() => {
+              setShowInterstitial(false);
+            }}
+          />
+        )}
+
+        {/* 배너 광고 - report 상태일 때만 표시 (REQ-AD-003) */}
+        {uiState === 'report' && <BannerAd show={true} />}
 
         {/* Bottom Content Area (idle: message card + CTA, report: fade-in card) */}
         {(uiState === 'idle' || uiState === 'report') && (

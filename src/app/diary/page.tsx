@@ -475,6 +475,7 @@ function TimelineEntry({ entry }: { entry: DiaryEntry }) {
   // SPEC-DIARY-002: 스와이프 삭제 상태
   const [swipeOffset, setSwipeOffset] = useState(0);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [swipeActiveState, setSwipeActiveState] = useState(false);
   const swipeStartX = useRef<number | null>(null);
   const swipeStartY = useRef<number | null>(null);
   const swipeActive = useRef<boolean>(false);
@@ -484,6 +485,7 @@ function TimelineEntry({ entry }: { entry: DiaryEntry }) {
     swipeStartX.current = e.touches[0].clientX;
     swipeStartY.current = e.touches[0].clientY;
     swipeActive.current = false;
+    setSwipeActiveState(false);
   }
 
   function handleCardTouchMove(e: React.TouchEvent) {
@@ -493,6 +495,7 @@ function TimelineEntry({ entry }: { entry: DiaryEntry }) {
     // 세로 스크롤 우선: 가로 우세할 때만 활성화
     if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 8) {
       swipeActive.current = true;
+      setSwipeActiveState(true);
     }
     if (!swipeActive.current) return;
     // 왼쪽 스와이프만 허용, 최대 -80
@@ -505,6 +508,7 @@ function TimelineEntry({ entry }: { entry: DiaryEntry }) {
       swipeStartX.current = null;
       swipeStartY.current = null;
       swipeActive.current = false;
+      setSwipeActiveState(false);
       return;
     }
     if (swipeActive.current) {
@@ -518,6 +522,7 @@ function TimelineEntry({ entry }: { entry: DiaryEntry }) {
     swipeStartX.current = null;
     swipeStartY.current = null;
     swipeActive.current = false;
+    setSwipeActiveState(false);
   }
 
   function handleCardClick() {
@@ -575,6 +580,11 @@ function TimelineEntry({ entry }: { entry: DiaryEntry }) {
 
   const showDeleteBtn = swipeOffset <= -60;
 
+  // transition 값 계산 (ref 접근 방지)
+  const cardTransition = useMemo(() => {
+    return swipeActiveState ? 'none' : 'transform 0.2s';
+  }, [swipeActiveState]);
+
   return (
     <>
       <div className="relative overflow-hidden rounded-[20px]">
@@ -600,7 +610,7 @@ function TimelineEntry({ entry }: { entry: DiaryEntry }) {
         onTouchEnd={handleCardTouchEnd}
         style={{
           transform: `translateX(${swipeOffset}px)`,
-          transition: swipeActive.current ? 'none' : 'transform 0.2s',
+          transition: cardTransition,
         }}
         className="glass-card rounded-[20px] p-[16px] shadow-sm relative transition-all active:scale-[0.98] cursor-pointer"
       >
