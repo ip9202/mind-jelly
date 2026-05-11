@@ -10,6 +10,7 @@ import { usePhysicsInit } from './usePhysicsInit';
 import { EMOTION_THEME, EMOTION_COLORS, JELLY_COLOR } from '@/lib/constants/emotion';
 import { isTouchOnJelly, shouldHandleTouch } from '@/lib/utils/touchHandler';
 import { createHeartParticles } from '@/components/jelly/HeartParticle';
+import { EmotionFace } from '@/components/jelly/EmotionFace';
 import type { EmotionType } from '@/types/emotion';
 
 const PhysicsCanvas = dynamic(
@@ -46,6 +47,25 @@ type UiState = 'idle' | 'input' | 'restoring' | 'beads' | 'report';
 const RESTORE_DURATION_MS = 500;
 const SATISFIED_DISPLAY_MS = 3000;
 const REPORT_DISPLAY_MS = 4000;
+
+// @MX:NOTE: 배경 장식용 9개 감정 비드 (SPEC-BEAD-AMBIENT-001)
+const AMBIENT_BEADS: Array<{
+  emotion: EmotionType;
+  top: string;
+  left: string;
+  size: number;
+  delay: string;
+}> = [
+  { emotion: 'joy',        top: '18%', left: '8%',  size: 48, delay: '0s'   },
+  { emotion: 'sadness',    top: '12%', left: '55%', size: 40, delay: '1.2s' },
+  { emotion: 'anger',      top: '65%', left: '72%', size: 44, delay: '2.5s' },
+  { emotion: 'fear',       top: '42%', left: '5%',  size: 36, delay: '0.8s' },
+  { emotion: 'disgust',    top: '72%', left: '15%', size: 40, delay: '3s'   },
+  { emotion: 'surprise',   top: '8%',  left: '78%', size: 44, delay: '1.8s' },
+  { emotion: 'love',       top: '38%', left: '82%', size: 48, delay: '0.4s' },
+  { emotion: 'gratitude',  top: '78%', left: '55%', size: 36, delay: '2s'   },
+  { emotion: 'hope',       top: '78%', left: '85%', size: 40, delay: '1.5s' },
+];
 
 export default function HomePage() {
   const mounted = useSyncExternalStore(emptySubscribe, () => true, () => false);
@@ -339,24 +359,22 @@ export default function HomePage() {
 
         {/* Emotion Beads Canvas (decorative) */}
         <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
-          <div className="absolute top-[30%] left-[25%] w-6 h-6 rounded-full bg-yellow-200 border-2 border-yellow-300 shadow-sm flex items-center justify-center jelly-float pointer-events-auto cursor-pointer hover:scale-110 transition-transform" style={{ animationDelay: '0s' }}>
-            <div className="flex gap-0.5">
-              <div className="w-1 h-1 bg-on-surface-variant rounded-full"></div>
-              <div className="w-1 h-1 bg-on-surface-variant rounded-full"></div>
+          {mounted && AMBIENT_BEADS.map(({ emotion, top, left, size, delay }) => (
+            <div
+              key={emotion}
+              className="absolute rounded-full flex items-center justify-center jelly-float shadow-sm border-2 border-white/40"
+              style={{
+                top,
+                left,
+                width: size,
+                height: size,
+                backgroundColor: EMOTION_COLORS[emotion] + 'CC',
+                animationDelay: delay,
+              }}
+            >
+              <EmotionFace emotion={emotion} size={Math.round(size * 0.45)} />
             </div>
-          </div>
-          <div className="absolute top-[45%] right-[20%] w-4 h-4 rounded-full bg-jelly-sad border-2 border-blue-200 shadow-sm flex items-center justify-center jelly-float pointer-events-auto cursor-pointer hover:scale-110 transition-transform" style={{ animationDelay: '1s' }}>
-            <div className="w-1 h-0.5 bg-on-surface-variant rounded-full"></div>
-          </div>
-          <div className="absolute bottom-[45%] left-[30%] w-5 h-5 rounded-full bg-jelly-anger border-2 border-red-200 shadow-sm flex items-center justify-center jelly-float pointer-events-auto cursor-pointer hover:scale-110 transition-transform" style={{ animationDelay: '2s' }}>
-            <div className="flex gap-0.5">
-              <div className="w-1 h-1 bg-white rounded-full"></div>
-              <div className="w-1 h-1 bg-white rounded-full"></div>
-            </div>
-          </div>
-          <div className="absolute top-[20%] right-[40%] w-4 h-4 rounded-full bg-green-200 border-2 border-green-300 shadow-sm flex items-center justify-center jelly-float pointer-events-auto cursor-pointer hover:scale-110 transition-transform" style={{ animationDelay: '1.5s' }}>
-            <div className="w-1.5 h-1.5 border-t border-on-surface-variant rounded-full"></div>
-          </div>
+          ))}
         </div>
 
         {/* Jelly Container - takes remaining space, jelly centered within */}
