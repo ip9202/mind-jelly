@@ -2,7 +2,7 @@
  * 감정 분석기 응답 시간 테스트
  * SPEC-JELLY-002: glm-4-plus 기본, glm-4.5-flash 폴백
  */
-import { describe, it, expect, beforeAll, skip } from '@jest/globals';
+import { describe, it, expect, beforeAll } from '@jest/globals';
 import { analyzeEmotion } from '@/lib/ai/analyzer';
 
 const hasApiKey = process.env.NEXT_PUBLIC_OPENAI_API_KEY &&

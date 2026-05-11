@@ -1,14 +1,15 @@
 'use client';
 
-import { hexToRgba } from '@/lib/utils/color';
+import { hexToRgba, lightenHex, darkenHex } from '@/lib/utils/color';
 import { JELLY_COLOR, EMOTION_THEME, JELLY_DEFAULT_SHAPE } from '@/lib/constants/emotion';
 import { JELLY_SHAPE_CONFIGS } from '@/lib/constants/jellyShapes';
 import type { EmotionType } from '@/types/emotion';
 import type { JellyShape } from '@/types/physics';
+import type { CSSProperties } from 'react';
 
 interface JellyRendererProps {
   bodies: Array<{ position: { x: number; y: number }; circleRadius?: number }>;
-  face: 'idle' | 'anticipation' | 'eating' | 'satisfied';
+  face: 'idle' | 'anticipation' | 'eating' | 'satisfied' | 'happy';
   animation: number;
   // M2: 감정 기반 색상 (기본값: JELLY_COLOR)
   emotionColor?: string;
@@ -18,9 +19,8 @@ interface JellyRendererProps {
   jellyShape?: JellyShape;
 }
 
-// @MX:NOTE: clipPath ID는 단일 젤리 인스턴스 가정으로 고정
-const JELLY_CLIP_PATH_ID = 'jelly-shape-clip';
-
+// @MX:ANCHOR: 3D 글로시 풍선 젤리 렌더러 (홈/감정플로우/다이어리 3곳 이상에서 사용)
+// @MX:REASON: SVG 네이티브 렌더링 + radialGradient + SMIL 애니메이션으로 풍선형 3D 입체감 구현
 export function JellyRenderer({ bodies, face, emotionColor, emotion, jellyShape }: JellyRendererProps) {
   if (bodies.length === 0) return null;
 
@@ -33,22 +33,41 @@ export function JellyRenderer({ bodies, face, emotionColor, emotion, jellyShape 
   const currentColor = emotionColor || JELLY_COLOR;
   const glowColor = hexToRgba(currentColor, 0.4);
 
-  // @MX:NOTE: 감정별 블롭 형태 (CSS 변수로 wobble 애니메이션 지원)
-  const currentShape = emotion && EMOTION_THEME[emotion]
+  // @MX:NOTE: 감정별 EMOTION_THEME 참조 (face 렌더링용, shape는 SVG path가 대체)
+  const _emotionShape = emotion && EMOTION_THEME[emotion]
     ? EMOTION_THEME[emotion].shape
     : JELLY_DEFAULT_SHAPE;
+  void _emotionShape;
 
-  const borderRadius = currentShape.borderRadius;
-  const borderRadiusAlt = currentShape.borderRadiusAlt || borderRadius;
+  // 사용자가 선택한 모양 (기본값: 'ppung')
+  const selectedShape: JellyShape = jellyShape || 'ppung';
+  let shapeConfig = JELLY_SHAPE_CONFIGS[selectedShape];
 
-  // @MX:NOTE: 800ms 트랜지션 (GPU 컴포지팅, 60fps 유지)
-  const transitionStyle = 'background-color 800ms ease-in-out, border-radius 800ms ease-in-out, box-shadow 800ms ease-in-out, clip-path 800ms ease-in-out';
+  // 안전장치: shapeConfig가 undefined인 경우 기본 모양 사용 (런타임 마이그레이션)
+  if (!shapeConfig) {
+    shapeConfig = JELLY_SHAPE_CONFIGS.ppung;
+  }
+  const jellyPath = shapeConfig.path;
+  const { faceOffset } = shapeConfig;
 
-  // 사용자가 선택한 모양 (circle은 clipPath 없이 border-radius만 사용)
-  const selectedShape: JellyShape = jellyShape || 'circle';
-  const shapeConfig = JELLY_SHAPE_CONFIGS[selectedShape];
-  const useClipPath = selectedShape !== 'circle';
-  const clipPathStyle = useClipPath ? `url(#${JELLY_CLIP_PATH_ID})` : undefined;
+  // SMIL 애니메이션 속성 (pathAlt가 있을 때만 활성화) - 더 빠르고 부드러운 울룩불룩 효과
+  const smilAttrs = shapeConfig.pathAlt ? {
+    dur: '2.5s',
+    repeatCount: 'indefinite' as const,
+    calcMode: 'spline' as const,
+    keyTimes: '0;0.5;1',
+    keySplines: '0.4 0 0.6 1;0.4 0 0.6 1',
+    values: `${shapeConfig.path};${shapeConfig.pathAlt};${shapeConfig.path}`,
+  } : null;
+
+  const svgStyle: CSSProperties = {
+    overflow: 'visible',
+    animation: 'jelly-float 4s ease-in-out infinite',
+    transition: 'all 800ms ease-in-out',
+    position: 'absolute',
+    top: 0,
+    left: 0,
+  };
 
   return (
     <div
@@ -61,331 +80,304 @@ export function JellyRenderer({ bodies, face, emotionColor, emotion, jellyShape 
         height: r * 5,
       }}
     >
-      {/* clipPath 정의 (objectBoundingBox 좌표계 0~1) */}
-      {useClipPath && (
-        <svg
-          aria-hidden
-          style={{ position: 'absolute', width: 0, height: 0, overflow: 'hidden' }}
-        >
-          <defs>
-            <clipPath id={JELLY_CLIP_PATH_ID} clipPathUnits="objectBoundingBox">
-              {/* @MX:NOTE: SMIL animate로 경계 자체를 흔들어 젤리 질감 구현 */}
-              <path d={shapeConfig.path}>
-                {shapeConfig.pathAlt && (
-                  <animate
-                    attributeName="d"
-                    dur="3.7s"
-                    repeatCount="indefinite"
-                    calcMode="spline"
-                    keyTimes="0;0.5;1"
-                    keySplines="0.42 0 0.58 1;0.42 0 0.58 1"
-                    values={`${shapeConfig.path};${shapeConfig.pathAlt};${shapeConfig.path}`}
-                  />
-                )}
-              </path>
-            </clipPath>
-          </defs>
-        </svg>
-      )}
-
-      {/* 글로우 효과 - 감정별 색상 외곽광 */}
-      <div
-        data-testid="jelly-glow"
-        className="absolute inset-0 scale-125 blur-3xl"
-        style={{
-          borderRadius,
-          backgroundColor: glowColor,
-          clipPath: clipPathStyle,
-          transition: 'background-color 800ms ease-in-out, border-radius 800ms ease-in-out, clip-path 800ms ease-in-out',
-        }}
-      />
-
-      {/* 젤리 바디 - 유기적 블롭 형태 */}
-      <div
-        data-testid="jelly-body"
-        className="relative w-full h-full flex items-center justify-center"
-        style={{
-          // @MX:NOTE: CSS 변수로 wobble 애니메이션 구동
-          '--jelly-br1': borderRadius,
-          '--jelly-br2': borderRadiusAlt,
-          borderRadius,
-          clipPath: clipPathStyle,
-          backgroundColor: currentColor,
-          opacity: 0.88,
-          // 글래스모피즘 효과
-          backdropFilter: 'blur(2px)',
-          WebkitBackdropFilter: 'blur(2px)',
-          // 3D 젤리 질감: 내부 그림자 + 외곽광
-          boxShadow: [
-            'inset -8px -8px 20px rgba(0,0,0,0.06)',
-            'inset 8px 8px 24px rgba(255,255,255,0.5)',
-            `0 0 30px ${hexToRgba(currentColor, 0.3)}`,
-          ].join(', '),
-          border: '3px solid rgba(255, 255, 255, 0.35)',
-          transition: transitionStyle,
-          // 부유 + 진동 복합 애니메이션
-          animation: 'jelly-float 4s ease-in-out infinite, jelly-wobble 6s ease-in-out infinite',
-        } as React.CSSProperties}
+      <svg
+        viewBox="0 0 1 1"
+        width={r * 5}
+        height={r * 5}
+        style={svgStyle}
+        aria-hidden
       >
-        {/* 표정 레이어 */}
-        <div
-          className="flex flex-col items-center"
-          style={{ marginTop: r * 0.05, gap: r * 0.06 }}
+        <defs>
+          {/* 3D 깊이감을 위한 radialGradient: 좌상단 흰색 하이라이트 → 베이스 색 → 우하단 어두운 색 */}
+          <radialGradient id="jelly-grad" cx="0.35" cy="0.28" r="0.72" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stopColor="white" stopOpacity="0.85" />
+            <stop offset="22%" stopColor={lightenHex(currentColor, 45)} />
+            <stop offset="62%" stopColor={currentColor} />
+            <stop offset="100%" stopColor={darkenHex(currentColor, 25)} />
+          </radialGradient>
+
+          {/* 글로우 블러 필터 - 더 생생한 광채 */}
+          <filter id="jelly-glow-filter" x="-40%" y="-40%" width="180%" height="180%">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="0.055" result="blur" />
+          </filter>
+
+          {/* 드롭 섀도우 - 더 깊은 입체감 */}
+          <filter id="jelly-shadow" x="-20%" y="-10%" width="140%" height="145%">
+            <feDropShadow dx="0" dy="0.040" stdDeviation="0.045" floodColor={currentColor} floodOpacity="0.42" />
+          </filter>
+
+          {/* 하이라이트를 젤리 형태 안쪽으로 클리핑하기 위한 마스크 */}
+          <mask id="jelly-mask">
+            <path d={jellyPath} fill="white">
+              {smilAttrs && <animate attributeName="d" {...smilAttrs} />}
+            </path>
+          </mask>
+        </defs>
+
+        {/* 외곽 글로우 */}
+        <path
+          data-testid="jelly-glow"
+          d={jellyPath}
+          fill={glowColor}
+          filter="url(#jelly-glow-filter)"
+          opacity="0.75"
+          transform="translate(0.5 0.5) scale(1.22) translate(-0.5 -0.5)"
         >
-          {emotion && EMOTION_THEME[emotion] ? (
-            // 감정 표정 (SVG 기반)
+          {smilAttrs && <animate attributeName="d" {...smilAttrs} />}
+        </path>
+
+        {/* 3D 그라디언트가 적용된 메인 젤리 바디 */}
+        <path
+          data-testid="jelly-body"
+          d={jellyPath}
+          fill="url(#jelly-grad)"
+          filter="url(#jelly-shadow)"
+          stroke="rgba(255,255,255,0.4)"
+          strokeWidth="0.016"
+          opacity="0.93"
+          style={{ transition: 'fill 800ms ease-in-out' }}
+        >
+          {smilAttrs && <animate attributeName="d" {...smilAttrs} />}
+        </path>
+
+        {/* 젤리 형태로 클리핑된 하이라이트 그룹 */}
+        <g mask="url(#jelly-mask)">
+          {/* 메인 하이라이트 블롭 - 크고 부드러운 광채 */}
+          <ellipse cx="0.33" cy="0.26" rx="0.17" ry="0.10" fill="white" opacity="0.52" style={{ filter: 'blur(2px)' }} />
+          {/* 스페큘러 하이라이트 - 선명한 반사광 */}
+          <ellipse cx="0.26" cy="0.21" rx="0.055" ry="0.036" fill="white" opacity="0.88" transform="rotate(-22 0.26 0.21)" />
+          {/* 작은 2차 스페큘러 */}
+          <circle cx="0.35" cy="0.18" r="0.020" fill="white" opacity="0.70" />
+        </g>
+
+        {/* 표정 그룹 - 젤리 바디와 함께 움직이도록 mask 적용 */}
+        <g mask="url(#jelly-mask)" className="jelly-face">
+          {/* eating은 emotion보다 우선: 구슬 먹는 애니메이션이 감정 표정을 덮어씀 */}
+          {face === 'eating' ? (
             <>
-              {renderEmotionEyes(emotion, r)}
-              {renderEmotionMouth(emotion, r)}
+              <path
+                d={`M 0.34 ${faceOffset.eyeY} L 0.42 ${faceOffset.eyeY} M 0.58 ${faceOffset.eyeY} L 0.66 ${faceOffset.eyeY}`}
+                stroke="#7a5761"
+                strokeWidth="0.008"
+                fill="none"
+                strokeLinecap="round"
+              />
+              <ellipse
+                cx="0.50"
+                cy={faceOffset.mouthY + 0.04}
+                rx="0.12"
+                ry="0.07"
+                stroke="#7a5761"
+                strokeWidth="0.008"
+                fill="rgba(80, 45, 55, 0.50)"
+              />
+            </>
+          ) : emotion && EMOTION_THEME[emotion] ? (
+            // 감정 표정 (SVG 기반) - faceOffset 적용
+            <>
+              {renderEmotionEyes(emotion, faceOffset)}
+              {renderEmotionMouth(emotion, faceOffset)}
             </>
           ) : (
-            // 기본 상태 표정 (idle/anticipation/eating/satisfied)
+            // 기본 상태 표정 (idle/anticipation/eating/satisfied) - 하나의 path로 통합
             <>
-              {/* 기본 눈: 큰 도트 */}
-              <svg width={r * 1.4} height={r * 0.56} viewBox="0 0 50 18">
-                <circle cx="14" cy="9" r="5.5" fill="#7a5761" />
-                <circle cx="36" cy="9" r="5.5" fill="#7a5761" />
-              </svg>
-              {/* 상태별 입 */}
               {face === 'idle' && (
-                <svg width={r * 0.6} height={r * 0.6} viewBox="0 0 20 20">
-                  <circle cx="10" cy="10" r="6" stroke="#7a5761" strokeWidth="2" fill="none" opacity="0.7" />
-                </svg>
-              )}
-              {face === 'eating' && (
-                <svg width={r * 1.1} height={r * 0.8} viewBox="0 0 40 30">
-                  <ellipse cx="20" cy="18" rx="12" ry="8" fill="#FF6B6B" opacity="0.8" />
-                </svg>
+                <path
+                  d={`
+                    M 0.34 ${faceOffset.eyeY} L 0.42 ${faceOffset.eyeY}
+                    M 0.58 ${faceOffset.eyeY} L 0.66 ${faceOffset.eyeY}
+                    M 0.42 ${faceOffset.mouthY + 0.04} Q 0.5 ${faceOffset.mouthY - 0.04} 0.58 ${faceOffset.mouthY + 0.04}
+                  `}
+                  stroke="#7a5761"
+                  strokeWidth="0.008"
+                  fill="none"
+                  strokeLinecap="round"
+                />
               )}
               {face === 'satisfied' && (
-                <svg width={r * 1.1} height={r * 0.6} viewBox="0 0 40 20">
-                  <path d="M 4 4 Q 20 18 36 4" stroke="#7a5761" strokeWidth="2.5" fill="none" strokeLinecap="round" />
-                </svg>
+                <path
+                  d={`
+                    M 0.34 ${faceOffset.eyeY - 0.01} L 0.42 ${faceOffset.eyeY - 0.01}
+                    M 0.58 ${faceOffset.eyeY - 0.01} L 0.66 ${faceOffset.eyeY - 0.01}
+                    M 0.38 ${faceOffset.mouthY - 0.06} Q 0.50 ${faceOffset.mouthY + 0.06} 0.62 ${faceOffset.mouthY - 0.06}
+                  `}
+                  stroke="#7a5761"
+                  strokeWidth="0.008"
+                  fill="none"
+                  strokeLinecap="round"
+                />
+              )}
+              {/* SPEC-TOUCH-001 REQ-TOUCH-002: happy 표정 (^ ^ 눈 + 큰 U자 미소) */}
+              {face === 'happy' && (
+                <path
+                  d={`
+                    M 0.34 ${faceOffset.eyeY + 0.02} Q 0.38 ${faceOffset.eyeY - 0.04} 0.42 ${faceOffset.eyeY + 0.02}
+                    M 0.58 ${faceOffset.eyeY + 0.02} Q 0.62 ${faceOffset.eyeY - 0.04} 0.66 ${faceOffset.eyeY + 0.02}
+                    M 0.30 ${faceOffset.mouthY - 0.02} Q 0.50 ${faceOffset.mouthY + 0.18} 0.70 ${faceOffset.mouthY - 0.02}
+                  `}
+                  stroke="#7a5761"
+                  strokeWidth="0.008"
+                  fill="none"
+                  strokeLinecap="round"
+                />
               )}
               {face === 'anticipation' && (
-                <svg width={r * 0.7} height={r * 0.44} viewBox="0 0 25 15">
-                  <ellipse cx="12.5" cy="8" rx="8" ry="5" fill="#7a5761" opacity="0.6" />
-                </svg>
+                <path
+                  d={`
+                    M 0.35 ${faceOffset.eyeY - 0.01} L 0.41 ${faceOffset.eyeY - 0.01}
+                    M 0.59 ${faceOffset.eyeY - 0.01} L 0.65 ${faceOffset.eyeY - 0.01}
+                    M 0.44 ${faceOffset.mouthY - 0.02} L 0.56 ${faceOffset.mouthY - 0.02}
+                  `}
+                  stroke="#7a5761"
+                  strokeWidth="0.008"
+                  fill="none"
+                  strokeLinecap="round"
+                  opacity="0.7"
+                />
               )}
             </>
           )}
-        </div>
-
-        {/* 내부 하이라이트 - 3D 젤리 광택 */}
-        <div
-          className="absolute rounded-full blur-md"
-          style={{
-            top: r * 0.25,
-            left: r * 0.45,
-            width: r * 0.7,
-            height: r * 0.35,
-            backgroundColor: 'rgba(255, 255, 255, 0.45)',
-            transform: 'rotate(-25deg)',
-            pointerEvents: 'none',
-          }}
-        />
-
-        {/* 작은 하이라이트 도트 - 젤리 반사광 */}
-        <div
-          className="absolute rounded-full"
-          style={{
-            top: r * 0.2,
-            left: r * 0.35,
-            width: r * 0.12,
-            height: r * 0.1,
-            backgroundColor: 'rgba(255, 255, 255, 0.7)',
-            transform: 'rotate(-15deg)',
-            pointerEvents: 'none',
-          }}
-        />
-      </div>
+        </g>
+      </svg>
     </div>
   );
 }
 
-// @MX:NOTE: 감정별 SVG 눈 렌더링
-// @MX:REASON: 5개 감정 타입별 고유 SVG 눈 모양 렌더링
-function renderEmotionEyes(emotion: EmotionType, r: number) {
+// @MX:NOTE: 감정별 SVG 눈 렌더링 (viewBox 0 0 1 1 기반)
+// @MX:REASON: 좌측 눈 중심 x=0.38, 우측 눈 중심 x=0.62 → SVG 중심 0.50 대칭, idle 표정과 동일 간격
+function renderEmotionEyes(emotion: EmotionType, faceOffset: { eyeY: number; mouthY: number }) {
   const theme = EMOTION_THEME[emotion];
   const eyeColor = '#7a5761';
-  const w = r * 1.6;
-  const h = r * 0.7;
+
+  const eyeY = faceOffset.eyeY;
 
   switch (theme.face.eyes) {
     case 'happy': // joy: ^ ^ 행복한 곡선 눈
       return (
-        <svg width={w} height={h} viewBox="0 0 50 22">
-          <path d="M 6 16 Q 14 4 22 16" stroke={eyeColor} strokeWidth="2.5" fill="none" strokeLinecap="round" />
-          <path d="M 28 16 Q 36 4 44 16" stroke={eyeColor} strokeWidth="2.5" fill="none" strokeLinecap="round" />
-        </svg>
+        <g className="emotion-eyes">
+          <path d={`M 0.34 ${eyeY + 0.02} Q 0.38 ${eyeY - 0.04} 0.42 ${eyeY + 0.02}`} stroke={eyeColor} strokeWidth="0.008" fill="none" strokeLinecap="round" />
+          <path d={`M 0.58 ${eyeY + 0.02} Q 0.62 ${eyeY - 0.04} 0.66 ${eyeY + 0.02}`} stroke={eyeColor} strokeWidth="0.008" fill="none" strokeLinecap="round" />
+        </g>
       );
     case 'sad': // sadness: U자형 처진 눈 + 눈물
       return (
-        <svg width={w} height={h * 1.3} viewBox="0 0 50 28">
-          {/* U자 눈 */}
-          <path d="M 6 6 Q 14 22 22 6" stroke={eyeColor} strokeWidth="2.5" fill="none" strokeLinecap="round" />
-          <path d="M 28 6 Q 36 22 44 6" stroke={eyeColor} strokeWidth="2.5" fill="none" strokeLinecap="round" />
-          {/* 눈물 방울 */}
-          <ellipse cx="22" cy="24" rx="1.5" ry="2.5" fill="#AEC6CF" opacity="0.7" />
-          <ellipse cx="36" cy="22" rx="1.5" ry="2.5" fill="#AEC6CF" opacity="0.5" />
-        </svg>
+        <g className="emotion-eyes">
+          <path d={`M 0.34 ${eyeY - 0.04} Q 0.38 ${eyeY + 0.10} 0.42 ${eyeY - 0.04}`} stroke={eyeColor} strokeWidth="0.008" fill="none" strokeLinecap="round" />
+          <path d={`M 0.58 ${eyeY - 0.04} Q 0.62 ${eyeY + 0.10} 0.66 ${eyeY - 0.04}`} stroke={eyeColor} strokeWidth="0.008" fill="none" strokeLinecap="round" />
+          <ellipse cx="0.42" cy={eyeY + 0.10} rx="0.006" ry="0.01" fill="#AEC6CF" opacity="0.7" />
+          <ellipse cx="0.66" cy={eyeY + 0.08} rx="0.006" ry="0.01" fill="#AEC6CF" opacity="0.5" />
+        </g>
       );
     case 'angry': // anger: 각진 눈썹 + 날카로운 눈
       return (
-        <svg width={w} height={h * 1.2} viewBox="0 0 50 26">
-          {/* 눈썹 */}
-          <line x1="3" y1="4" x2="20" y2="10" stroke={eyeColor} strokeWidth="3" strokeLinecap="round" />
-          <line x1="47" y1="4" x2="30" y2="10" stroke={eyeColor} strokeWidth="3" strokeLinecap="round" />
-          {/* 눈 */}
-          <circle cx="12" cy="16" r="3" fill={eyeColor} />
-          <circle cx="38" cy="16" r="3" fill={eyeColor} />
-        </svg>
+        <g className="emotion-eyes">
+          <line x1="0.30" y1={eyeY - 0.06} x2="0.44" y2={eyeY - 0.01} stroke={eyeColor} strokeWidth="0.01" strokeLinecap="round" />
+          <line x1="0.70" y1={eyeY - 0.06} x2="0.56" y2={eyeY - 0.01} stroke={eyeColor} strokeWidth="0.01" strokeLinecap="round" />
+          <circle cx="0.38" cy={eyeY + 0.02} r="0.008" fill={eyeColor} />
+          <circle cx="0.62" cy={eyeY + 0.02} r="0.008" fill={eyeColor} />
+        </g>
       );
     case 'scared': // fear: 큰 둥근 눈 + 작은 동공
       return (
-        <svg width={w} height={h * 1.1} viewBox="0 0 50 24">
-          {/* 큰 눈 흰자 */}
-          <circle cx="14" cy="12" r="8" stroke={eyeColor} strokeWidth="2" fill="white" opacity="0.8" />
-          <circle cx="36" cy="12" r="8" stroke={eyeColor} strokeWidth="2" fill="white" opacity="0.8" />
-          {/* 작은 동공 */}
-          <circle cx="14" cy="13" r="3.5" fill={eyeColor} />
-          <circle cx="36" cy="13" r="3.5" fill={eyeColor} />
-          {/* 반사광 */}
-          <circle cx="16" cy="10" r="1.5" fill="white" />
-          <circle cx="38" cy="10" r="1.5" fill="white" />
-        </svg>
+        <g className="emotion-eyes">
+          <circle cx="0.38" cy={eyeY} r="0.02" stroke={eyeColor} strokeWidth="0.006" fill="white" opacity="0.8" />
+          <circle cx="0.38" cy={eyeY} r="0.009" fill={eyeColor} />
+          <circle cx="0.39" cy={eyeY - 0.02} r="0.004" fill="white" />
+          <circle cx="0.62" cy={eyeY} r="0.02" stroke={eyeColor} strokeWidth="0.006" fill="white" opacity="0.8" />
+          <circle cx="0.62" cy={eyeY} r="0.009" fill={eyeColor} />
+          <circle cx="0.63" cy={eyeY - 0.02} r="0.004" fill="white" />
+        </g>
       );
     case 'squint': // disgust: 가늘어진 눈
       return (
-        <svg width={w} height={h * 0.7} viewBox="0 0 50 15">
-          <line x1="4" y1="8" x2="20" y2="8" stroke={eyeColor} strokeWidth="2.5" strokeLinecap="round" />
-          <line x1="30" y1="8" x2="46" y2="8" stroke={eyeColor} strokeWidth="2.5" strokeLinecap="round" />
-          {/* 미세한 곡선으로 찡그림 표현 */}
-          <path d="M 4 8 Q 12 4 20 8" stroke={eyeColor} strokeWidth="1.5" fill="none" opacity="0.5" />
-          <path d="M 30 8 Q 38 4 46 8" stroke={eyeColor} strokeWidth="1.5" fill="none" opacity="0.5" />
-        </svg>
+        <g className="emotion-eyes">
+          <line x1="0.34" y1={eyeY} x2="0.42" y2={eyeY} stroke={eyeColor} strokeWidth="0.008" strokeLinecap="round" />
+          <line x1="0.58" y1={eyeY} x2="0.66" y2={eyeY} stroke={eyeColor} strokeWidth="0.008" strokeLinecap="round" />
+        </g>
       );
-    case 'wide': // surprise: 커다란 둥근 눈 + 확장된 동공 + 반사광
+    case 'wide': // surprise: 커다란 둥근 눈
       return (
-        <svg width={w} height={h} viewBox="0 0 50 26">
-          {/* 커다란 흰자 */}
-          <circle cx="14" cy="13" r="9.5" stroke={eyeColor} strokeWidth="1.5" fill="white" opacity="0.9" />
-          <circle cx="36" cy="13" r="9.5" stroke={eyeColor} strokeWidth="1.5" fill="white" opacity="0.9" />
-          {/* 확장된 동공 */}
-          <circle cx="14" cy="14" r="5.5" fill={eyeColor} />
-          <circle cx="36" cy="14" r="5.5" fill={eyeColor} />
-          {/* 반사광 하이라이트 */}
-          <circle cx="17" cy="11" r="2" fill="white" />
-          <circle cx="39" cy="11" r="2" fill="white" />
-        </svg>
+        <g className="emotion-eyes">
+          <circle cx="0.38" cy={eyeY} r="0.024" stroke={eyeColor} strokeWidth="0.004" fill="white" opacity="0.9" />
+          <circle cx="0.38" cy={eyeY} r="0.014" fill={eyeColor} />
+          <circle cx="0.40" cy={eyeY - 0.02} r="0.005" fill="white" />
+          <circle cx="0.62" cy={eyeY} r="0.024" stroke={eyeColor} strokeWidth="0.004" fill="white" opacity="0.9" />
+          <circle cx="0.62" cy={eyeY} r="0.014" fill={eyeColor} />
+          <circle cx="0.64" cy={eyeY - 0.02} r="0.005" fill="white" />
+        </g>
       );
     case 'heart': // love: 하트 모양 눈
       return (
-        <svg width={w} height={h} viewBox="0 0 50 24">
-          {/* 왼쪽 하트 */}
-          <path
-            d="M 14 8 C 14 4, 8 2, 8 7 C 8 11, 14 16, 14 16 C 14 16, 20 11, 20 7 C 20 2, 14 4, 14 8 Z"
-            fill="#E8788A"
-          />
-          {/* 오른쪽 하트 */}
-          <path
-            d="M 36 8 C 36 4, 30 2, 30 7 C 30 11, 36 16, 36 16 C 36 16, 42 11, 42 7 C 42 2, 36 4, 36 8 Z"
-            fill="#E8788A"
-          />
-        </svg>
+        <g className="emotion-eyes">
+          <path d={`M 0.38 ${eyeY - 0.02} C 0.38 ${eyeY - 0.04}, 0.34 ${eyeY - 0.05}, 0.34 ${eyeY - 0.02} C 0.34 ${eyeY}, 0.38 ${eyeY + 0.04}, 0.38 ${eyeY + 0.04} C 0.38 ${eyeY + 0.04}, 0.42 ${eyeY}, 0.42 ${eyeY - 0.02} C 0.42 ${eyeY - 0.05}, 0.38 ${eyeY - 0.04}, 0.38 ${eyeY - 0.02} Z`} fill="#E8788A" />
+          <path d={`M 0.62 ${eyeY - 0.02} C 0.62 ${eyeY - 0.04}, 0.58 ${eyeY - 0.05}, 0.58 ${eyeY - 0.02} C 0.58 ${eyeY}, 0.62 ${eyeY + 0.04}, 0.62 ${eyeY + 0.04} C 0.62 ${eyeY + 0.04}, 0.66 ${eyeY}, 0.66 ${eyeY - 0.02} C 0.66 ${eyeY - 0.05}, 0.62 ${eyeY - 0.04}, 0.62 ${eyeY - 0.02} Z`} fill="#E8788A" />
+        </g>
       );
     case 'crescent': // gratitude: 아래로 향한 우아한 초승달 눈
       return (
-        <svg width={w} height={h} viewBox="0 0 50 20">
-          {/* 우아한 아래 곡선 눈 */}
-          <path d="M 6 6 Q 14 18 22 6" stroke={eyeColor} strokeWidth="2.5" fill="none" strokeLinecap="round" />
-          <path d="M 28 6 Q 36 18 44 6" stroke={eyeColor} strokeWidth="2.5" fill="none" strokeLinecap="round" />
-        </svg>
+        <g className="emotion-eyes">
+          <path d={`M 0.34 ${eyeY - 0.04} Q 0.38 ${eyeY + 0.08} 0.42 ${eyeY - 0.04}`} stroke={eyeColor} strokeWidth="0.008" fill="none" strokeLinecap="round" />
+          <path d={`M 0.58 ${eyeY - 0.04} Q 0.62 ${eyeY + 0.08} 0.66 ${eyeY - 0.04}`} stroke={eyeColor} strokeWidth="0.008" fill="none" strokeLinecap="round" />
+        </g>
       );
     case 'sparkle': // hope: 반짝이는 별 모양 눈
       return (
-        <svg width={w} height={h} viewBox="0 0 50 24">
-          {/* 왼쪽 반짝이 */}
-          <path
-            d="M 14 2 L 15.5 9 L 22 10 L 15.5 11 L 14 18 L 12.5 11 L 6 10 L 12.5 9 Z"
-            fill="#F4C542"
-          />
-          {/* 오른쪽 반짝이 */}
-          <path
-            d="M 36 2 L 37.5 9 L 44 10 L 37.5 11 L 36 18 L 34.5 11 L 28 10 L 34.5 9 Z"
-            fill="#F4C542"
-          />
-        </svg>
+        <g className="emotion-eyes">
+          <path d={`M 0.38 ${eyeY - 0.04} L 0.385 ${eyeY} L 0.42 ${eyeY} L 0.385 ${eyeY + 0.01} L 0.38 ${eyeY + 0.06} L 0.375 ${eyeY + 0.01} L 0.34 ${eyeY} L 0.375 ${eyeY} Z`} fill="#F4C542" />
+          <path d={`M 0.62 ${eyeY - 0.04} L 0.625 ${eyeY} L 0.66 ${eyeY} L 0.625 ${eyeY + 0.01} L 0.62 ${eyeY + 0.06} L 0.615 ${eyeY + 0.01} L 0.58 ${eyeY} L 0.615 ${eyeY} Z`} fill="#F4C542" />
+        </g>
       );
     default:
       return null;
   }
 }
 
-// @MX:NOTE: 감정별 SVG 입 렌더링
-// @MX:REASON: 5개 감정 타입별 고유 SVG 입 모양 렌더링
-function renderEmotionMouth(emotion: EmotionType, r: number) {
+// @MX:NOTE: 감정별 SVG 입 렌더링 (viewBox 0 0 1 1 기반)
+// @MX:REASON: SVG 내부에서 렌더링되어 젤리 바디와 완전 동기화
+function renderEmotionMouth(emotion: EmotionType, faceOffset: { eyeY: number; mouthY: number }) {
   const theme = EMOTION_THEME[emotion];
   const mouthColor = '#7a5761';
-  const w = r * 1.3;
-  const h = r * 0.6;
+  const mouthY = faceOffset.mouthY;
 
   switch (theme.face.mouth) {
     case 'smile': // joy: 넓은 미소
       return (
-        <svg width={w * 1.2} height={h * 1.1} viewBox="0 0 48 22">
-          <path d="M 4 6 Q 24 22 44 6" stroke={mouthColor} strokeWidth="2.5" fill="none" strokeLinecap="round" />
-        </svg>
+        <path d={`M 0.32 ${mouthY} Q 0.5 ${mouthY + 0.16} 0.68 ${mouthY}`} stroke={mouthColor} strokeWidth="0.008" fill="none" strokeLinecap="round" className="emotion-mouth" />
       );
     case 'wave': // sadness: 물결형 처진 입
       return (
-        <svg width={w} height={h} viewBox="0 0 40 20">
-          <path d="M 4 8 Q 12 16 20 8 Q 28 0 36 8" stroke={mouthColor} strokeWidth="2" fill="none" strokeLinecap="round" />
-        </svg>
+        <path d={`M 0.34 ${mouthY} Q 0.42 ${mouthY + 0.08} 0.50 ${mouthY} Q 0.58 ${mouthY - 0.08} 0.66 ${mouthY}`} stroke={mouthColor} strokeWidth="0.006" fill="none" strokeLinecap="round" className="emotion-mouth" />
       );
     case 'wavy': // anger: 물결형 팽팽한 입
       return (
-        <svg width={w} height={h * 0.8} viewBox="0 0 40 16">
-          <path d="M 4 8 Q 12 2 20 8 Q 28 14 36 8" stroke={mouthColor} strokeWidth="2.5" fill="none" strokeLinecap="round" />
-        </svg>
+        <path d={`M 0.34 ${mouthY} Q 0.42 ${mouthY - 0.06} 0.50 ${mouthY} Q 0.58 ${mouthY + 0.06} 0.66 ${mouthY}`} stroke={mouthColor} strokeWidth="0.008" fill="none" strokeLinecap="round" className="emotion-mouth" />
       );
     case 'o-mouth': // fear: O자형 입
       return (
-        <svg width={r * 0.35} height={r * 0.35} viewBox="0 0 22 22">
-          <ellipse cx="11" cy="12" rx="6" ry="7" stroke={mouthColor} strokeWidth="2" fill="none" />
-        </svg>
+        <ellipse cx="0.5" cy={mouthY} rx="0.02" ry="0.024" stroke={mouthColor} strokeWidth="0.006" fill="none" className="emotion-mouth" />
       );
     case 'flat': // disgust: 일자형 입
       return (
-        <svg width={w * 0.8} height={h * 0.4} viewBox="0 0 32 10">
-          <line x1="6" y1="5" x2="26" y2="5" stroke={mouthColor} strokeWidth="2.5" strokeLinecap="round" />
-        </svg>
+        <line x1="0.38" y1={mouthY} x2="0.62" y2={mouthY} stroke={mouthColor} strokeWidth="0.008" strokeLinecap="round" className="emotion-mouth" />
       );
     case 'o': // surprise: 작고 둥근 O자형 입
       return (
-        <svg width={r * 0.4} height={r * 0.4} viewBox="0 0 20 20">
-          <circle cx="10" cy="10" r="5.5" stroke={mouthColor} strokeWidth="2" fill="none" />
-        </svg>
+        <circle cx="0.5" cy={mouthY} r="0.02" stroke={mouthColor} strokeWidth="0.006" fill="none" className="emotion-mouth" />
       );
     case 'grin': // gratitude: 넓은 미소 + 이 힌트
       return (
-        <svg width={w * 1.3} height={h * 1.1} viewBox="0 0 48 24">
-          {/* 이 힌트 (반투명) */}
-          <path d="M 6 8 Q 24 12 42 8 L 42 10 Q 24 14 6 10 Z" fill={mouthColor} opacity="0.2" />
-          {/* 넓은 미소 곡선 */}
-          <path d="M 6 8 Q 24 24 42 8" stroke={mouthColor} strokeWidth="2.5" fill="none" strokeLinecap="round" />
-        </svg>
+        <g className="emotion-mouth">
+          <path d={`M 0.34 ${mouthY} Q 0.5 ${mouthY + 0.06} 0.66 ${mouthY} L 0.66 ${mouthY + 0.02} Q 0.5 ${mouthY + 0.06} 0.34 ${mouthY + 0.02} Z`} fill={mouthColor} opacity="0.2" />
+          <path d={`M 0.34 ${mouthY} Q 0.5 ${mouthY + 0.16} 0.66 ${mouthY}`} stroke={mouthColor} strokeWidth="0.008" fill="none" strokeLinecap="round" />
+        </g>
       );
     case 'beam': // hope: 아주 넓은 환한 미소 + 보조개
       return (
-        <svg width={w * 1.4} height={h * 1.0} viewBox="0 0 52 22">
-          {/* 넓은 미소 곡선 */}
-          <path d="M 4 8 Q 26 24 48 8" stroke={mouthColor} strokeWidth="2.5" fill="none" strokeLinecap="round" />
-          {/* 왼쪽 보조개 */}
-          <path d="M 2 10 Q 4 14 6 10" stroke={mouthColor} strokeWidth="1.5" fill="none" strokeLinecap="round" opacity="0.6" />
-          {/* 오른쪽 보조개 */}
-          <path d="M 46 10 Q 48 14 50 10" stroke={mouthColor} strokeWidth="1.5" fill="none" strokeLinecap="round" opacity="0.6" />
-        </svg>
+        <g className="emotion-mouth">
+          <path d={`M 0.30 ${mouthY} Q 0.5 ${mouthY + 0.16} 0.70 ${mouthY}`} stroke={mouthColor} strokeWidth="0.008" fill="none" strokeLinecap="round" />
+          <path d={`M 0.28 ${mouthY + 0.02} Q 0.30 ${mouthY + 0.06} 0.32 ${mouthY + 0.02}`} stroke={mouthColor} strokeWidth="0.005" fill="none" strokeLinecap="round" opacity="0.6" />
+          <path d={`M 0.68 ${mouthY + 0.02} Q 0.70 ${mouthY + 0.06} 0.72 ${mouthY + 0.02}`} stroke={mouthColor} strokeWidth="0.005" fill="none" strokeLinecap="round" opacity="0.6" />
+        </g>
       );
     default:
       return null;

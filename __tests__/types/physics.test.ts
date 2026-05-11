@@ -24,15 +24,22 @@ describe('Physics Types', () => {
       expect(eatingState).toBe('eating');
       expect(satisfiedState).toBe('satisfied');
     });
+
+    // REQ-TOUCH-002: happy 상태 (터치 시 일시적 표정 변화)
+    it('happy 상태를 포함해야 한다 (SPEC-TOUCH-001)', () => {
+      const happyState: JellyState = 'happy';
+      expect(happyState).toBe('happy');
+    });
   });
 
   describe('TransitionMap', () => {
     it('올바른 전이 맵을 정의해야 한다', () => {
       const transitionMap: TransitionMap = {
-        idle: ['anticipation'],
+        idle: ['anticipation', 'happy'],
         anticipation: ['eating'],
         eating: ['anticipation', 'satisfied'],
         satisfied: ['idle'],
+        happy: ['idle'],
       };
 
       expect(transitionMap.idle).toContain('anticipation');
@@ -40,6 +47,32 @@ describe('Physics Types', () => {
       expect(transitionMap.eating).toContain('anticipation');
       expect(transitionMap.eating).toContain('satisfied');
       expect(transitionMap.satisfied).toContain('idle');
+    });
+
+    // REQ-TOUCH-002: idle → happy → idle 전이 (터치 반응)
+    it('idle에서 happy로 전이할 수 있어야 한다 (SPEC-TOUCH-001)', () => {
+      const transitionMap: TransitionMap = {
+        idle: ['anticipation', 'happy'],
+        anticipation: ['eating'],
+        eating: ['anticipation', 'satisfied'],
+        satisfied: ['idle'],
+        happy: ['idle'],
+      };
+
+      expect(transitionMap.idle).toContain('happy');
+    });
+
+    // REQ-TOUCH-002: happy에서 idle로 자동 복귀
+    it('happy에서 idle로 전이할 수 있어야 한다 (SPEC-TOUCH-001)', () => {
+      const transitionMap: TransitionMap = {
+        idle: ['anticipation', 'happy'],
+        anticipation: ['eating'],
+        eating: ['anticipation', 'satisfied'],
+        satisfied: ['idle'],
+        happy: ['idle'],
+      };
+
+      expect(transitionMap.happy).toContain('idle');
     });
   });
 
@@ -94,6 +127,7 @@ describe('Physics Types', () => {
         anticipation: { eyes: '• •', mouth: 'o' },
         eating: { eyes: 'u u', mouth: 'o' },
         satisfied: { eyes: '^ ^', mouth: '-' },
+        happy: { eyes: '^ ^', mouth: 'U' },
       };
 
       expect(faceMap.idle.eyes).toBe('• •');
@@ -104,6 +138,8 @@ describe('Physics Types', () => {
       expect(faceMap.eating.mouth).toBe('o');
       expect(faceMap.satisfied.eyes).toBe('^ ^');
       expect(faceMap.satisfied.mouth).toBe('-');
+      expect(faceMap.happy.eyes).toBe('^ ^');
+      expect(faceMap.happy.mouth).toBe('U');
     });
   });
 });

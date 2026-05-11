@@ -1,11 +1,12 @@
 'use client';
 
-import { useState, useMemo, useSyncExternalStore } from 'react';
+import { useState, useMemo, useSyncExternalStore, useEffect, useRef } from 'react';
 import NavMenu from '@/components/layout/NavMenu';
 import { EmotionFace } from '@/components/jelly/EmotionFace';
 import { diaryStore } from '@/stores/diaryStore';
 import type { DiaryEntry } from '@/types/diary';
 import type { EmotionType } from '@/types/emotion';
+import { EMOTION_COLORS } from '@/lib/constants/emotion';
 
 const emptySubscribe = () => () => {};
 
@@ -134,13 +135,14 @@ function getMondayIndex(date: Date): Date {
 export default function DiaryPage() {
   const mounted = useSyncExternalStore(emptySubscribe, () => true, () => false);
 
-  const today = new Date();
+  const today = useMemo(() => {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    return d;
+  }, []);
   const [currentYear, setCurrentYear] = useState(today.getFullYear());
   const [currentMonth, setCurrentMonth] = useState(today.getMonth() + 1);
   const [selectedDate, setSelectedDate] = useState<Date>(today);
-
-  // store에서 엔트리 읽기
-  const entries = diaryStore((state) => state.entries);
 
   // 월 이동
   const goToPrevMonth = () => {
@@ -173,18 +175,38 @@ export default function DiaryPage() {
   const monthEntries = useMemo(
     () =>
       diaryStore.getState().getEntriesByMonth(currentYear, currentMonth),
-    [currentYear, currentMonth, entries],
+    [currentYear, currentMonth],
   );
 
-  // 날짜별 엔트리 존재 여부 (빠른 조회용 Set)
-  const daysWithEntries = useMemo(() => {
-    const daySet = new Set<number>();
+  // 날짜별 대표 감정 Map (SPEC-CALENDAR-001: 최빈 감정, 동률 시 최근 감정)
+  const dayEmotionMap = useMemo(() => {
+    const map = new Map<number, EmotionType>();
+    const dayGroups = new Map<number, DiaryEntry[]>();
     monthEntries.forEach((entry) => {
       const d = new Date(entry.createdAt);
-      daySet.add(d.getDate());
+      if (d.getFullYear() === currentYear && d.getMonth() + 1 === currentMonth) {
+        const day = d.getDate();
+        if (!dayGroups.has(day)) dayGroups.set(day, []);
+        dayGroups.get(day)!.push(entry);
+      }
     });
-    return daySet;
-  }, [monthEntries]);
+    dayGroups.forEach((entries, day) => {
+      const counts = new Map<EmotionType, number>();
+      entries.forEach((e) => counts.set(e.emotion, (counts.get(e.emotion) ?? 0) + 1));
+      const maxCount = Math.max(...counts.values());
+      const topEmotions = [...counts.entries()].filter(([, c]) => c === maxCount).map(([e]) => e);
+      if (topEmotions.length === 1) {
+        map.set(day, topEmotions[0]);
+      } else {
+        // 동률 시 가장 최근 감정 선택
+        const mostRecent = entries
+          .filter((e) => topEmotions.includes(e.emotion))
+          .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0];
+        map.set(day, mostRecent.emotion);
+      }
+    });
+    return map;
+  }, [monthEntries, currentYear, currentMonth]);
 
   // 선택된 날짜의 타임라인 엔트리 (최신순)
   const dayEntries = useMemo(
@@ -196,7 +218,7 @@ export default function DiaryPage() {
           (a, b) =>
             new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
         ),
-    [selectedDate, entries],
+    [selectedDate],
   );
 
   // 주간 차트용 데이터 (월~일 순서)
@@ -242,7 +264,7 @@ export default function DiaryPage() {
         segments,
       };
     });
-  }, [selectedDate, entries, today]);
+  }, [selectedDate, today]);
 
   return (
     <div className="text-on-background min-h-screen pb-6 font-gowun">
@@ -304,7 +326,7 @@ export default function DiaryPage() {
               const dateObj = new Date(currentYear, currentMonth - 1, day);
               const isSelected =
                 formatDateKey(dateObj) === formatDateKey(selectedDate);
-              const hasEntry = daysWithEntries.has(day);
+              const emotion = dayEmotionMap.get(day);
 
               return (
                 <button
@@ -317,8 +339,11 @@ export default function DiaryPage() {
                   }`}
                 >
                   {day}
-                  {mounted && hasEntry && (
-                    <div className="absolute -top-1 -right-1 w-2 h-2 bg-jelly-base rounded-full border border-white" />
+                  {mounted && emotion && (
+                    <div
+                      className="absolute -top-1 -right-1 w-2 h-2 rounded-full border border-white"
+                      style={{ backgroundColor: EMOTION_COLORS[emotion] }}
+                    />
                   )}
                 </button>
               );
@@ -429,12 +454,44 @@ export default function DiaryPage() {
 }
 
 /**
+ * 감정 신뢰도를 한국어 등급으로 변환
+ */
+function getConfidenceLabel(confidence: number): string {
+  if (confidence >= 0.8) return '많이';
+  if (confidence >= 0.5) return '어느정도';
+  return '살짝';
+}
+
+/**
  * 타임라인 개별 엔트리 컴포넌트
  */
 function TimelineEntry({ entry }: { entry: DiaryEntry }) {
   const ui = EMOTION_UI[entry.emotion];
   const supabaseUserId = diaryStore((s) => s.supabaseUserId);
   const [toggling, setToggling] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
+  const touchStartY = useRef<number | null>(null);
+
+  // 모달 오픈 시 body 스크롤 잠금
+  useEffect(() => {
+    if (modalOpen) {
+      document.body.style.overflow = 'hidden';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [modalOpen]);
+
+  function handleHandleTouchStart(e: React.TouchEvent) {
+    touchStartY.current = e.touches[0].clientY;
+  }
+
+  function handleHandleTouchEnd(e: React.TouchEvent) {
+    if (touchStartY.current === null) return;
+    const delta = e.changedTouches[0].clientY - touchStartY.current;
+    if (delta > 80) setModalOpen(false);
+    touchStartY.current = null;
+  }
 
   async function handleToggle() {
     if (toggling || !supabaseUserId) return;
@@ -449,47 +506,113 @@ function TimelineEntry({ entry }: { entry: DiaryEntry }) {
   }
 
   return (
-    <article aria-label={`${ui.label} 감정 기록`} className="glass-card rounded-[20px] p-[16px] shadow-sm relative transition-all active:scale-[0.98]">
-      <div
-        className={`absolute -left-10 top-1/2 -translate-y-1/2 flex items-center justify-center w-6 h-6 ${ui.bg} rounded-full border-4 border-surface shadow-sm`}
+    <>
+      <article
+        aria-label={`${ui.label} 감정 기록`}
+        onClick={() => setModalOpen(true)}
+        className="glass-card rounded-[20px] p-[16px] shadow-sm relative transition-all active:scale-[0.98] cursor-pointer"
       >
-        <span className="w-1.5 h-1.5 bg-white rounded-full" />
-      </div>
-      <div className="flex items-center gap-[8px]">
-        <div className={`shrink-0 flex items-center justify-center w-8 h-8 ${ui.bg} rounded-full`}>
-          <EmotionFace emotion={entry.emotion} size={22} />
+        <div
+          className={`absolute -left-10 top-1/2 -translate-y-1/2 flex items-center justify-center w-6 h-6 ${ui.bg} rounded-full border-4 border-surface shadow-sm`}
+        >
+          <span className="w-1.5 h-1.5 bg-white rounded-full" />
         </div>
-        <div>
-          <p className="font-bold text-on-surface">{entry.text}</p>
-          <p className="text-[13px] text-on-surface-variant">
-            {formatTimeKo(entry.createdAt)}
-          </p>
+        <div className="flex items-center gap-[8px]">
+          <div className={`shrink-0 flex items-center justify-center w-8 h-8 ${ui.bg} rounded-full`}>
+            <EmotionFace emotion={entry.emotion} size={22} />
+          </div>
+          <div className="min-w-0">
+            <p className="font-bold text-on-surface line-clamp-2">{entry.text}</p>
+            <p className="text-[13px] text-on-surface-variant">
+              {formatTimeKo(entry.createdAt)}
+            </p>
+          </div>
         </div>
-      </div>
-      {supabaseUserId && (
-        <div className="flex justify-end mt-[8px]">
-          <button
-            onClick={handleToggle}
-            disabled={toggling}
-            aria-label={entry.isShared ? '친구에게 공개됨, 클릭하여 비공개 전환' : '비공개 상태, 클릭하여 친구에게 공개'}
-            className={`flex items-center gap-1 px-[10px] py-[4px] rounded-full text-[12px] font-gowun transition-all active:scale-95 ${
-              entry.isShared
-                ? 'bg-primary-container text-on-primary-container'
-                : 'bg-surface-container text-on-surface-variant'
-            } disabled:opacity-40`}
-          >
-            <span
-              className="material-symbols-outlined text-[14px]"
-              style={{ fontVariationSettings: '"FILL" 1, "wght" 400, "GRAD" 0, "opsz" 24' }}
-              aria-hidden="true"
+        {supabaseUserId && (
+          <div className="flex justify-end mt-[8px]">
+            <button
+              onClick={(e) => { e.stopPropagation(); handleToggle(); }}
+              disabled={toggling}
+              aria-label={entry.isShared ? '친구에게 공개됨, 클릭하여 비공개 전환' : '비공개 상태, 클릭하여 친구에게 공개'}
+              className={`flex items-center gap-1 px-[10px] py-[4px] rounded-full text-[12px] font-gowun transition-all active:scale-95 ${
+                entry.isShared
+                  ? 'bg-primary-container text-on-primary-container'
+                  : 'bg-surface-container text-on-surface-variant'
+              } disabled:opacity-40`}
             >
-              {entry.isShared ? 'lock_open' : 'lock'}
-            </span>
-            {toggling ? '...' : entry.isShared ? '친구 공개' : '비공개'}
-          </button>
+              <span
+                className="material-symbols-outlined text-[14px]"
+                style={{ fontVariationSettings: '"FILL" 1, "wght" 400, "GRAD" 0, "opsz" 24' }}
+                aria-hidden="true"
+              >
+                {entry.isShared ? 'lock_open' : 'lock'}
+              </span>
+              {toggling ? '...' : entry.isShared ? '친구 공개' : '비공개'}
+            </button>
+          </div>
+        )}
+      </article>
+
+      {/* 바텀시트 모달 */}
+      {modalOpen && (
+        <div
+          data-testid="modal-overlay"
+          className="fixed inset-0 z-50 flex items-end justify-center bg-black/30"
+          onClick={() => setModalOpen(false)}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label="감정 기록 상세"
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-lg bg-surface rounded-t-[24px] p-[20px] pb-[32px] shadow-lg"
+          >
+            {/* 핸들바 - 드래그로 모달 닫기 */}
+            <div
+              data-testid="modal-handle"
+              className="flex justify-center mb-[16px] touch-none cursor-grab"
+              onTouchStart={handleHandleTouchStart}
+              onTouchEnd={handleHandleTouchEnd}
+            >
+              <div className="w-10 h-1 rounded-full bg-gray-300" />
+            </div>
+
+            {/* 헤더: 감정 아이콘 + 라벨 + 닫기 버튼 */}
+            <div className="flex items-center justify-between mb-[16px]">
+              <div className="flex items-center gap-[8px]">
+                <div className={`shrink-0 flex items-center justify-center w-10 h-10 ${ui.bg} rounded-full`}>
+                  <EmotionFace emotion={entry.emotion} size={28} />
+                </div>
+                <span className="font-bold text-on-surface text-[18px]">{ui.label}</span>
+                <div
+                  data-testid="emotion-color-dot"
+                  className={`w-3 h-3 rounded-full ${ui.dot}`}
+                />
+              </div>
+              <button
+                aria-label="닫기"
+                onClick={() => setModalOpen(false)}
+                className="p-1 rounded-full hover:bg-surface-container-high"
+              >
+                <span className="material-symbols-outlined text-on-surface-variant">close</span>
+              </button>
+            </div>
+
+            {/* 전체 텍스트 */}
+            <p className="text-on-surface text-[15px] leading-relaxed whitespace-pre-wrap mb-[16px]">
+              {entry.text}
+            </p>
+
+            {/* 메타 정보 */}
+            <div className="flex items-center gap-[12px] text-[13px] text-on-surface-variant">
+              <span>{formatTimeKo(entry.createdAt)}</span>
+              <span className="text-outline-variant">|</span>
+              <span>신뢰도: {getConfidenceLabel(entry.confidence)}</span>
+            </div>
+          </div>
         </div>
       )}
-    </article>
+    </>
   );
 }
 

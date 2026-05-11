@@ -150,6 +150,7 @@ describe('diaryStore', () => {
             confidence: 0.8,
             emotionKo: '기쁨',
             createdAt: '2026-05-01T10:00:00.000Z',
+            isShared: false,
           },
           {
             id: '2',
@@ -158,6 +159,7 @@ describe('diaryStore', () => {
             confidence: 0.6,
             emotionKo: '분노',
             createdAt: '2026-05-15T14:00:00.000Z',
+            isShared: false,
           },
           {
             id: '3',
@@ -166,6 +168,7 @@ describe('diaryStore', () => {
             confidence: 0.7,
             emotionKo: '슬픔',
             createdAt: '2026-06-01T10:00:00.000Z',
+            isShared: false,
           },
         ],
       });
@@ -195,6 +198,7 @@ describe('diaryStore', () => {
             confidence: 0.8,
             emotionKo: '기쁨',
             createdAt: '2026-05-04T10:00:00.000Z',
+            isShared: false,
           },
           {
             id: '2',
@@ -203,6 +207,7 @@ describe('diaryStore', () => {
             confidence: 0.6,
             emotionKo: '분노',
             createdAt: '2026-05-06T14:00:00.000Z',
+            isShared: false,
           },
           {
             id: '3',
@@ -211,6 +216,7 @@ describe('diaryStore', () => {
             confidence: 0.9,
             emotionKo: '기쁨',
             createdAt: '2026-05-07T09:00:00.000Z',
+            isShared: false,
           },
         ],
       });
@@ -235,6 +241,7 @@ describe('diaryStore', () => {
             confidence: 0.8,
             emotionKo: '기쁨',
             createdAt: '2026-05-06T10:00:00.000Z',
+            isShared: false,
           },
           {
             id: '2',
@@ -243,6 +250,7 @@ describe('diaryStore', () => {
             confidence: 0.8,
             emotionKo: '기쁨',
             createdAt: '2026-05-11T10:00:00.000Z',
+            isShared: false,
           },
         ],
       });
@@ -281,6 +289,7 @@ describe('diaryStore', () => {
             confidence: 0.8,
             emotionKo: '기쁨',
             createdAt: '2026-05-09T10:00:00.000Z',
+            isShared: false,
           },
           {
             id: 'delete',
@@ -289,6 +298,7 @@ describe('diaryStore', () => {
             confidence: 0.6,
             emotionKo: '분노',
             createdAt: '2026-05-09T14:00:00.000Z',
+            isShared: false,
           },
         ],
       });
@@ -310,6 +320,7 @@ describe('diaryStore', () => {
             confidence: 0.8,
             emotionKo: '기쁨',
             createdAt: '2026-05-09T10:00:00.000Z',
+            isShared: false,
           },
         ],
       });

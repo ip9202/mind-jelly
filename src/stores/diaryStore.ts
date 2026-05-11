@@ -91,19 +91,26 @@ export const diaryStore = create<DiaryStoreState>()(
                 createdAt,
               });
             } catch {
-              // Supabase 실패해도 localStorage 유지
+              // Supabase 실패해도 로컬 상태는 유지
             }
           }
         },
 
         getEntriesByDate: (date: Date) => {
           const dateStr = formatDateKey(date);
-          return get().entries.filter((e) => e.createdAt.startsWith(dateStr));
+          return get().entries.filter((e) => {
+            const localDate = new Date(e.createdAt);
+            return formatDateKey(localDate) === dateStr;
+          });
         },
 
         getEntriesByMonth: (year: number, month: number) => {
           const prefix = `${year}-${String(month).padStart(2, '0')}`;
-          return get().entries.filter((e) => e.createdAt.startsWith(prefix));
+          return get().entries.filter((e) => {
+            const localDate = new Date(e.createdAt);
+            const localPrefix = `${localDate.getFullYear()}-${String(localDate.getMonth() + 1).padStart(2, '0')}`;
+            return localPrefix === prefix;
+          });
         },
 
         getWeekStats: (date: Date) => {

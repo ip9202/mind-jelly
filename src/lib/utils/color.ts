@@ -21,3 +21,31 @@ export function hexToRgba(hex: string, alpha: number = 1): string {
   const b = parseInt(h.substring(4, 6), 16);
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
+
+/**
+ * hex 색상을 amount만큼 밝게 변환 (그라디언트 하이라이트용)
+ * @param hex - 6자리 hex 색상 (예: '#FFD93D')
+ * @param amount - 각 채널에 더할 값 (0~255)
+ * @returns rgb 문자열 (예: 'rgb(255,255,150)')
+ */
+export function lightenHex(hex: string, amount: number): string {
+  const h = hex.replace('#', '');
+  const r = Math.min(255, parseInt(h.substring(0, 2), 16) + amount);
+  const g = Math.min(255, parseInt(h.substring(2, 4), 16) + amount);
+  const b = Math.min(255, parseInt(h.substring(4, 6), 16) + amount);
+  return `rgb(${r},${g},${b})`;
+}
+
+/**
+ * hex 색상을 amount만큼 어둡게 변환 (그라디언트 그림자용)
+ * @param hex - 6자리 hex 색상 (예: '#FFD93D')
+ * @param amount - 각 채널에서 뺄 값 (0~255)
+ * @returns rgb 문자열 (예: 'rgb(200,170,30)')
+ */
+export function darkenHex(hex: string, amount: number): string {
+  const h = hex.replace('#', '');
+  const r = Math.max(0, parseInt(h.substring(0, 2), 16) - amount);
+  const g = Math.max(0, parseInt(h.substring(2, 4), 16) - amount);
+  const b = Math.max(0, parseInt(h.substring(4, 6), 16) - amount);
+  return `rgb(${r},${g},${b})`;
+}

@@ -173,12 +173,12 @@ body {
   }
 }
 
-/* 다방향 부유 애니메이션 - 단순 상하 운동을 대체 */
+/* 다방향 부유 애니메이션 - 단순 상하 운동을 대체, 더 큰 울룩불룩 효과 */
 @keyframes jelly-float {
   0%, 100% { transform: translate(0, 0) scale(1); }
-  25% { transform: translate(15px, -8px) scale(1.03); }
-  50% { transform: translate(-10px, -18px) scale(0.97); }
-  75% { transform: translate(-15px, -5px) scale(1.02); }
+  25% { transform: translate(15px, -8px) scale(1.07); }
+  50% { transform: translate(-10px, -18px) scale(0.94); }
+  75% { transform: translate(-15px, -5px) scale(1.05); }
 }
 
 /* 블롭 형태 미세 진동 - CSS 변수 기반 border-radius 전환 */

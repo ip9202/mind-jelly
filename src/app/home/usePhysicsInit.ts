@@ -87,7 +87,7 @@ export function usePhysicsInit(options: UsePhysicsInitOptions): UsePhysicsInitRe
       Matter.Composite.add(engine.world, walls);
 
       // 충돌 감지 설정 (REQ-EVT-003)
-      setupCollisionDetection(engine, (_beadBody, _jellyBody) => {
+      setupCollisionDetection(engine, () => {
         const state = jellyStore.getState();
 
         // idle -> anticipation -> eating 전이
@@ -98,6 +98,8 @@ export function usePhysicsInit(options: UsePhysicsInitOptions): UsePhysicsInitRe
           }, 400);
         } else if (state.currentState === 'anticipation') {
           jellyStore.getState().transitionState('eating');
+        } else if (state.currentState === 'eating') {
+          // 이미 eating 상태 — 유지 (추가 전이 불필요)
         }
 
         // 구슬 개수 감소

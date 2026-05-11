@@ -5,17 +5,18 @@
 
 // @MX:ANCHOR: 젤리 상태 타입 (다수 컴포넌트에서 사용)
 // @MX:REASON: jellyStore, JellyRenderer, usePhysics 등 5개 이상의 모듈에서 참조
-// @MX:SPEC: REQ-STA-001~004, REQ-UNW-004
-export type JellyState = 'idle' | 'anticipation' | 'eating' | 'satisfied';
+// @MX:SPEC: REQ-STA-001~004, REQ-UNW-004, REQ-TOUCH-002
+export type JellyState = 'idle' | 'anticipation' | 'eating' | 'satisfied' | 'happy';
 
 // @MX:ANCHOR: 상태 전이 맵 (무효 전이 방지)
 // @MX:REASON: jellyStore에서 상태 전이 유효성 검증에 사용
-// @MX:SPEC: REQ-UNW-004
+// @MX:SPEC: REQ-UNW-004, REQ-TOUCH-002
 export type TransitionMap = {
-  idle: ['anticipation'];
+  idle: ['anticipation', 'happy'];
   anticipation: ['eating'];
   eating: ['anticipation', 'satisfied'];
   satisfied: ['idle'];
+  happy: ['idle'];
 };
 
 // @MX:NOTE: 물리 설정 인터페이스
@@ -55,6 +56,6 @@ export interface JellyFace {
 // @MX:NOTE: 상태별 페이스 표현 맵
 export type JellyFaceMap = Record<JellyState, JellyFace>;
 
-// @MX:NOTE: 젤리 외형 모양 타입 (사용자 설정 가능, 두루뭉술한 형태)
+// @MX:NOTE: 젤리 외형 모양 타입 (사용자 설정 가능, 불특정하고 유기체적인 형태)
 // @MX:REASON: 설정 페이지에서 사용자가 젤리 기본 모양을 선택할 수 있도록 6종 형태 제공
-export type JellyShape = 'circle' | 'star' | 'square' | 'triangle' | 'pentagon' | 'hexagon';
+export type JellyShape = 'ppung' | 'mallang' | 'jjit' | 'banggeul' | 'sillung' | 'kkul';

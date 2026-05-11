@@ -67,8 +67,8 @@ const mockBodyApplyForce = jest.fn();
 
 jest.mock('matter-js', () => ({
   Bodies: {
-    circle: (...args: unknown[]) => mockBodiesCircle(...args),
-    rectangle: (...args: unknown[]) => mockBodiesRectangle(...args),
+    circle: (x: number, y: number, r: number, opts: Record<string, unknown>) => mockBodiesCircle(x, y, r, opts),
+    rectangle: (x: number, y: number, w: number, h: number, opts: Record<string, unknown>) => mockBodiesRectangle(x, y, w, h, opts),
   },
   Composite: {
     add: (...args: unknown[]) => mockCompositeAdd(...args),

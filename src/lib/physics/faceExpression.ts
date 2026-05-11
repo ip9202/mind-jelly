@@ -6,6 +6,7 @@ const STATE_FACE_MAP: Record<JellyState, JellyFace> = {
   anticipation: { eyes: '• •', mouth: 'o' },
   eating: { eyes: 'u u', mouth: 'o' },
   satisfied: { eyes: '^ ^', mouth: '-' },
+  happy: { eyes: '^ ^', mouth: 'D' },
 };
 
 /**

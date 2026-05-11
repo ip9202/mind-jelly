@@ -2,16 +2,19 @@
 
 import dynamic from 'next/dynamic';
 import NavMenu from '@/components/layout/NavMenu';
-import { useEffect, useState, useRef, useMemo, useSyncExternalStore } from 'react';
+import { JellySkeleton } from '@/components/jelly/JellySkeleton';
+import { useEffect, useState, useRef, useMemo, useCallback, useSyncExternalStore } from 'react';
 import { jellyStore } from '@/stores/jellyStore';
 import { tossStore } from '@/stores/tossStore';
 import { usePhysicsInit } from './usePhysicsInit';
 import { EMOTION_THEME, EMOTION_COLORS, JELLY_COLOR } from '@/lib/constants/emotion';
+import { isTouchOnJelly, shouldHandleTouch } from '@/lib/utils/touchHandler';
+import { createHeartParticles } from '@/components/jelly/HeartParticle';
 import type { EmotionType } from '@/types/emotion';
 
 const PhysicsCanvas = dynamic(
   () => import('@/components/jelly/PhysicsCanvas').then((m) => m.PhysicsCanvas),
-  { ssr: false, loading: () => <div className="flex-1 flex items-center justify-center text-on-surface-variant">로딩중...</div> }
+  { ssr: false, loading: () => <JellySkeleton /> }
 );
 
 const JellyRenderer = dynamic(
@@ -26,6 +29,11 @@ const BeadGroup = dynamic(
 
 const EmotionInput = dynamic(
   () => import('@/components/input/EmotionInput').then((m) => m.EmotionInput),
+  { ssr: false }
+);
+
+const HeartParticle = dynamic(
+  () => import('@/components/jelly/HeartParticle').then((m) => m.HeartParticle),
   { ssr: false }
 );
 
@@ -48,22 +56,28 @@ export default function HomePage() {
   const [uiState, setUiState] = useState<UiState>('idle');
   const [keyboardHeight, setKeyboardHeight] = useState(0);
 
+  // SPEC-TOUCH-001: 하트 파티클 상태
+  const [heartParticles, setHeartParticles] = useState<Array<{
+    id: string;
+    x: number;
+    y: number;
+    delay: number;
+    offsetX: number;
+  }>>([]);
+
 
 
   // 젤리 시각적 감정 상태 (persist된 store에서 복원)
-  // @MX:NOTE: [AUTO] emotionColor 대신 EMOTION_CODES[lastEmotion] 사용
-  // @MX:REASON: persist에 저장된 emotionColor가 레거시 값일 수 있음
-  const [jellyVisualEmotion, setJellyVisualEmotion] = useState<EmotionType | null>(() => {
-    const { emotionHistory } = jellyStore.getState();
-    return emotionHistory.length > 0 ? emotionHistory[emotionHistory.length - 1].emotion : null;
+  // @MX:NOTE: [AUTO] lastEmotion 직접 참조 (emotionHistory는 persist되지 않음)
+  // @MX:REASON: 리프레시 후 마지막 감정 상태 유지를 위해 저장된 lastEmotion 사용
+  const [jellyVisualEmotion, setJellyVisualEmotion] = useState<EmotionType>(() => {
+    const { lastEmotion } = jellyStore.getState();
+    return lastEmotion || 'joy'; // 저장된 감정 없으면 기본값 joy
   });
   const [jellyVisualColor, setJellyVisualColor] = useState<string>(() => {
-    const { emotionHistory, lastEmotion } = jellyStore.getState();
-    // emotionHistory가 있으면 최신 감정의 색상 사용, 없으면 기본 색상
-    if (emotionHistory.length > 0) {
-      return EMOTION_COLORS[lastEmotion];
-    }
-    return JELLY_COLOR;
+    const { lastEmotion } = jellyStore.getState();
+    // lastEmotion 기반 색상 사용
+    return EMOTION_COLORS[lastEmotion || JELLY_COLOR];
   });
 
   const currentState = jellyStore((s) => s.currentState);
@@ -87,6 +101,49 @@ export default function HomePage() {
     setJellyPos,
   });
 
+  // @MX:NOTE: [AUTO] SPEC-TOUCH-001: 젤리 터치 핸들러
+  // @MX:REASON: idle 상태에서만 반응, 1초 쿨다운, hit-test 후 happy 전이 + 바운스 + 파티클
+  const handleJellyTouch = useCallback(
+    (pointerX: number, pointerY: number) => {
+      const st = jellyStore.getState();
+
+      // PhysicsCanvas 내부 좌표로 변환 (캔버스 800x600 기준)
+      const canvasX = (pointerX / (typeof window !== 'undefined' ? window.innerWidth : 375)) * 800;
+      const canvasY = (pointerY / (typeof window !== 'undefined' ? window.innerHeight : 667)) * 600;
+
+      const onJelly = isTouchOnJelly(canvasX, canvasY, jellyPos, 60);
+
+      if (!shouldHandleTouch({
+        currentState: st.currentState,
+        canTouch: st.canTouch(),
+        isOnJelly: onJelly,
+      })) return;
+
+      // happy 상태 전이
+      st.triggerHappy();
+
+      // 물리 임펄스 (위쪽 바운스)
+      if (engineRef.current && matterRef.current) {
+        const Matter = matterRef.current;
+        const allBodies = Matter.Composite.allBodies(engineRef.current.world);
+        const jelly = allBodies.find((b: Matter.Body) => b.label === 'jelly');
+        if (jelly) {
+          Matter.Body.applyForce(jelly, jelly.position, { x: 0, y: -0.015 });
+        }
+      }
+
+      // 하트 파티클 생성
+      const particles = createHeartParticles(pointerX, pointerY);
+      setHeartParticles(particles);
+
+      // 1.5초 후 파티클 제거
+      setTimeout(() => {
+        setHeartParticles([]);
+      }, 1500);
+    },
+    [jellyPos, engineRef, matterRef],
+  );
+
   useEffect(() => {
     import('matter-js')
       .then((M) => {
@@ -103,6 +160,11 @@ export default function HomePage() {
   useEffect(() => {
     if (uiState === 'restoring') {
       const timer = setTimeout(() => {
+        // 새 사이클: currentState가 satisfied에 머물면 eating 전이가 불가하므로 idle로 리셋
+        const st = jellyStore.getState();
+        if (st.currentState === 'satisfied') {
+          st.transitionState('idle');
+        }
         setUiState('beads');
         // 젤리가 원래 크기로 복원된 후 구슬 생성
         jellyStore.getState().incrementBeadCount(5);
@@ -197,13 +259,13 @@ export default function HomePage() {
           <NavMenu activeTab="jelly" />
         </header>
         <main className="flex-1 flex items-center justify-center">
-          <div className="text-on-surface-variant font-body-md animate-pulse">로딩중...</div>
+          <JellySkeleton />
         </main>
       </div>
     );
   }
 
-  const bodies = [{ position: jellyPos, circleRadius: 40 }];
+  const bodies = [{ position: jellyPos, circleRadius: 60 }];
 
   return (
     <div
@@ -307,6 +369,11 @@ export default function HomePage() {
             transition: 'transform 500ms cubic-bezier(0.4, 0, 0.2, 1)',
             transformOrigin: 'center top',
           }}
+          onPointerDown={(e) => {
+            // SPEC-TOUCH-001: 젤리 터치 감지
+            const rect = e.currentTarget.getBoundingClientRect();
+            handleJellyTouch(e.clientX - rect.left, e.clientY - rect.top);
+          }}
         >
           {matterError ? (
             <div className="flex items-center justify-center p-4">
@@ -388,6 +455,21 @@ export default function HomePage() {
           </div>
         )}
       </main>
+
+      {/* SPEC-TOUCH-001: 하트 파티클 오버레이 */}
+      {heartParticles.length > 0 && (
+        <div className="fixed inset-0 pointer-events-none z-50" aria-hidden="true">
+          {heartParticles.map((p) => (
+            <HeartParticle
+              key={p.id}
+              x={p.x}
+              y={p.y}
+              delay={p.delay}
+              offsetX={p.offsetX}
+            />
+          ))}
+        </div>
+      )}
 
       {/* EmotionInput Bottom Sheet (input mode only) */}
       {uiState === 'input' && (

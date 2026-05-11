@@ -72,7 +72,7 @@ export function EmotionInput({ onCompleteAction }: { onCompleteAction?: () => vo
       };
 
       setLastInputText(trimmedText);
-      addEmotionResult(fullResult);
+      await addEmotionResult(fullResult);
       setLastEmotion(analysisResult.emotion);
       setResult(analysisResult);
 
@@ -89,7 +89,7 @@ export function EmotionInput({ onCompleteAction }: { onCompleteAction?: () => vo
     } finally {
       setAnalyzing(false);
     }
-  }, [isSubmitDisabled, trimmedText]);
+  }, [isSubmitDisabled, trimmedText, onCompleteAction]);
 
   const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const value = e.target.value;

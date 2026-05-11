@@ -125,42 +125,86 @@ function ProfileSection() {
 function JellyShapeSection() {
   const jellyShape = jellyStore((s) => s.jellyShape);
   const setJellyShape = jellyStore((s) => s.setJellyShape);
-
-  // objectBoundingBox 0~1 path를 viewBox 0~100 path로 변환
-  const scalePath = (path: string) =>
-    path.replace(/(\d+\.\d+)/g, (n) => String(parseFloat(n) * 100));
-
   const shapes = Object.keys(JELLY_SHAPE_CONFIGS) as JellyShape[];
 
   return (
     <section className="space-y-[8px]">
       <h2 className="font-dongle text-5xl text-primary leading-none px-2">젤리 모양</h2>
-      <div className="glass-card rounded-lg p-[24px] shadow-[0_4px_20px_0_rgba(0,0,0,0.05)] border border-white/40">
-        <div className="grid grid-cols-3 gap-[12px]">
+      <div className="glass-card rounded-lg p-[20px] shadow-[0_4px_20px_0_rgba(0,0,0,0.05)] border border-white/40">
+        <div className="grid grid-cols-2 gap-[16px]">
           {shapes.map((shape) => {
             const config = JELLY_SHAPE_CONFIGS[shape];
             const isSelected = jellyShape === shape;
+            const gradStart = isSelected ? '#fff0f4' : '#f0f0f0';
+            const gradMid = isSelected ? '#FFD1DC' : '#d0d0d0';
+            const gradEnd = isSelected ? '#FFB3A7' : '#a0a0a0';
+            const gradId = `sg-${shape}`;
+            const maskId = `sm-${shape}`;
+            const filterId = `sf-${shape}`;
+
             return (
               <button
                 key={shape}
                 onClick={() => setJellyShape(shape)}
                 aria-label={`젤리 모양: ${config.label}`}
                 aria-pressed={isSelected}
-                className={`flex flex-col items-center gap-[6px] p-[12px] rounded-xl transition-all active:scale-95 ${
+                className={`flex flex-col items-center gap-[10px] p-[16px] rounded-2xl transition-all active:scale-95 ${
                   isSelected
-                    ? 'bg-primary-container ring-2 ring-primary'
-                    : 'bg-surface-container/50 hover:bg-surface-container'
+                    ? 'bg-primary-container border-2 border-[#FFB3A7]'
+                    : 'bg-surface-container/50 border-2 border-transparent hover:bg-surface-container'
                 }`}
               >
-                <svg width="44" height="44" viewBox="0 0 100 100" aria-hidden>
+                {/* 3D 글로시 젤리 미니 프리뷰 */}
+                <svg width="72" height="72" viewBox="0 0 1 1" aria-hidden>
+                  <defs>
+                    <radialGradient id={gradId} cx="0.35" cy="0.28" r="0.70" gradientUnits="userSpaceOnUse">
+                      <stop offset="0%" stopColor="white" stopOpacity="0.85" />
+                      <stop offset="20%" stopColor={gradStart} />
+                      <stop offset="60%" stopColor={gradMid} />
+                      <stop offset="100%" stopColor={gradEnd} />
+                    </radialGradient>
+                    <mask id={maskId}>
+                      <path d={config.path} fill="white" />
+                    </mask>
+                    <filter id={filterId} x="-20%" y="-15%" width="140%" height="145%">
+                      <feDropShadow
+                        dx="0"
+                        dy="0.03"
+                        stdDeviation="0.035"
+                        floodColor={isSelected ? '#FFB3A7' : '#999'}
+                        floodOpacity="0.35"
+                      />
+                    </filter>
+                  </defs>
+                  {/* 젤리 바디 */}
                   <path
-                    d={scalePath(config.path)}
-                    fill={isSelected ? 'var(--color-primary)' : 'var(--color-on-surface-variant)'}
-                    opacity={isSelected ? 0.85 : 0.4}
+                    d={config.path}
+                    fill={`url(#${gradId})`}
+                    filter={`url(#${filterId})`}
+                    stroke="rgba(255,255,255,0.5)"
+                    strokeWidth="0.018"
                   />
+                  {/* 하이라이트 (마스크 적용) */}
+                  <g mask={`url(#${maskId})`}>
+                    <ellipse cx="0.32" cy="0.25" rx="0.16" ry="0.09" fill="white" opacity="0.55" style={{ filter: 'blur(1.5px)' }} />
+                    <circle cx="0.26" cy="0.20" r="0.042" fill="white" opacity="0.88" />
+                  </g>
+                  {/* 미니 표정 (눈 + 미소) */}
+                  <g mask={`url(#${maskId})`}>
+                    <circle cx="0.40" cy="0.52" r="0.040" fill="#7a5761" />
+                    <circle cx="0.60" cy="0.52" r="0.040" fill="#7a5761" />
+                    <path
+                      d="M 0.36 0.62 Q 0.50 0.72 0.64 0.62"
+                      stroke="#7a5761"
+                      strokeWidth="0.030"
+                      fill="none"
+                      strokeLinecap="round"
+                    />
+                  </g>
                 </svg>
+
                 <span
-                  className={`font-gowun text-[13px] ${
+                  className={`font-gowun text-[14px] ${
                     isSelected
                       ? 'text-on-primary-container font-bold'
                       : 'text-on-surface-variant'
@@ -173,7 +217,7 @@ function JellyShapeSection() {
           })}
         </div>
         <p className="font-gowun text-[12px] text-on-surface-variant mt-[16px] text-center">
-          젤리의 기본 모양을 선택해보세요
+          젤리의 기본 모양을 선택해보세요 💕
         </p>
       </div>
     </section>
@@ -199,25 +243,6 @@ export default function SettingsPage() {
 
         {/* Jelly Shape Section */}
         <JellyShapeSection />
-
-        {/* Notifications Section */}
-        <section className="space-y-[8px]">
-          <h2 className="font-dongle text-5xl text-primary leading-none px-2">알림</h2>
-          <div className="glass-card rounded-lg shadow-[0_4px_20px_0_rgba(0,0,0,0.05)] border border-white/40 overflow-hidden">
-            <div className="p-[16px] border-b border-white/40 flex justify-between items-center hover:bg-white/40 transition-colors cursor-pointer">
-              <span className="font-gowun text-[16px] text-on-surface">데일리 리마인더</span>
-              <span className="material-symbols-outlined text-on-surface-variant">chevron_right</span>
-            </div>
-            <div className="p-[16px] border-b border-white/40 flex justify-between items-center hover:bg-white/40 transition-colors cursor-pointer">
-              <span className="font-gowun text-[16px] text-on-surface">스트레스 분석 알림</span>
-              <span className="material-symbols-outlined text-on-surface-variant">chevron_right</span>
-            </div>
-            <div className="p-[16px] flex justify-between items-center hover:bg-white/40 transition-colors cursor-pointer">
-              <span className="font-gowun text-[16px] text-on-surface">방해 금지 모드</span>
-              <span className="material-symbols-outlined text-on-surface-variant">chevron_right</span>
-            </div>
-          </div>
-        </section>
 
         {/* About Section */}
         <section className="space-y-[8px]">

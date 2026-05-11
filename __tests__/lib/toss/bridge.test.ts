@@ -14,6 +14,8 @@ declare global {
   }
 }
 
+export {};
+
 // navigator.userAgent mock을 위한 유틸
 function mockUserAgent(ua: string) {
   Object.defineProperty(window.navigator, 'userAgent', {
@@ -31,7 +33,7 @@ describe('Toss Bridge', () => {
     jest.resetModules();
 
     // window 초기화
-    delete (window as Record<string, unknown>).__TOSS_BRIDGE__;
+    delete window.__TOSS_BRIDGE__;
     mockUserAgent(
       'Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15',
     );
@@ -39,7 +41,7 @@ describe('Toss Bridge', () => {
 
   afterEach(() => {
     // 정리
-    delete (window as Record<string, unknown>).__TOSS_BRIDGE__;
+    delete window.__TOSS_BRIDGE__;
     mockUserAgent(
       'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
     );
@@ -49,7 +51,7 @@ describe('Toss Bridge', () => {
 
   describe('detectWebView', () => {
     it('window.__TOSS_BRIDGE__가 있고 User-Agent에 Toss가 있으면 true를 반환한다', async () => {
-      (window as Record<string, unknown>).__TOSS_BRIDGE__ = {
+      window.__TOSS_BRIDGE__ = {
         getUserInfo: jest.fn(),
       };
       mockUserAgent('Mozilla/5.0 Toss/1.0 AppleWebKit/605.1.15');
@@ -59,7 +61,7 @@ describe('Toss Bridge', () => {
     });
 
     it('window.__TOSS_BRIDGE__가 있어도 User-Agent에 Toss가 없으면 false를 반환한다', async () => {
-      (window as Record<string, unknown>).__TOSS_BRIDGE__ = {
+      window.__TOSS_BRIDGE__ = {
         getUserInfo: jest.fn(),
       };
       mockUserAgent(
@@ -71,7 +73,7 @@ describe('Toss Bridge', () => {
     });
 
     it('User-Agent에 Toss가 있어도 window.__TOSS_BRIDGE__가 없으면 false를 반환한다', async () => {
-      delete (window as Record<string, unknown>).__TOSS_BRIDGE__;
+      delete window.__TOSS_BRIDGE__;
       mockUserAgent('Mozilla/5.0 Toss/1.0 AppleWebKit/605.1.15');
 
       bridge = await import('@/lib/toss/bridge');
@@ -79,7 +81,7 @@ describe('Toss Bridge', () => {
     });
 
     it('둘 다 없으면 false를 반환한다', async () => {
-      delete (window as Record<string, unknown>).__TOSS_BRIDGE__;
+      delete window.__TOSS_BRIDGE__;
       mockUserAgent(
         'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
       );
@@ -94,7 +96,7 @@ describe('Toss Bridge', () => {
   describe('connectBridge', () => {
     it('브릿지에서 사용자 정보를 성공적으로 가져온다', async () => {
       const mockUserInfo = { name: '홍길동', userId: 'user-123' };
-      (window as Record<string, unknown>).__TOSS_BRIDGE__ = {
+      window.__TOSS_BRIDGE__ = {
         getUserInfo: jest.fn().mockResolvedValue(mockUserInfo),
       };
       mockUserAgent('Mozilla/5.0 Toss/1.0 AppleWebKit/605.1.15');
@@ -106,7 +108,7 @@ describe('Toss Bridge', () => {
     });
 
     it('WebView가 아니면 null을 반환한다', async () => {
-      delete (window as Record<string, unknown>).__TOSS_BRIDGE__;
+      delete window.__TOSS_BRIDGE__;
       mockUserAgent(
         'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
       );
@@ -118,7 +120,7 @@ describe('Toss Bridge', () => {
     });
 
     it('getUserInfo가 에러를 던지면 null을 반환한다 (silent fallback)', async () => {
-      (window as Record<string, unknown>).__TOSS_BRIDGE__ = {
+      window.__TOSS_BRIDGE__ = {
         getUserInfo: jest.fn().mockRejectedValue(new Error('Bridge error')),
       };
       mockUserAgent('Mozilla/5.0 Toss/1.0 AppleWebKit/605.1.15');
@@ -131,7 +133,7 @@ describe('Toss Bridge', () => {
 
     it('5초 타임아웃 시 null을 반환한다', async () => {
       // 영원히 resolve되지 않는 Promise
-      (window as Record<string, unknown>).__TOSS_BRIDGE__ = {
+      window.__TOSS_BRIDGE__ = {
         getUserInfo: jest.fn().mockReturnValue(new Promise(() => {})),
       };
       mockUserAgent('Mozilla/5.0 Toss/1.0 AppleWebKit/605.1.15');
@@ -152,7 +154,9 @@ describe('Toss Bridge', () => {
     });
 
     it('브릿지 객체에 getUserInfo가 없으면 null을 반환한다', async () => {
-      (window as Record<string, unknown>).__TOSS_BRIDGE__ = {};
+      window.__TOSS_BRIDGE__ = {
+        getDeviceInfo: jest.fn(),
+      } as any;
       mockUserAgent('Mozilla/5.0 Toss/1.0 AppleWebKit/605.1.15');
 
       bridge = await import('@/lib/toss/bridge');
@@ -167,7 +171,7 @@ describe('Toss Bridge', () => {
   describe('getDeviceInfo', () => {
     it('브릿지에서 디바이스 정보를 성공적으로 가져온다', async () => {
       const mockDeviceInfo = { darkMode: true, screenWidth: 390 };
-      (window as Record<string, unknown>).__TOSS_BRIDGE__ = {
+      window.__TOSS_BRIDGE__ = {
         getUserInfo: jest.fn().mockResolvedValue({
           name: '테스트',
           userId: '1',
@@ -183,7 +187,7 @@ describe('Toss Bridge', () => {
     });
 
     it('getDeviceInfo가 없으면 null을 반환한다', async () => {
-      (window as Record<string, unknown>).__TOSS_BRIDGE__ = {
+      window.__TOSS_BRIDGE__ = {
         getUserInfo: jest.fn().mockResolvedValue({
           name: '테스트',
           userId: '1',
@@ -198,7 +202,7 @@ describe('Toss Bridge', () => {
     });
 
     it('WebView가 아니면 null을 반환한다', async () => {
-      delete (window as Record<string, unknown>).__TOSS_BRIDGE__;
+      delete window.__TOSS_BRIDGE__;
       mockUserAgent(
         'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
       );
@@ -210,7 +214,7 @@ describe('Toss Bridge', () => {
     });
 
     it('getDeviceInfo가 에러를 던지면 null을 반환한다', async () => {
-      (window as Record<string, unknown>).__TOSS_BRIDGE__ = {
+      window.__TOSS_BRIDGE__ = {
         getUserInfo: jest.fn().mockResolvedValue({
           name: '테스트',
           userId: '1',

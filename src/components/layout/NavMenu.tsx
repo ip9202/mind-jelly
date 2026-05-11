@@ -83,7 +83,7 @@ export default function NavMenu({ activeTab = 'jelly' }: NavMenuProps) {
           id="nav-menu"
           role="menu"
           aria-label="내비게이션 메뉴"
-          className="absolute right-0 top-12 w-48 glass-card rounded-2xl shadow-lg py-2 z-50 animate-slide-up"
+          className="absolute right-0 top-12 w-48 bg-white rounded-2xl shadow-lg py-2 z-50 animate-slide-up border border-surface-variant"
         >
           {items.map((item, index) => {
             const isActive = activeTab === item.id;

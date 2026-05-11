@@ -8,10 +8,11 @@ import { diaryStore } from '@/stores/diaryStore';
 
 // 상태 전이 맵 (유효한 전이만 정의)
 const TRANSITION_MAP: Record<string, string[]> = {
-  idle: ['anticipation'],
+  idle: ['anticipation', 'happy'],
   anticipation: ['eating'],
   eating: ['anticipation', 'satisfied'],
   satisfied: ['idle'],
+  happy: ['idle'],
 };
 
 // 상태별 기본 표정
@@ -20,6 +21,7 @@ const STATE_FACES: Record<string, JellyFace> = {
   anticipation: { eyes: '• •', mouth: 'o' },
   eating: { eyes: 'u u', mouth: 'o' },
   satisfied: { eyes: '^ ^', mouth: '-' },
+  happy: { eyes: '^ ^', mouth: 'U' },
 };
 
 interface JellyStoreState {
@@ -93,7 +95,7 @@ interface JellyStoreState {
   // M1 액션: 감정 분석 상태
   setAnalyzing: (value: boolean) => void;
   setAnalysisError: (error: string | null) => void;
-  addEmotionResult: (result: AnalysisResponse) => void;
+  addEmotionResult: (result: AnalysisResponse) => Promise<void>;
 
   // 마지막 입력 텍스트 설정
   setLastInputText: (text: string) => void;
@@ -106,6 +108,15 @@ interface JellyStoreState {
 
   // 액션: 젤리 모양 설정
   setJellyShape: (shape: JellyShape) => void;
+
+  // SPEC-TOUCH-001: 터치 쿨다운 타임스탬프 (0이면 쿨다운 없음)
+  touchCooldownAt: number;
+
+  // SPEC-TOUCH-001: 터치 가능 여부 확인 (1초 쿨다운 체크)
+  canTouch: () => boolean;
+
+  // SPEC-TOUCH-001: happy 상태 트리거 (2초 후 idle 자동 복귀)
+  triggerHappy: () => void;
 }
 
 /**
@@ -150,8 +161,11 @@ export const jellyStore = create<JellyStoreState>()(
       // 젤리 이름 (온보딩에서 설정)
       jellyName: '',
 
-      // 젤리 외형 모양 (기본값: 원형)
-      jellyShape: 'circle',
+      // 젤리 외형 모양 (기본값: 퐁당)
+      jellyShape: 'ppung',
+
+      // SPEC-TOUCH-001: 터치 쿨다운 타임스탬프
+      touchCooldownAt: 0,
 
       // 상태 전이 (가드 조건 검증)
       transitionState: (newState: JellyState) => {
@@ -243,7 +257,7 @@ export const jellyStore = create<JellyStoreState>()(
       // M1: 감정 분석 결과 추가
       // emotionColor는 구슬 섭취 완료 후 page.tsx에서 적용
       // diaryStore에도 일기 엔트리로 자동 저장
-      addEmotionResult: (result: AnalysisResponse) => {
+      addEmotionResult: async (result: AnalysisResponse) => {
         set((state) => ({
           emotionHistory: [...state.emotionHistory, result],
         }));
@@ -251,7 +265,7 @@ export const jellyStore = create<JellyStoreState>()(
         // diaryStore에 일기 엔트리로 저장
         const inputText = get().lastInputText;
         if (inputText) {
-          diaryStore.getState().addEntry({
+          await diaryStore.getState().addEntry({
             text: inputText,
             emotion: result.emotion,
             confidence: result.confidence,
@@ -274,16 +288,52 @@ export const jellyStore = create<JellyStoreState>()(
       setJellyShape: (shape: JellyShape) => {
         set({ jellyShape: shape });
       },
+
+      // @MX:NOTE: [AUTO] SPEC-TOUCH-001 REQ-TOUCH-004: 1초 쿨다운 체크
+      // @MX:REASON: 연속 터치 방지, touchCooldownAt 기준 1000ms 이내면 false
+      canTouch: () => {
+        const { touchCooldownAt } = get();
+        if (touchCooldownAt === 0) return true;
+        return Date.now() - touchCooldownAt >= 1000;
+      },
+
+      // @MX:NOTE: [AUTO] SPEC-TOUCH-001 REQ-TOUCH-002: happy 상태 트리거 + 2초 후 idle 자동 복귀
+      // @MX:REASON: idle 상태에서만 호출 가능, transitionState 가드가 상태 검증
+      triggerHappy: () => {
+        const currentState = get().currentState;
+        const validTransitions = TRANSITION_MAP[currentState];
+        if (!validTransitions || !validTransitions.includes('happy')) {
+          return;
+        }
+
+        set({
+          currentState: 'happy',
+          faceExpression: STATE_FACES.happy,
+          touchCooldownAt: Date.now(),
+        });
+
+        // 2초 후 idle로 자동 복귀
+        setTimeout(() => {
+          const st = get();
+          if (st.currentState === 'happy') {
+            set({
+              currentState: 'idle',
+              faceExpression: STATE_FACES.idle,
+            });
+          }
+        }, 2000);
+      },
     }),
     {
       name: 'jelly-storage',
+      version: 2,
       // @MX:NOTE: 순수 UI 상태만 저장 (REQ-UBI-003)
       // @MX:REASON: jellyName→Supabase users.nickname, emotionHistory→Supabase diary_entries로 이전
       partialize: (state) => ({
         lastEmotion: state.lastEmotion,
         emotionColor: state.emotionColor,
         currentState: state.currentState,
-        jellyShape: state.jellyShape,
+        jellyShape: state.jellyShape as JellyShape,
       }),
       migrate: (persistedState: unknown, version: number) => {
         // 버전 0 (기존) → 1 마이그레이션
@@ -294,6 +344,18 @@ export const jellyStore = create<JellyStoreState>()(
             currentState: state.currentState || 'idle',
             beadCount: state.beadCount ?? 0,
           };
+        }
+        // 버전 1 → 2: 젤리 모양 마이그레이션 (기하학적 형태 → 유기적 형태)
+        // 이전 모양 값(circle, star, square, triangle, pentagon, hexagon)을 기본값 'ppung'으로 변환
+        if (version <= 1 && state) {
+          const validShapes: JellyShape[] = ['ppung', 'mallang', 'jjit', 'banggeul', 'sillung', 'kkul'];
+          if (state.jellyShape && !validShapes.includes(state.jellyShape)) {
+            // 유효하지 않은 모양 값은 기본값으로 대체
+            return {
+              ...state,
+              jellyShape: 'ppung',
+            } as JellyStoreState;
+          }
         }
         return state;
       },
