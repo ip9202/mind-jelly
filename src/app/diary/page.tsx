@@ -472,6 +472,74 @@ function TimelineEntry({ entry }: { entry: DiaryEntry }) {
   const [modalOpen, setModalOpen] = useState(false);
   const touchStartY = useRef<number | null>(null);
 
+  // SPEC-DIARY-002: 스와이프 삭제 상태
+  const [swipeOffset, setSwipeOffset] = useState(0);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const swipeStartX = useRef<number | null>(null);
+  const swipeStartY = useRef<number | null>(null);
+  const swipeActive = useRef<boolean>(false);
+
+  function handleCardTouchStart(e: React.TouchEvent) {
+    if (modalOpen) return;
+    swipeStartX.current = e.touches[0].clientX;
+    swipeStartY.current = e.touches[0].clientY;
+    swipeActive.current = false;
+  }
+
+  function handleCardTouchMove(e: React.TouchEvent) {
+    if (modalOpen || swipeStartX.current === null || swipeStartY.current === null) return;
+    const deltaX = e.touches[0].clientX - swipeStartX.current;
+    const deltaY = e.touches[0].clientY - swipeStartY.current;
+    // 세로 스크롤 우선: 가로 우세할 때만 활성화
+    if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 8) {
+      swipeActive.current = true;
+    }
+    if (!swipeActive.current) return;
+    // 왼쪽 스와이프만 허용, 최대 -80
+    const newOffset = Math.max(Math.min(deltaX, 0), -80);
+    setSwipeOffset(newOffset);
+  }
+
+  function handleCardTouchEnd() {
+    if (modalOpen) {
+      swipeStartX.current = null;
+      swipeStartY.current = null;
+      swipeActive.current = false;
+      return;
+    }
+    if (swipeActive.current) {
+      // 60px 이상 왼쪽 스와이프 → 삭제 버튼 노출
+      if (swipeOffset <= -60) {
+        setSwipeOffset(-80);
+      } else {
+        setSwipeOffset(0);
+      }
+    }
+    swipeStartX.current = null;
+    swipeStartY.current = null;
+    swipeActive.current = false;
+  }
+
+  function handleCardClick() {
+    // 스와이프로 삭제 버튼이 노출된 상태에서는 카드 탭으로 모달 열지 않고 원복
+    if (swipeOffset !== 0) {
+      setSwipeOffset(0);
+      return;
+    }
+    setModalOpen(true);
+  }
+
+  function handleDeleteConfirm() {
+    setShowDeleteConfirm(false);
+    setSwipeOffset(0);
+    diaryStore.getState().deleteEntry(entry.id);
+  }
+
+  function handleDeleteCancel() {
+    setShowDeleteConfirm(false);
+    setSwipeOffset(0);
+  }
+
   // 모달 오픈 시 body 스크롤 잠금
   useEffect(() => {
     if (modalOpen) {
@@ -505,11 +573,35 @@ function TimelineEntry({ entry }: { entry: DiaryEntry }) {
     }
   }
 
+  const showDeleteBtn = swipeOffset <= -60;
+
   return (
     <>
+      <div className="relative overflow-hidden rounded-[20px]">
+        {/* 스와이프 삭제 버튼 (카드 뒤) */}
+        {showDeleteBtn && (
+          <button
+            data-testid="swipe-delete-btn"
+            aria-label="삭제"
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowDeleteConfirm(true);
+            }}
+            className="absolute right-0 top-0 h-full w-20 bg-red-500 text-white flex items-center justify-center font-bold"
+          >
+            <span className="material-symbols-outlined" aria-hidden="true">delete</span>
+          </button>
+        )}
       <article
         aria-label={`${ui.label} 감정 기록`}
-        onClick={() => setModalOpen(true)}
+        onClick={handleCardClick}
+        onTouchStart={handleCardTouchStart}
+        onTouchMove={handleCardTouchMove}
+        onTouchEnd={handleCardTouchEnd}
+        style={{
+          transform: `translateX(${swipeOffset}px)`,
+          transition: swipeActive.current ? 'none' : 'transform 0.2s',
+        }}
         className="glass-card rounded-[20px] p-[16px] shadow-sm relative transition-all active:scale-[0.98] cursor-pointer"
       >
         <div
@@ -552,6 +644,47 @@ function TimelineEntry({ entry }: { entry: DiaryEntry }) {
           </div>
         )}
       </article>
+      </div>
+
+      {/* SPEC-DIARY-002: 삭제 확인 다이얼로그 */}
+      {showDeleteConfirm && (
+        <div
+          className="fixed inset-0 z-50 flex items-end justify-center bg-black/30"
+          onClick={handleDeleteCancel}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label="삭제 확인"
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-lg bg-surface rounded-t-[24px] p-[20px] pb-[32px] shadow-lg"
+          >
+            <div className="flex justify-center mb-[16px]">
+              <div className="w-10 h-1 rounded-full bg-gray-300" />
+            </div>
+            <p className="text-center text-on-surface font-bold mb-[8px]">
+              이 감정 기록을 삭제할까요?
+            </p>
+            <p className="text-center text-on-surface-variant text-[13px] mb-[24px]">
+              삭제하면 복구할 수 없어요
+            </p>
+            <div className="flex gap-[8px]">
+              <button
+                onClick={handleDeleteCancel}
+                className="flex-1 py-[12px] rounded-[12px] bg-surface-container text-on-surface font-bold"
+              >
+                취소
+              </button>
+              <button
+                onClick={handleDeleteConfirm}
+                className="flex-1 py-[12px] rounded-[12px] bg-red-500 text-white font-bold"
+              >
+                삭제
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* 바텀시트 모달 */}
       {modalOpen && (

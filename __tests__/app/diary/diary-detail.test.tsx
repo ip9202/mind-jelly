@@ -260,6 +260,119 @@ describe('SPEC-DIARY-001: 일기 상세 보기', () => {
     });
   });
 
+  // SPEC-DIARY-002: 스와이프 삭제
+  describe('SPEC-DIARY-002: 스와이프 삭제', () => {
+    it('왼쪽 스와이프 60px 이상 시 삭제 버튼이 노출된다', () => {
+      render(<DiaryPage />);
+
+      const entryCard = screen.getByLabelText('평온 감정 기록');
+      // 초기: 삭제 버튼 숨김
+      expect(screen.queryByTestId('swipe-delete-btn')).not.toBeInTheDocument();
+
+      // 왼쪽 스와이프 80px (deltaX = -80)
+      fireEvent.touchStart(entryCard, { touches: [{ clientX: 200, clientY: 100 }] });
+      fireEvent.touchMove(entryCard, { touches: [{ clientX: 120, clientY: 100 }] });
+      fireEvent.touchEnd(entryCard, { changedTouches: [{ clientX: 120, clientY: 100 }] });
+
+      // 삭제 버튼 노출
+      expect(screen.getByTestId('swipe-delete-btn')).toBeInTheDocument();
+    });
+
+    it('짧은 왼쪽 스와이프(40px 미만)는 원위치로 복귀한다', () => {
+      render(<DiaryPage />);
+
+      const entryCard = screen.getByLabelText('평온 감정 기록');
+
+      // 30px 스와이프
+      fireEvent.touchStart(entryCard, { touches: [{ clientX: 200, clientY: 100 }] });
+      fireEvent.touchMove(entryCard, { touches: [{ clientX: 170, clientY: 100 }] });
+      fireEvent.touchEnd(entryCard, { changedTouches: [{ clientX: 170, clientY: 100 }] });
+
+      // 삭제 버튼이 보이지 않음(또는 활성 상태 아님). delete-btn은 항상 DOM에 있을 수 있으므로 클릭 가능성으로 확인
+      // 단순히 버튼 노출 안 됨을 확인
+      expect(screen.queryByTestId('swipe-delete-btn')).not.toBeInTheDocument();
+    });
+
+    it('세로 스크롤이 우선되면 스와이프가 활성화되지 않는다', () => {
+      render(<DiaryPage />);
+
+      const entryCard = screen.getByLabelText('평온 감정 기록');
+
+      // 가로 -40, 세로 100 (세로 우세)
+      fireEvent.touchStart(entryCard, { touches: [{ clientX: 200, clientY: 100 }] });
+      fireEvent.touchMove(entryCard, { touches: [{ clientX: 160, clientY: 200 }] });
+      fireEvent.touchEnd(entryCard, { changedTouches: [{ clientX: 160, clientY: 200 }] });
+
+      expect(screen.queryByTestId('swipe-delete-btn')).not.toBeInTheDocument();
+    });
+
+    it('삭제 버튼 탭 시 확인 다이얼로그가 표시된다', () => {
+      render(<DiaryPage />);
+
+      const entryCard = screen.getByLabelText('평온 감정 기록');
+      fireEvent.touchStart(entryCard, { touches: [{ clientX: 200, clientY: 100 }] });
+      fireEvent.touchMove(entryCard, { touches: [{ clientX: 100, clientY: 100 }] });
+      fireEvent.touchEnd(entryCard, { changedTouches: [{ clientX: 100, clientY: 100 }] });
+
+      const deleteBtn = screen.getByTestId('swipe-delete-btn');
+      fireEvent.click(deleteBtn);
+
+      expect(screen.getByLabelText('삭제 확인')).toBeInTheDocument();
+      expect(screen.getByText(/이 감정 기록을 삭제할까요/)).toBeInTheDocument();
+    });
+
+    it('확인 다이얼로그에서 삭제 시 deleteEntry가 호출된다', async () => {
+      const user = userEvent.setup();
+      const { diaryStore } = jest.requireMock('@/stores/diaryStore') as {
+        diaryStore: { getState: () => { deleteEntry: jest.Mock } };
+      };
+      const deleteEntryMock = diaryStore.getState().deleteEntry;
+      deleteEntryMock.mockClear();
+
+      render(<DiaryPage />);
+
+      const entryCard = screen.getByLabelText('평온 감정 기록');
+      fireEvent.touchStart(entryCard, { touches: [{ clientX: 200, clientY: 100 }] });
+      fireEvent.touchMove(entryCard, { touches: [{ clientX: 100, clientY: 100 }] });
+      fireEvent.touchEnd(entryCard, { changedTouches: [{ clientX: 100, clientY: 100 }] });
+
+      const deleteBtn = screen.getByTestId('swipe-delete-btn');
+      fireEvent.click(deleteBtn);
+
+      const dialog = screen.getByLabelText('삭제 확인');
+      const confirmBtn = within(dialog).getByRole('button', { name: '삭제' });
+      await user.click(confirmBtn);
+
+      expect(deleteEntryMock).toHaveBeenCalledWith('test-entry-1');
+    });
+
+    it('확인 다이얼로그에서 취소 시 deleteEntry가 호출되지 않는다', async () => {
+      const user = userEvent.setup();
+      const { diaryStore } = jest.requireMock('@/stores/diaryStore') as {
+        diaryStore: { getState: () => { deleteEntry: jest.Mock } };
+      };
+      const deleteEntryMock = diaryStore.getState().deleteEntry;
+      deleteEntryMock.mockClear();
+
+      render(<DiaryPage />);
+
+      const entryCard = screen.getByLabelText('평온 감정 기록');
+      fireEvent.touchStart(entryCard, { touches: [{ clientX: 200, clientY: 100 }] });
+      fireEvent.touchMove(entryCard, { touches: [{ clientX: 100, clientY: 100 }] });
+      fireEvent.touchEnd(entryCard, { changedTouches: [{ clientX: 100, clientY: 100 }] });
+
+      const deleteBtn = screen.getByTestId('swipe-delete-btn');
+      fireEvent.click(deleteBtn);
+
+      const dialog = screen.getByLabelText('삭제 확인');
+      const cancelBtn = within(dialog).getByRole('button', { name: '취소' });
+      await user.click(cancelBtn);
+
+      expect(deleteEntryMock).not.toHaveBeenCalled();
+      expect(screen.queryByLabelText('삭제 확인')).not.toBeInTheDocument();
+    });
+  });
+
   // REQ-DIARY-005: Body 스크롤 잠금
   describe('REQ-DIARY-005: 모달 오픈 시 스크롤 잠금', () => {
     it('모달이 열리면 body 스크롤이 잠긴다', async () => {
