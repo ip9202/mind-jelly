@@ -14,7 +14,7 @@ export default function BottomNav({ activeTab = 'jelly' }: BottomNavProps) {
   ] as const;
 
   return (
-    <nav className="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pb-6 pt-3 bg-surface-container/80 backdrop-blur-lg border-t border-white/20 rounded-t-lg shadow-sm">
+    <nav className="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pb-6 pt-3 bg-surface-container/80 backdrop-blur-lg border-t border-white/20 rounded-t-lg shadow-sm nav-safe-bottom">
       {tabs.map((tab) => {
         const isActive = activeTab === tab.id;
         return (

@@ -290,52 +290,8 @@ body {
   animation: fadeIn 800ms ease-out 600ms forwards;
 }
 
-/* ========================================
-   Dark mode styles
-   .dark 클래스가 <html>에 추가될 때 적용
-   ======================================== */
-
-.dark body {
-  background: #191F28;
-  color: #fbf9f6;
-}
-
-/* Dark mode: glass card */
-.dark .glass-card {
-  background: rgba(25, 31, 40, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.dark .soft-glass {
-  background: rgba(25, 31, 40, 0.4);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.dark .glass-panel {
-  background: rgba(25, 31, 40, 0.45);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-/* Dark mode: jelly inner glow (밝기 증가) */
-.dark .jelly-inner-glow {
-  box-shadow: inset 0 0 60px rgba(255, 255, 255, 0.8);
-}
-
-/* Dark mode: gradient backgrounds */
-.dark .bg-gradient-splash {
-  background: linear-gradient(135deg, #1a1a2e 0%, #2d1b30 50%, #1f2937 100%);
-  background-size: 400% 400%;
-  animation: gradientShift 15s ease infinite;
-}
-
-.dark .bg-pastel-gradient {
-  background: linear-gradient(135deg, #191F28 0%, rgba(120, 85, 94, 0.2) 50%, rgba(92, 93, 110, 0.2) 100%);
-}
-
-.dark .bg-welcome-gradient {
-  background-color: #191F28;
-  background-image: linear-gradient(135deg, #191F28 0%, rgba(120, 85, 94, 0.15) 50%, rgba(92, 93, 110, 0.15) 100%);
-}
+/* 다크 모드 제거됨: 앱인토스는 라이트 모드만 지원
+   @see https://developers-apps-in-toss.toss.im/ (§6 Design) */
 
 /* 접근성: 모션 감소 선호 */
 @media (prefers-reduced-motion: reduce) {
@@ -385,4 +341,63 @@ body {
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border-width: 0;
+}
+
+/* ========================================
+   앱인토스 Safe Area 지원
+   iOS 홈 인디케이터, Dynamic Island 침범 방지
+   ======================================== */
+
+/* Safe Area 하단 패딩 (iOS 홈 인디케이터) */
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 20px);
+}
+
+/* Safe Area 상단 패딩 (노치/Dynamic Island) */
+.safe-top {
+  padding-top: env(safe-area-inset-top, 20px);
+}
+
+/* 전체 Safe Area 적용 */
+.safe-area {
+  padding-top: env(safe-area-inset-top, 20px);
+  padding-bottom: env(safe-area-inset-bottom, 20px);
+  padding-left: env(safe-area-inset-left, 20px);
+  padding-right: env(safe-area-inset-right, 20px);
+}
+
+/* 고정 네비게이션 바 Safe Area */
+.nav-safe-bottom {
+  padding-bottom: calc(env(safe-area-inset-bottom, 20px) + 16px);
+}
+
+/* ========================================
+   앱인토스 닫기 버튼
+   우측 상단 고정 위치
+   ======================================== */
+
+.ait-close-button {
+  position: fixed;
+  top: env(safe-area-inset-top, 16px);
+  right: 16px;
+  z-index: 9999;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.05);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+}
+
+.ait-close-button:hover {
+  background: rgba(0, 0, 0, 0.1);
+  transform: scale(1.05);
+}
+
+.ait-close-button:active {
+  transform: scale(0.95);
 }
