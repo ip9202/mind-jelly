@@ -450,9 +450,13 @@ export default function HomePage() {
                 onClick={() => setUiState('input')}
                 disabled={uiState === 'report'}
                 aria-label="감정 표현하기"
-                className="w-full h-14 rounded-full bg-primary text-white font-gowun text-base font-semibold shadow-lg hover:scale-[0.98] active:scale-95 transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-default"
+                className="w-full h-14 rounded-full bg-accent text-on-primary font-gamja text-lg font-bold shadow-lg hover:scale-[0.98] active:scale-95 transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-default hover:shadow-xl hover:-translate-y-0.5"
+                style={{
+                  background: 'linear-gradient(135deg, #FF9ECD 0%, #FFD1DC 100%)',
+                  boxShadow: '0 4px 14px rgba(255, 158, 205, 0.4)',
+                }}
               >
-                <span className="material-symbols-outlined text-xl" style={{ fontVariationSettings: "'FILL' 1" }} aria-hidden="true">edit_note</span>
+                <span className="material-symbols-outlined text-2xl" style={{ fontVariationSettings: "'FILL' 1" }} aria-hidden="true">edit_note</span>
                 감정 표현하기
               </button>
             </div>
