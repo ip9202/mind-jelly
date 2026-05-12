@@ -349,7 +349,7 @@ export default function DiaryPage() {
 
         {/* Emotion Timeline */}
         <section className="space-y-[12px]">
-          <h2 className="text-primary px-1 font-dongle text-[28px] font-normal">
+          <h2 className="text-primary px-1 font-gowun text-[24px] font-bold">
             타임라인
           </h2>
 
@@ -377,7 +377,7 @@ export default function DiaryPage() {
 
         {/* Weekly Emotion Flow Chart */}
         <section className="glass-card rounded-[20px] p-[16px] shadow-sm">
-          <h2 className="text-primary mb-[16px] font-dongle text-[28px] font-normal">
+          <h2 className="text-primary mb-[16px] font-gowun text-[24px] font-bold">
             이번 주 감정 흐름
           </h2>
 
