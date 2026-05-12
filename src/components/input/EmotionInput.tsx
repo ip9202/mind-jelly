@@ -143,7 +143,7 @@ export function EmotionInput({ onCompleteAction }: { onCompleteAction?: () => vo
           disabled={isAnalyzing}
           aria-label="감정 텍스트 입력"
           aria-describedby="char-count"
-          className="w-full h-36 bg-white/60 border-none rounded-xl p-4 text-on-surface resize-none text-2xl placeholder:text-on-surface-variant/40 focus:ring-2 focus:ring-[#ffd1dc] focus:outline-none transition-all disabled:opacity-50"
+          className="w-full h-36 bg-white/60 border-none rounded-xl p-4 text-on-surface resize-none text-sm placeholder:text-on-surface-variant/40 focus:ring-2 focus:ring-[#ffd1dc] focus:outline-none transition-all disabled:opacity-50 font-gowun leading-relaxed"
         />
         <span
           id="char-count"
