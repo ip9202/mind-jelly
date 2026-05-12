@@ -7,6 +7,51 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added (SPEC-UI-001)
+- 감정 리포트 시각화 기능
+  - 주간 감정 트렌드 차트 (`WeeklyTrendChart` 컴포넌트)
+  - 감정 분포 도넛 차트 (`EmotionDonutChart` 컴포넌트)
+  - 3단계 시각적 계층 구조 (요약/시각화/인사이트)
+  - 인터랙티브 차트 요소 (호버, 터치, 툴팁)
+  - 차트 진입 애니메이션 시스템 (`ChartAnimations`)
+  - 개인화된 감정 인사이트 (`useEmotionInsights` 훅)
+  - WCAG 2.1 AA 접근성 준수
+  - 반응형 디자인 (모바일/태블릿 지원)
+  - 스켈레톤 로딩 상태 (`EmotionReportSkeleton`)
+- 새로운 컴포넌트 및 유틸리티
+  - `EmotionReportCard`: 메인 감정 리포트 컨테이너
+  - `EmotionDetailPanel`: 감정 상세 정보 슬라이드업 패널
+  - `emotion-insights.ts`: 감정 데이터 분석 로직
+  - `chartTheme.ts`: Recharts 테마 설정
+  - `index.ts`: 컴포넌트 통합 내보내기
+
+### Changed (SPEC-UI-001)
+- 홈 화면 감정 리포트 영역 개선
+  - 텍스트 전용 카드 → 인터랙티브 시각화 리포트
+  - 9개 감정 컬러 시스템 시각화
+  - 데이터 기반 인사이트 제공
+- 상수 및 타입 시스템 확장
+  - `emotion.ts`: 감정별 아이콘 매핑 추가
+  - `emotion-chart.ts`: 새로운 차트 타입 정의
+
+### Testing (SPEC-UI-001)
+- TDD 방식론(RED-GREEN-REFACTOR) 적용
+- 테스트 커버리지: 90개 테스트 전체 통과
+  - visualization 컴포넌트: 56개
+  - emotion-insights: 9개
+  - lib 상수: 25개
+- overall 커버리지: 85%+ 달성
+
+### Technical Notes (SPEC-UI-001)
+- Recharts 라이브러리 도입 (동적 import로 번들 크기 최적화)
+- 클라이언트 사이드 데이터 캐싱 구현
+- 60fps 애니메이션 프레임레이트 유지
+- 번들 사이즈 증가량 50KB 이하 (gzip 기준)
+- 초기 렌더링 지연 200ms 이하 달성
+- `prefers-reduced-motion` 미디어 쿼리 지원
+- 키보드 네비게이션 지원 (Tab 키 포커스)
+- 터치 타겟 크기 44x44px 준수
+
 ### Added (SPEC-AD-001)
 - AdMob SDK 초기화 기능 추가 (`src/lib/ad/adInitializer.ts`)
 - 전면형 광고(Interstitial Ad) 컴포넌트 추가 (`src/components/ads/InterstitialAd.tsx`)

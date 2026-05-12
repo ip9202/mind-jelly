@@ -8,9 +8,10 @@
 'use client';
 
 import { useState } from 'react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { EMOTION_COLORS } from '@/lib/constants/emotion';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, type TooltipProps } from 'recharts';
+import { EMOTION_COLORS, EMOTION_THEME } from '@/lib/constants/emotion';
 import { useEmotionChartData } from '@/hooks/useEmotionChartData';
+import { getLineChartAnimationProps } from './ChartAnimations';
 import type { EmotionType } from '@/types/emotion';
 
 // @MX:NOTE: 감정 타입 배열 (라인 렌더링용)
@@ -18,6 +19,57 @@ const EMOTION_TYPES: EmotionType[] = [
   'joy', 'sadness', 'anger', 'fear', 'disgust',
   'surprise', 'love', 'gratitude', 'hope',
 ];
+
+// @MX:NOTE: [AUTO] REQ-VIS-004-1 커스텀 툴팁 - 날짜별 9개 감정 빈도를 테이블로 표시
+function CustomTooltip({ active, payload, label }: TooltipProps<number, string>) {
+  if (!active || !payload || !payload.length || !label) {
+    return null;
+  }
+
+  const formattedDate = (() => {
+    const date = new Date(label);
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${month}-${day}`;
+  })();
+
+  return (
+    <div
+      className="glass-card rounded-2xl border border-white/20 bg-white/10 backdrop-blur-md p-3 shadow-lg transition-all duration-300"
+      role="tooltip"
+    >
+      <p className="text-white/90 dark:text-white/80 text-xs font-jakarta font-semibold mb-2 text-center">
+        {formattedDate}
+      </p>
+      <table className="w-full text-xs" aria-label={`${formattedDate} 감정 빈도`}>
+        <tbody>
+          {payload.map((entry) => {
+            const emotionKey = entry.dataKey as EmotionType;
+            const color = EMOTION_COLORS[emotionKey];
+            const label = EMOTION_THEME[emotionKey]?.label ?? emotionKey;
+            const value = entry.value ?? 0;
+
+            return (
+              <tr key={emotionKey} className="transition-all duration-300">
+                <td className="pr-2 py-0.5">
+                  <span
+                    className="inline-block w-2.5 h-2.5 rounded-full mr-1.5 align-middle"
+                    style={{ backgroundColor: color }}
+                    aria-hidden="true"
+                  />
+                  <span className="text-white/80 dark:text-white/70 font-jakarta">{label}</span>
+                </td>
+                <td className="text-right text-white/90 dark:text-white/80 font-medium font-jakarta py-0.5">
+                  {value}
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
+}
 
 // @MX:NOTE: 뷰 모드 타입
 type ViewMode = 'weekly' | 'monthly';
@@ -31,6 +83,9 @@ export function WeeklyTrendChart() {
   const { weeklyData, monthlyData } = useEmotionChartData();
   const [viewMode, setViewMode] = useState<ViewMode>('weekly');
   const [touchStart, setTouchStart] = useState<number | null>(null);
+
+ // REQ-VIS-005: draw-in 애니메이션 설정
+  const lineAnimation = getLineChartAnimationProps();
 
   // 현재 뷰 모드에 따른 데이터 선택
   const chartData = viewMode === 'weekly' ? weeklyData : monthlyData;
@@ -70,19 +125,19 @@ export function WeeklyTrendChart() {
   };
 
   return (
-    <div className="glass-card rounded-3xl border border-white/20 bg-white/10 backdrop-blur-md p-4">
+    <div className="glass-card animate-draw-in rounded-3xl border border-white/20 bg-white/10 backdrop-blur-md dark:bg-gray-900/30 dark:border-white/10 p-4">
       {/* 뷰 전환 토글 버튼 */}
       <div className="flex justify-between items-center mb-4">
-        <span className="material-symbols-outlined text-primary text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>
+        <span className="material-symbols-outlined text-primary text-sm" style={{ fontVariationSettings: "'FILL' 1" }} aria-hidden="true">
           show_chart
         </span>
-        <div className="flex gap-2">
+        <div className="flex gap-2" role="group" aria-label="차트 기간 선택">
           <button
             onClick={() => setViewMode('weekly')}
-            className={`px-3 py-1 rounded-full text-xs font-medium transition-all duration-300 ${
+            className={`px-3 py-2 rounded-full text-xs font-jakarta font-medium transition-all duration-300 min-h-[44px] min-w-[44px] focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-transparent ${
               viewMode === 'weekly'
-                ? 'bg-white text-gray-800 shadow-sm'
-                : 'bg-white/20 text-white/70 hover:bg-white/30'
+                ? 'bg-white dark:bg-gray-100 text-gray-800 shadow-sm'
+                : 'bg-white/20 dark:bg-white/10 text-white/70 hover:bg-white/30 dark:hover:bg-white/20'
             }`}
             aria-label="주간 뷰"
             aria-pressed={viewMode === 'weekly'}
@@ -91,10 +146,10 @@ export function WeeklyTrendChart() {
           </button>
           <button
             onClick={() => setViewMode('monthly')}
-            className={`px-3 py-1 rounded-full text-xs font-medium transition-all duration-300 ${
+            className={`px-3 py-2 rounded-full text-xs font-jakarta font-medium transition-all duration-300 min-h-[44px] min-w-[44px] focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-transparent ${
               viewMode === 'monthly'
-                ? 'bg-white text-gray-800 shadow-sm'
-                : 'bg-white/20 text-white/70 hover:bg-white/30'
+                ? 'bg-white dark:bg-gray-100 text-gray-800 shadow-sm'
+                : 'bg-white/20 dark:bg-white/10 text-white/70 hover:bg-white/30 dark:hover:bg-white/20'
             }`}
             aria-label="월간 뷰"
             aria-pressed={viewMode === 'monthly'}
@@ -130,13 +185,8 @@ export function WeeklyTrendChart() {
               style={{ fontSize: '12px' }}
             />
             <Tooltip
-              contentStyle={{
-                backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                borderRadius: '12px',
-                border: 'none',
-                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-              }}
-              labelStyle={{ color: '#000', fontWeight: 'bold' }}
+              content={<CustomTooltip />}
+              cursor={{ stroke: 'rgba(255,255,255,0.3)', strokeWidth: 1 }}
             />
             {EMOTION_TYPES.map((emotion) => (
               <Line
@@ -148,11 +198,39 @@ export function WeeklyTrendChart() {
                 dot={{ fill: EMOTION_COLORS[emotion], r: 4 }}
                 activeDot={{ r: 6 }}
                 connectNulls={true}
+                isAnimationActive={lineAnimation.isAnimationActive}
+                animationDuration={lineAnimation.animationDuration}
+                animationEasing={lineAnimation.animationEasing}
               />
             ))}
           </LineChart>
         </ResponsiveContainer>
       </div>
+
+      {/* REQ-VIS-007: 스크린 리더용 대체 테이블 */}
+      {chartData.length > 0 && (
+        <table className="sr-only" aria-label={`${viewMode === 'weekly' ? '주간' : '월간'} 감정 트렌드 데이터`}>
+          <caption>{viewMode === 'weekly' ? '최근 7일' : '최근 30일'} 감정 빈도 데이터</caption>
+          <thead>
+            <tr>
+              <th scope="col">날짜</th>
+              {EMOTION_TYPES.map((emotion) => (
+                <th key={emotion} scope="col">{EMOTION_THEME[emotion]?.label ?? emotion}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {chartData.map((day) => (
+              <tr key={day.date}>
+                <th scope="row">{formatXAxisLabel(day.date)}</th>
+                {EMOTION_TYPES.map((emotion) => (
+                  <td key={emotion}>{day[emotion] ?? 0}</td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
     </div>
   );
 }

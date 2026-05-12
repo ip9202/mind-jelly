@@ -10,6 +10,8 @@ import { useMemo } from 'react';
 import { PieChart, Pie, ResponsiveContainer, Cell, Tooltip } from 'recharts';
 import { EmotionFace } from '@/components/jelly/EmotionFace';
 import { useEmotionChartData } from '@/hooks/useEmotionChartData';
+import { getPieChartAnimationProps } from './ChartAnimations';
+import { UI_COLORS } from '@/lib/constants/emotion';
 import type { EmotionDistribution } from '@/types/emotion-chart';
 import type { EmotionType } from '@/types/emotion';
 
@@ -47,7 +49,7 @@ function consolidateSmallEmotions(distribution: EmotionDistribution[]): DonutSec
     sectors.push({
       name: '기타',
       value: otherPercentage,
-      color: '#E0E0E0', // 회색
+      color: UI_COLORS.otherSector,
       count: otherCount,
     });
   }
@@ -92,6 +94,9 @@ export function EmotionDonutChart({ selectedEmotion, onEmotionSelect }: EmotionD
     return findMostFrequentEmotion(distribution);
   }, [distribution]);
 
+  // REQ-VIS-005: reveal 애니메이션 설정
+  const pieAnimation = getPieChartAnimationProps();
+
   // 섹터 클릭 핸들러
   const handleSectorClick = (data: DonutSector) => {
     if (data.emotionKey) {
@@ -101,7 +106,7 @@ export function EmotionDonutChart({ selectedEmotion, onEmotionSelect }: EmotionD
 
   return (
     <div
-      className="glass-card bg-white/10 backdrop-blur-md rounded-3xl border border-white/20 p-6"
+      className="glass-card animate-reveal bg-white/10 backdrop-blur-md rounded-3xl border border-white/20 dark:bg-gray-900/30 dark:border-white/10 p-6"
       role="img"
       aria-label="감정 분포 도넛 차트"
     >
@@ -118,6 +123,10 @@ export function EmotionDonutChart({ selectedEmotion, onEmotionSelect }: EmotionD
               dataKey="value"
               onClick={handleSectorClick}
               cursor="pointer"
+              isAnimationActive={pieAnimation.isAnimationActive}
+              animationBegin={pieAnimation.animationBegin}
+              animationDuration={pieAnimation.animationDuration}
+              animationEasing={pieAnimation.animationEasing}
             >
               {chartData.map((entry, index) => (
                 <Cell
@@ -133,11 +142,11 @@ export function EmotionDonutChart({ selectedEmotion, onEmotionSelect }: EmotionD
                 if (!active || !payload || !payload.length) return null;
                 const data = payload[0].payload as DonutSector;
                 return (
-                  <div className="bg-white/90 backdrop-blur-sm rounded-lg px-3 py-2 shadow-lg">
-                    <p className="text-sm font-medium text-gray-800">
+                  <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-lg px-3 py-2 shadow-lg">
+                    <p className="text-sm font-gamja font-medium text-gray-800 dark:text-gray-100">
                       {data.name}: {data.value}%
                     </p>
-                    <p className="text-xs text-gray-600">
+                    <p className="text-xs font-jakarta text-gray-600 dark:text-gray-300">
                       {data.count}회
                     </p>
                   </div>
@@ -154,12 +163,12 @@ export function EmotionDonutChart({ selectedEmotion, onEmotionSelect }: EmotionD
               <div className="flex justify-center mb-1">
                 <EmotionFace emotion={mostFrequent.emotionKey} size={32} />
               </div>
-              <p className="text-2xl font-bold text-gray-800">
+              <p className="text-2xl font-bold font-gamja text-gray-800 dark:text-gray-100">
                 {mostFrequent.percentage}%
               </p>
             </div>
           ) : (
-            <p className="text-gray-400 text-sm text-center px-4">
+            <p className="text-gray-400 dark:text-gray-500 text-sm text-center px-4 font-gamja">
               아직 감정 데이터가 없어요
             </p>
           )}
@@ -168,8 +177,8 @@ export function EmotionDonutChart({ selectedEmotion, onEmotionSelect }: EmotionD
 
       {/* 선택된 감정 상세 정보 */}
       {selectedEmotion && (
-        <div className="mt-4 p-3 bg-white/20 rounded-xl backdrop-blur-sm">
-          <p className="text-sm text-gray-700">
+        <div className="mt-4 p-3 bg-white/20 dark:bg-gray-700/30 rounded-xl backdrop-blur-sm" role="status" aria-live="polite">
+          <p className="text-sm font-gamja text-gray-700 dark:text-gray-200">
             <span className="font-medium">
               {selectedEmotion}
             </span>
@@ -177,6 +186,29 @@ export function EmotionDonutChart({ selectedEmotion, onEmotionSelect }: EmotionD
             감정을 선택했어요
           </p>
         </div>
+      )}
+
+      {/* REQ-VIS-007: 스크린 리더용 대체 테이블 */}
+      {chartData.length > 0 && (
+        <table className="sr-only" aria-label="감정 분포 데이터">
+          <caption>전체 감정 중 각 감정의 비율</caption>
+          <thead>
+            <tr>
+              <th scope="col">감정</th>
+              <th scope="col">비율 (%)</th>
+              <th scope="col">횟수</th>
+            </tr>
+          </thead>
+          <tbody>
+            {chartData.map((entry) => (
+              <tr key={entry.name}>
+                <td>{entry.name}</td>
+                <td>{entry.value}</td>
+                <td>{entry.count}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       )}
     </div>
   );
