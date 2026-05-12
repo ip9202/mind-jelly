@@ -1,8 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Link from 'next/link';
-import NavMenu from '@/components/layout/NavMenu';
 import { getMyProfile, setNickname } from '@/lib/supabase/db';
 import { diaryStore } from '@/stores/diaryStore';
 import { jellyStore } from '@/stores/jellyStore';
@@ -227,18 +225,7 @@ function JellyShapeSection() {
 export default function SettingsPage() {
   return (
     <div className="bg-background text-on-surface font-body-md min-h-screen overflow-x-hidden">
-      {/* Top AppBar */}
-      <header className="bg-surface/85 backdrop-blur-[8px] fixed top-0 left-0 z-40 w-full">
-        <div className="flex justify-between items-center w-full px-[20px] h-16">
-          <Link href="/home" className="text-primary hover:opacity-80 transition-opacity flex items-center">
-            <span className="material-symbols-outlined">arrow_back</span>
-          </Link>
-          <h1 className="font-dongle text-5xl text-primary tracking-tight leading-none">설정</h1>
-          <NavMenu activeTab="garden" />
-        </div>
-      </header>
-
-      <main className="mt-20 px-[20px] space-y-[12px]">
+      <main className="mt-4 px-[20px] space-y-[12px]">
         <ProfileSection />
 
         {/* Jelly Shape Section */}

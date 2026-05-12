@@ -366,34 +366,3 @@ body {
 .nav-safe-bottom {
   padding-bottom: calc(env(safe-area-inset-bottom, 20px) + 16px);
 }
-
-/* ========================================
-   앱인토스 닫기 버튼
-   우측 상단 고정 위치
-   ======================================== */
-
-.ait-close-button {
-  position: fixed;
-  top: env(safe-area-inset-top, 16px);
-  right: 16px;
-  z-index: 9999;
-  width: 36px;
-  height: 36px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  background: rgba(0, 0, 0, 0.05);
-  backdrop-filter: blur(8px);
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  transition: all 0.2s ease;
-}
-
-.ait-close-button:hover {
-  background: rgba(0, 0, 0, 0.1);
-  transform: scale(1.05);
-}
-
-.ait-close-button:active {
-  transform: scale(0.95);
-}

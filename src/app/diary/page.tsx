@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useMemo, useSyncExternalStore, useEffect, useRef } from 'react';
-import NavMenu from '@/components/layout/NavMenu';
 import { EmotionFace } from '@/components/jelly/EmotionFace';
 import { diaryStore } from '@/stores/diaryStore';
 import type { DiaryEntry } from '@/types/diary';
@@ -268,19 +267,6 @@ export default function DiaryPage() {
 
   return (
     <div className="text-on-background min-h-screen pb-6 font-gowun">
-      {/* TopAppBar */}
-      <header className="sticky top-0 z-50 flex justify-between items-center w-full px-[20px] h-16 bg-surface/85 backdrop-blur-[8px]">
-        <div className="flex items-center gap-2">
-          <span className="material-symbols-outlined text-primary" aria-hidden="true">
-            bubble_chart
-          </span>
-          <h1 className="font-dongle text-[32px] leading-none text-primary pt-2">
-            오늘의 감정 일기
-          </h1>
-        </div>
-        <NavMenu activeTab="history" />
-      </header>
-
       <main id="main-content" className="px-[20px] mt-[16px] space-y-[24px]">
         {/* Calendar Section */}
         <section role="group" aria-label="달력" className="glass-card rounded-[20px] p-[16px] shadow-sm relative overflow-hidden">

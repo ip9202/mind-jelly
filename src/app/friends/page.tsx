@@ -1,8 +1,6 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import Link from 'next/link';
-import NavMenu from '@/components/layout/NavMenu';
 import { diaryStore } from '@/stores/diaryStore';
 import {
   findUserByInviteCode,
@@ -550,23 +548,7 @@ export default function FriendsPage() {
 
   return (
     <div className="bg-background text-on-surface font-body-md min-h-screen overflow-x-hidden">
-      {/* Top AppBar */}
-      <header className="bg-surface/85 backdrop-blur-[8px] fixed top-0 left-0 z-40 w-full">
-        <div className="flex justify-between items-center w-full px-[20px] h-16">
-          <Link
-            href="/home"
-            className="text-primary hover:opacity-80 transition-opacity flex items-center"
-          >
-            <span className="material-symbols-outlined">arrow_back</span>
-          </Link>
-          <h1 className="font-dongle text-5xl text-primary tracking-tight leading-none">
-            친구
-          </h1>
-          <NavMenu activeTab="friends" />
-        </div>
-      </header>
-
-      <main className="mt-20 px-[20px] pb-8 space-y-[12px]">
+      <main className="mt-4 px-[20px] pb-8 space-y-[12px]">
         {/* Tab bar */}
         <div className="bg-surface-container rounded-full p-1 flex gap-1">
           {tabs.map((t) => {

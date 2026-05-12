@@ -1,0 +1,289 @@
+
+<!doctype html>
+<html lang="en">
+
+<head>
+    <title>Code coverage report for lib/constants/jellyShapes.ts</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="../../prettify.css" />
+    <link rel="stylesheet" href="../../base.css" />
+    <link rel="shortcut icon" type="image/x-icon" href="../../favicon.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style type='text/css'>
+        .coverage-summary .sorter {
+            background-image: url(../../sort-arrow-sprite.png);
+        }
+    </style>
+</head>
+    
+<body>
+<div class='wrapper'>
+    <div class='pad1'>
+        <h1><a href="../../index.html">All files</a> / <a href="index.html">lib/constants</a> jellyShapes.ts</h1>
+        <div class='clearfix'>
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">0% </span>
+                <span class="quiet">Statements</span>
+                <span class='fraction'>0/2</span>
+            </div>
+        
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">100% </span>
+                <span class="quiet">Branches</span>
+                <span class='fraction'>0/0</span>
+            </div>
+        
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">100% </span>
+                <span class="quiet">Functions</span>
+                <span class='fraction'>0/0</span>
+            </div>
+        
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">0% </span>
+                <span class="quiet">Lines</span>
+                <span class='fraction'>0/2</span>
+            </div>
+        
+            
+        </div>
+        <p class="quiet">
+            Press <em>n</em> or <em>j</em> to go to the next uncovered block, <em>b</em>, <em>p</em> or <em>k</em> for the previous block.
+        </p>
+        <template id="filterTemplate">
+            <div class="quiet">
+                Filter:
+                <input type="search" id="fileSearch">
+            </div>
+        </template>
+    </div>
+    <div class='status-line low'></div>
+    <pre><table class="coverage">
+<tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
+<a name='L2'></a><a href='#L2'>2</a>
+<a name='L3'></a><a href='#L3'>3</a>
+<a name='L4'></a><a href='#L4'>4</a>
+<a name='L5'></a><a href='#L5'>5</a>
+<a name='L6'></a><a href='#L6'>6</a>
+<a name='L7'></a><a href='#L7'>7</a>
+<a name='L8'></a><a href='#L8'>8</a>
+<a name='L9'></a><a href='#L9'>9</a>
+<a name='L10'></a><a href='#L10'>10</a>
+<a name='L11'></a><a href='#L11'>11</a>
+<a name='L12'></a><a href='#L12'>12</a>
+<a name='L13'></a><a href='#L13'>13</a>
+<a name='L14'></a><a href='#L14'>14</a>
+<a name='L15'></a><a href='#L15'>15</a>
+<a name='L16'></a><a href='#L16'>16</a>
+<a name='L17'></a><a href='#L17'>17</a>
+<a name='L18'></a><a href='#L18'>18</a>
+<a name='L19'></a><a href='#L19'>19</a>
+<a name='L20'></a><a href='#L20'>20</a>
+<a name='L21'></a><a href='#L21'>21</a>
+<a name='L22'></a><a href='#L22'>22</a>
+<a name='L23'></a><a href='#L23'>23</a>
+<a name='L24'></a><a href='#L24'>24</a>
+<a name='L25'></a><a href='#L25'>25</a>
+<a name='L26'></a><a href='#L26'>26</a>
+<a name='L27'></a><a href='#L27'>27</a>
+<a name='L28'></a><a href='#L28'>28</a>
+<a name='L29'></a><a href='#L29'>29</a>
+<a name='L30'></a><a href='#L30'>30</a>
+<a name='L31'></a><a href='#L31'>31</a>
+<a name='L32'></a><a href='#L32'>32</a>
+<a name='L33'></a><a href='#L33'>33</a>
+<a name='L34'></a><a href='#L34'>34</a>
+<a name='L35'></a><a href='#L35'>35</a>
+<a name='L36'></a><a href='#L36'>36</a>
+<a name='L37'></a><a href='#L37'>37</a>
+<a name='L38'></a><a href='#L38'>38</a>
+<a name='L39'></a><a href='#L39'>39</a>
+<a name='L40'></a><a href='#L40'>40</a>
+<a name='L41'></a><a href='#L41'>41</a>
+<a name='L42'></a><a href='#L42'>42</a>
+<a name='L43'></a><a href='#L43'>43</a>
+<a name='L44'></a><a href='#L44'>44</a>
+<a name='L45'></a><a href='#L45'>45</a>
+<a name='L46'></a><a href='#L46'>46</a>
+<a name='L47'></a><a href='#L47'>47</a>
+<a name='L48'></a><a href='#L48'>48</a>
+<a name='L49'></a><a href='#L49'>49</a>
+<a name='L50'></a><a href='#L50'>50</a>
+<a name='L51'></a><a href='#L51'>51</a>
+<a name='L52'></a><a href='#L52'>52</a>
+<a name='L53'></a><a href='#L53'>53</a>
+<a name='L54'></a><a href='#L54'>54</a>
+<a name='L55'></a><a href='#L55'>55</a>
+<a name='L56'></a><a href='#L56'>56</a>
+<a name='L57'></a><a href='#L57'>57</a>
+<a name='L58'></a><a href='#L58'>58</a>
+<a name='L59'></a><a href='#L59'>59</a>
+<a name='L60'></a><a href='#L60'>60</a>
+<a name='L61'></a><a href='#L61'>61</a>
+<a name='L62'></a><a href='#L62'>62</a>
+<a name='L63'></a><a href='#L63'>63</a>
+<a name='L64'></a><a href='#L64'>64</a>
+<a name='L65'></a><a href='#L65'>65</a>
+<a name='L66'></a><a href='#L66'>66</a>
+<a name='L67'></a><a href='#L67'>67</a>
+<a name='L68'></a><a href='#L68'>68</a>
+<a name='L69'></a><a href='#L69'>69</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">/**
+ * 젤리 외형 모양 정의
+ *
+ * 모든 모양은 자연스럽게 생성된 불특정 형태로 디자인됨 (3D 글로시 젤리).
+ * 젤리는 특정한 형태가 없이 자연적으로 생성되며, 푸딩처럼 울룩불룩함.
+ * 중점(midpoint) Q bezier 기법: 인접 꼭짓점들의 중점을 path 종점으로,
+ * 원래 꼭짓점을 Q 제어점으로 사용 → 모든 꼭짓점이 둥근 풍선 모양이 됨.
+ *
+ * SVG path 좌표계: 0~1 (SVG viewBox="0 0 1 1" 또는 objectBoundingBox)
+ * SMIL path 애니메이션 요건: path / pathAlt 는 동일한 명령어 순서를 가져야 함.
+ */
+import type { JellyShape } from '@/types/physics';
+&nbsp;
+// @MX:ANCHOR: 젤리 모양 설정 맵 (settings, JellyRenderer, store 3곳 이상에서 참조)
+// @MX:REASON: 사용자가 선택 가능한 6종 불특정 형태의 단일 소스 오브 트루스
+export const <span class="cstat-no" title="statement not covered" >JELLY_SHAPE_CONFIGS: Record&lt;JellyShape, {</span>
+  label: string;
+  /** SVG path (0~1 좌표계) — 상태 1 (SMIL 기준) */
+  path: string;
+  /** SVG path (0~1 좌표계) — 상태 2 (SMIL 흔들림 대상, path와 동일 명령어 순서) */
+  pathAlt?: string;
+  /** 표정 위치 오프셋 (0~1 좌표계) — 모양 중심점에 맞춘 눈/입 Y좌표 보정값 */
+  faceOffset: { eyeY: number; mouthY: number };
+}&gt; = <span class="cstat-no" title="statement not covered" >{</span>
+  ppung: {
+    label: '퐁당',
+    // 빵빵하고 둥근 형태 (완벽한 구형)
+    // 유기적 곡선으로 자연스러운 blob 느낌 표현
+    path:    'M 0.50 0.15 C 0.30 0.15 0.15 0.30 0.15 0.50 C 0.15 0.70 0.30 0.85 0.50 0.85 C 0.70 0.85 0.85 0.70 0.85 0.50 C 0.85 0.30 0.70 0.15 0.50 0.15 Z',
+    pathAlt: 'M 0.50 0.18 C 0.28 0.18 0.12 0.32 0.12 0.50 C 0.12 0.68 0.28 0.82 0.50 0.82 C 0.72 0.82 0.88 0.68 0.88 0.50 C 0.88 0.32 0.72 0.18 0.50 0.18 Z',
+    faceOffset: { eyeY: 0.40, mouthY: 0.60 },
+  },
+  mallang: {
+    label: '말랑',
+    // 위로 길쭉한 물방울 모양 (타원형 변형)
+    path:    'M 0.50 0.12 C 0.35 0.12 0.20 0.25 0.18 0.40 C 0.16 0.55 0.30 0.78 0.50 0.88 C 0.70 0.98 0.82 0.75 0.86 0.50 C 0.90 0.25 0.70 0.12 0.50 0.12 Z',
+    pathAlt: 'M 0.50 0.10 C 0.32 0.10 0.16 0.24 0.14 0.42 C 0.12 0.60 0.28 0.82 0.50 0.90 C 0.72 0.98 0.84 0.72 0.88 0.50 C 0.92 0.28 0.68 0.10 0.50 0.10 Z',
+    faceOffset: { eyeY: 0.38, mouthY: 0.58 },
+  },
+  jjit: {
+    label: '쫄긋',
+    // 수축된 듯한 불규칙한 곡선 (살짝 주머진 형태)
+    path:    'M 0.50 0.20 C 0.35 0.18 0.22 0.32 0.24 0.45 C 0.26 0.58 0.40 0.75 0.50 0.82 C 0.60 0.89 0.75 0.78 0.80 0.60 C 0.85 0.42 0.70 0.25 0.50 0.20 Z',
+    pathAlt: 'M 0.52 0.22 C 0.38 0.20 0.24 0.34 0.26 0.47 C 0.28 0.60 0.42 0.77 0.52 0.84 C 0.62 0.91 0.77 0.80 0.82 0.62 C 0.87 0.44 0.72 0.27 0.52 0.22 Z',
+    faceOffset: { eyeY: 0.42, mouthY: 0.60 },
+  },
+  banggeul: {
+    label: '방글',
+    // 옆으로 넓고 편평한 형태 (방글방글 웃음)
+    path:    'M 0.50 0.35 C 0.30 0.35 0.15 0.42 0.15 0.55 C 0.15 0.68 0.30 0.82 0.50 0.85 C 0.70 0.88 0.85 0.72 0.85 0.55 C 0.85 0.38 0.70 0.35 0.50 0.35 Z',
+    pathAlt: 'M 0.50 0.38 C 0.28 0.38 0.12 0.45 0.12 0.58 C 0.12 0.71 0.28 0.84 0.50 0.88 C 0.72 0.92 0.88 0.75 0.88 0.58 C 0.88 0.41 0.72 0.38 0.50 0.38 Z',
+    faceOffset: { eyeY: 0.52, mouthY: 0.67 },
+  },
+  sillung: {
+    label: '실룸',
+    // 아래로 처진 형태 (아랫부분이 좁아짐)
+    path:    'M 0.50 0.15 C 0.32 0.15 0.18 0.28 0.20 0.45 C 0.22 0.62 0.40 0.82 0.50 0.88 C 0.60 0.94 0.80 0.78 0.82 0.55 C 0.84 0.32 0.68 0.15 0.50 0.15 Z',
+    pathAlt: 'M 0.50 0.12 C 0.30 0.12 0.16 0.26 0.18 0.43 C 0.20 0.60 0.38 0.80 0.50 0.86 C 0.62 0.92 0.82 0.76 0.84 0.53 C 0.86 0.30 0.70 0.12 0.50 0.12 Z',
+    faceOffset: { eyeY: 0.40, mouthY: 0.58 },
+  },
+  kkul: {
+    label: '꿀꿀',
+    // 위로 솟은 형태 (윗부분이 넓어짐)
+    path:    'M 0.50 0.75 C 0.32 0.75 0.15 0.62 0.15 0.50 C 0.15 0.38 0.32 0.22 0.50 0.15 C 0.68 0.08 0.85 0.22 0.85 0.50 C 0.85 0.78 0.68 0.92 0.50 0.75 Z',
+    pathAlt: 'M 0.50 0.78 C 0.30 0.78 0.12 0.65 0.12 0.50 C 0.12 0.35 0.30 0.20 0.50 0.12 C 0.70 0.04 0.88 0.20 0.88 0.50 C 0.88 0.80 0.70 0.95 0.50 0.78 Z',
+    faceOffset: { eyeY: 0.35, mouthY: 0.52 },
+  },
+};
+&nbsp;</pre></td></tr></table></pre>
+
+                <div class='push'></div><!-- for sticky footer -->
+            </div><!-- /wrapper -->
+            <div class='footer quiet pad2 space-top1 center small'>
+                Code coverage generated by
+                <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
+                at 2026-05-11T07:18:19.851Z
+            </div>
+        <script src="../../prettify.js"></script>
+        <script>
+            window.onload = function () {
+                prettyPrint();
+            };
+        </script>
+        <script src="../../sorter.js"></script>
+        <script src="../../block-navigation.js"></script>
+    </body>
+</html>
+    

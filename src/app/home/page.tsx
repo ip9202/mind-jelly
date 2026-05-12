@@ -1,7 +1,6 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import NavMenu from '@/components/layout/NavMenu';
 import { JellySkeleton } from '@/components/jelly/JellySkeleton';
 import { useEffect, useState, useRef, useMemo, useCallback, useSyncExternalStore } from 'react';
 import { jellyStore } from '@/stores/jellyStore';
@@ -287,13 +286,6 @@ export default function HomePage() {
           transition: 'background 800ms linear',
         }}
       >
-        <header className="sticky top-0 z-50 flex justify-between items-center px-[20px] h-16 backdrop-blur-md bg-white/70 border-b border-white/30">
-          <div className="flex items-center gap-2">
-            <span className="material-symbols-outlined text-primary text-3xl" style={{ fontVariationSettings: "'FILL' 1" }}>bubble_chart</span>
-            <h1 className="font-dongle text-4xl leading-none text-primary tracking-tight">Mind Jelly</h1>
-          </div>
-          <NavMenu activeTab="jelly" />
-        </header>
         <main className="flex-1 flex items-center justify-center">
           <JellySkeleton />
         </main>
@@ -311,27 +303,9 @@ export default function HomePage() {
         transition: 'background 800ms linear',
       }}
     >
-      {/* TopAppBar */}
-      <header className="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-[20px] h-16 backdrop-blur-md bg-white/70 border-b border-white/30">
-        <div className="flex items-center gap-2">
-          <span className="material-symbols-outlined text-primary text-3xl" style={{ fontVariationSettings: "'FILL' 1" }}>bubble_chart</span>
-          <h1 className="font-dongle text-4xl leading-none text-primary tracking-tight">Mind Jelly</h1>
-        </div>
-        {uiState === 'input' && !isAnalyzing ? (
-          <button
-            onClick={() => setUiState('idle')}
-            className="font-gowun text-sm text-on-surface-variant hover:text-primary transition-colors"
-          >
-            취소
-          </button>
-        ) : (
-          <NavMenu activeTab="jelly" />
-        )}
-      </header>
-
       {/* Emotion Status Header */}
       {uiState === 'idle' && (
-        <div className="fixed top-16 left-0 w-full z-40 px-[20px] py-2">
+        <div className="fixed top-0 left-0 w-full z-40 px-[20px] py-2">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <span

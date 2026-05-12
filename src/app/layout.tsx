@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { Dongle, Gowun_Dodum, Gamja_Flower, Plus_Jakarta_Sans } from "next/font/google";
 import BridgeInitializer from "@/components/bridge/BridgeInitializer";
 import { ThemeInitializer } from "@/components/ui/ThemeInitializer";
-import { AITCloseButton } from "@/components/ui/AITCloseButton";
 import "./globals.css";
 
 const dongle = Dongle({
@@ -54,9 +53,8 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body className="min-h-full flex flex-col safe-top" suppressHydrationWarning>
+      <body className="min-h-full flex flex-col" suppressHydrationWarning>
         <a href="#main-content" className="skip-nav">본문으로 바로가기</a>
-        <AITCloseButton />
         <BridgeInitializer />
         <ThemeInitializer />
         {children}
