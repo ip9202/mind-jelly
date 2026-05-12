@@ -88,4 +88,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - SPEC-AD-001의 빈도 제어기와 독립적인 보상형 광고 카운터
 - mecab-ko 형용소 분석 대신 간소화 버전 사용 (GREEN phase)
 
+## [1.3.0] - 2026-05-12
+
+### Added (BRAND-UI-001)
+- 브랜드 가이드 준수 UI 디자인 시스템 적용
+  - visual-identity.md 정의: 색상, 타이포그래피, 폰트 패밀리
+  - TDS 스타일 Semantic Typography Tokens 도입 (display, title1-3, body1-2, caption)
+  - 하이브리드 폰트 시스템: Toss Design System 구조 + 프로젝트 브랜드 폰트 유지
+
+### Changed (BRAND-UI-001)
+- 홈 화면 CTA 버튼 디자인 (`src/app/home/page.tsx`)
+  - 배경: 갈색 primary → 핑크 그라데이션 (#FF9ECD → #FFD1DC)
+  - 폰트: Gowun Dodum → Gamja Flower (장난스러운 손글씓)
+  - 호버 효과: 그림자 강화 + 살짝 떠오름 효과
+- 감정 입력폼 textarea 폰트 크기 조정 (`src/components/input/EmotionInput.tsx`)
+  - 텍스트 영역: 24px → 14px (상단 안내 문구와 동일)
+  - 폰트: Gowun Dodum 추가, 행간 leading-relaxed 적용
+- 감정 분석 버튼 리디자인 (`src/components/input/EmotionInput.tsx`)
+  - 홈 화면 CTA와 동일한 핑크 그라데이션 + Gamja Flower 폰트
+- 친구 페이지 헤더 폰트 통일 (`src/app/friends/page.tsx`)
+  - 모든 섹션 헤더: 48px → 20px (text-5xl → text-xl)
+  - 폰트: Dongle → Gowun Dodun, 굵기 bold 추가
+- 설정 페이지 폰트 스타일 통일 (`src/app/settings/page.tsx`)
+  - 섹션 헤더, 초대코드: 적절한 크기로 조정
+  - 푸터 장식: Gamja Flower 폰트 적용
+- 다이어리 페이지 헤더 폰트 통일 (`src/app/diary/page.tsx`)
+  - 타임라인, 감정 흐름 헤더: Dongle → Gowun Dodum
+
+### Fixed (BRAND-UI-001)
+- 전체 페이지 헤더 폰트 크기 불일치 해소
+- 사용성 개선: 너무 큰 헤더(48px)로 인한 가독성 문제 해결
+
 🗿 MoAI <email@mo.ai.kr>
