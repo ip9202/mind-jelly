@@ -175,7 +175,7 @@ function SearchTab({ supabaseUserId }: { supabaseUserId: string }) {
   return (
     <div className="space-y-[12px]">
       <section className="space-y-[8px]">
-        <h2 className="font-dongle text-5xl text-primary leading-none px-2">
+        <h2 className="font-gowun text-xl font-bold text-primary leading-tight px-2">
           초대코드로 찾기
         </h2>
         <div className="glass-card rounded-lg p-[24px] shadow-[0_4px_20px_0_rgba(0,0,0,0.05)] border border-white/40 space-y-[12px]">
@@ -246,7 +246,7 @@ function SearchTab({ supabaseUserId }: { supabaseUserId: string }) {
 
       {recentFriends.length > 0 && (
         <section className="space-y-[8px]">
-          <h2 className="font-dongle text-5xl text-primary leading-none px-2">
+          <h2 className="font-gowun text-xl font-bold text-primary leading-tight px-2">
             최근에 추가한 친구
           </h2>
           <div className="glass-card rounded-lg shadow-[0_4px_20px_0_rgba(0,0,0,0.05)] border border-white/40 overflow-hidden">
@@ -356,7 +356,7 @@ function ListTab({ supabaseUserId }: { supabaseUserId: string }) {
       )}
 
       <section className="space-y-[8px]">
-        <h2 className="font-dongle text-5xl text-primary leading-none px-2">
+        <h2 className="font-gowun text-xl font-bold text-primary leading-tight px-2">
           받은 요청
         </h2>
         {pending.length === 0 ? (
@@ -404,7 +404,7 @@ function ListTab({ supabaseUserId }: { supabaseUserId: string }) {
       </section>
 
       <section className="space-y-[8px]">
-        <h2 className="font-dongle text-5xl text-primary leading-none px-2">
+        <h2 className="font-gowun text-xl font-bold text-primary leading-tight px-2">
           내 친구
         </h2>
         {friends.length === 0 ? (
@@ -487,7 +487,7 @@ function FeedTab({ supabaseUserId }: { supabaseUserId: string }) {
 
   return (
     <div className="space-y-[12px]">
-      <h2 className="font-dongle text-5xl text-primary leading-none px-2">
+      <h2 className="font-gowun text-xl font-bold text-primary leading-tight px-2">
         친구 감정 피드
       </h2>
 
