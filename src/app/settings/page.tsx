@@ -51,7 +51,7 @@ function ProfileSection() {
 
   return (
     <section className="space-y-[8px]">
-      <h2 className="font-dongle text-5xl text-primary leading-none px-2">프로필</h2>
+      <h2 className="font-gowun text-xl font-bold text-primary leading-tight px-2">프로필</h2>
       <div className="glass-card rounded-lg p-[24px] shadow-[0_4px_20px_0_rgba(0,0,0,0.05)] border border-white/40 space-y-[20px]">
         {/* 닉네임 */}
         <div className="space-y-[8px]">
@@ -101,7 +101,7 @@ function ProfileSection() {
         <div className="space-y-[8px]">
           <p className="font-gowun text-[13px] text-on-surface-variant">내 초대코드</p>
           <div className="flex items-center justify-between">
-            <span className="font-dongle text-3xl text-primary tracking-[0.2em]">
+            <span className="font-gowun text-xl font-bold text-primary tracking-[0.2em]">
               {inviteCode || '------'}
             </span>
             <button
@@ -128,7 +128,7 @@ function JellyShapeSection() {
 
   return (
     <section className="space-y-[8px]">
-      <h2 className="font-dongle text-5xl text-primary leading-none px-2">젤리 모양</h2>
+      <h2 className="font-gowun text-xl font-bold text-primary leading-tight px-2">젤리 모양</h2>
       <div className="glass-card rounded-lg p-[20px] shadow-[0_4px_20px_0_rgba(0,0,0,0.05)] border border-white/40">
         <div className="grid grid-cols-2 gap-[16px]">
           {shapes.map((shape) => {
@@ -239,7 +239,7 @@ export default function SettingsPage() {
 
         {/* About Section */}
         <section className="space-y-[8px]">
-          <h2 className="font-dongle text-5xl text-primary leading-none px-2">정보</h2>
+          <h2 className="font-gowun text-xl font-bold text-primary leading-tight px-2">정보</h2>
           <div className="glass-card rounded-lg shadow-[0_4px_20px_0_rgba(0,0,0,0.05)] border border-white/40 overflow-hidden">
             <div className="p-[16px] border-b border-white/40 flex justify-between items-center">
               <span className="font-gowun text-[16px] text-on-surface">버전 정보</span>
@@ -259,7 +259,7 @@ export default function SettingsPage() {
         {/* Decorative Element */}
         <div className="pt-[32px] flex flex-col items-center opacity-40">
           <span className="material-symbols-outlined text-[32px] text-primary mb-2">bubble_chart</span>
-          <p className="font-dongle text-2xl text-primary">Mind Jelly with Love</p>
+          <p className="font-gamja text-lg text-primary">Mind Jelly with Love</p>
         </div>
       </main>
 
