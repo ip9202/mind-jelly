@@ -53,7 +53,7 @@ describe('canShowInterstitial', () => {
     const env = setupFreshEnvironment();
     originalLocalStorage = env.originalLocalStorage;
 
-    // eslint-disable-next-line @typescript-eslint/no-assign-module-variable, @next/next/no-assign-module-variable
+    // eslint-disable-next-line @next/next/no-assign-module-variable
     const module = await import('../adFrequencyControl');
     canShowInterstitial = module.canShowInterstitial;
     recordSession = module.recordSession;

@@ -211,9 +211,9 @@ export default function HomePage() {
       }, 0);
 
       // 전면형 광고 타이머 설정
-      // 감정 선택 중(input)에는 광고 표시하지 않음 (REQ-AD-005)
+      // uiState가 'beads'일 때만 실행되므로 별도 조건 체크 불필요
       const adTimer = setTimeout(() => {
-        if (uiState !== 'input' && canShowInterstitial()) {
+        if (canShowInterstitial()) {
           setShowInterstitial(true);
         }
       }, 0);

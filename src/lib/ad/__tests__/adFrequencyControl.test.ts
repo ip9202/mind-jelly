@@ -59,7 +59,7 @@ describe('adFrequencyControl', () => {
       originalLocalStorage = env.originalLocalStorage;
 
       // 이 그룹의 테스트에 필요한 함수만 import
-      // eslint-disable-next-line @typescript-eslint/no-assign-module-variable, @next/next/no-assign-module-variable
+      // eslint-disable-next-line @next/next/no-assign-module-variable
       const module = await import('../adFrequencyControl');
       getUserType = module.getUserType;
       recordSession = module.recordSession;
@@ -106,7 +106,7 @@ describe('adFrequencyControl', () => {
       const env = setupFreshEnvironment();
       originalLocalStorage = env.originalLocalStorage;
 
-      // eslint-disable-next-line @typescript-eslint/no-assign-module-variable, @next/next/no-assign-module-variable
+      // eslint-disable-next-line @next/next/no-assign-module-variable
       const module = await import('../adFrequencyControl');
       recordSession = module.recordSession;
     });
@@ -148,7 +148,7 @@ describe('adFrequencyControl', () => {
       const env = setupFreshEnvironment();
       originalLocalStorage = env.originalLocalStorage;
 
-      // eslint-disable-next-line @typescript-eslint/no-assign-module-variable, @next/next/no-assign-module-variable
+      // eslint-disable-next-line @next/next/no-assign-module-variable
       const module = await import('../adFrequencyControl');
       recordSession = module.recordSession;
       recordAdShown = module.recordAdShown;

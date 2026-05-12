@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* Material Symbols - defer 로딩으로 초기 성능 개선 */
+@import url("https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap");
+
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
@@ -104,31 +107,27 @@
   --font-gamja: "Gamja Flower", cursive;
   --font-jakarta: "Plus Jakarta Sans", sans-serif;
 
+  /* Background & Foreground */
+  --background: #fbf9f6;
+  --foreground: #1b1c1a;
+
   /* Animations */
   --animate-jelly-float: floating 3s ease-in-out infinite;
   --animate-gradient-shift: gradientShift 15s ease infinite;
+
+  /* Dark mode removed for AIT - light mode only */
 }
 
-:root {
-  --background: #fbf9f6;
-  --foreground: #1b1c1a;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #191F28;
-    --foreground: #fbf9f6;
-  }
-}
+/* Dark mode removed: AIT only supports light mode
+   @see https://developers-apps-in-toss.toss.im/ (§6 Design) */
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: "Plus Jakarta Sans", "Dongle", "Gowun Dodum", "Gamja Flower", sans-serif;
+  font-family: var(--font-jakarta), var(--font-dongle), var(--font-gowun), var(--font-gamja), sans-serif;
   min-height: max(884px, 100dvh);
 }
 
-/* Material Symbols Outlined */
 .material-symbols-outlined {
   font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
   display: inline-block;

@@ -34,6 +34,7 @@ const customJestConfig = {
   // 테스트 파일 패턴
   testMatch: [
     '**/__tests__/**/*.test.(ts|tsx)',
+    'src/**/*.test.(ts|tsx)',
   ],
 
   // 커버리지 수집 설정
@@ -58,4 +59,11 @@ const customJestConfig = {
   setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
 }
 
-module.exports = createJestConfig(customJestConfig)
+// @ts-ignore
+module.exports = createJestConfig({
+  ...customJestConfig,
+  testMatch: [
+    '**/__tests__/**/*.test.(ts|tsx)',
+    'src/**/*.test.(ts|tsx)',
+  ],
+})

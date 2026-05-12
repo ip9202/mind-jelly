@@ -7,29 +7,25 @@ import "./globals.css";
 
 const dongle = Dongle({
   weight: ["400", "700"],
-  subsets: ["latin"],
   variable: "--font-dongle",
-  display: "swap",
+  display: "optional",
 });
 
 const gowun = Gowun_Dodum({
   weight: "400",
-  subsets: ["latin"],
   variable: "--font-gowun",
-  display: "swap",
+  display: "optional",
 });
 
 const gamja = Gamja_Flower({
   weight: "400",
-  subsets: ["latin"],
   variable: "--font-gamja",
-  display: "swap",
+  display: "optional",
 });
 
 const jakartaSans = Plus_Jakarta_Sans({
-  subsets: ["latin"],
   variable: "--font-jakarta",
-  display: "swap",
+  display: "optional",
 });
 
 export const metadata: Metadata = {
@@ -52,11 +48,11 @@ export default function RootLayout({
   return (
     <html lang="ko" className={`${jakartaSans.variable} ${dongle.variable} ${gowun.variable} ${gamja.variable} h-full antialiased`} suppressHydrationWarning>
       <head>
+        {/* Material Symbols: CSS @import 방식으로 로딩 성능 개선 */}
         <link
           href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
           rel="stylesheet"
         />
-        {/* 다크모드 강제 해제는 ThemeInitializer 클라이언트 컴포넌트에서 처리 */}
       </head>
       <body className="min-h-full flex flex-col safe-top" suppressHydrationWarning>
         <a href="#main-content" className="skip-nav">본문으로 바로가기</a>
