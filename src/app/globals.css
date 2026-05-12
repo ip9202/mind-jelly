@@ -1,8 +1,5 @@
 @import "tailwindcss";
 
-/* Material Symbols - defer 로딩으로 초기 성능 개선 */
-@import url("https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap");
-
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
