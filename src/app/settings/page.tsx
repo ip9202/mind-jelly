@@ -6,6 +6,7 @@ import { diaryStore } from '@/stores/diaryStore';
 import { jellyStore } from '@/stores/jellyStore';
 import { JELLY_SHAPE_CONFIGS } from '@/lib/constants/jellyShapes';
 import type { JellyShape } from '@/types/physics';
+import NavMenu from '@/components/layout/NavMenu';
 
 function ProfileSection() {
   const supabaseUserId = diaryStore((s) => s.supabaseUserId);
@@ -225,6 +226,11 @@ function JellyShapeSection() {
 export default function SettingsPage() {
   return (
     <div className="bg-background text-on-surface font-body-md min-h-screen overflow-x-hidden">
+      {/* 햄버거 메뉴 - 우측 상단 플로팅 */}
+      <div className="fixed top-4 right-4 z-50">
+        <NavMenu activeTab="garden" />
+      </div>
+
       <main className="mt-4 px-[20px] space-y-[12px]">
         <ProfileSection />
 

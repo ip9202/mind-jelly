@@ -6,6 +6,7 @@ import { diaryStore } from '@/stores/diaryStore';
 import type { DiaryEntry } from '@/types/diary';
 import type { EmotionType } from '@/types/emotion';
 import { EMOTION_COLORS } from '@/lib/constants/emotion';
+import NavMenu from '@/components/layout/NavMenu';
 
 const emptySubscribe = () => () => {};
 
@@ -267,6 +268,11 @@ export default function DiaryPage() {
 
   return (
     <div className="text-on-background min-h-screen pb-6 font-gowun">
+      {/* 햄버거 메뉴 - 우측 상단 플로팅 */}
+      <div className="fixed top-4 right-4 z-50">
+        <NavMenu activeTab="history" />
+      </div>
+
       <main id="main-content" className="px-[20px] mt-[16px] space-y-[24px]">
         {/* Calendar Section */}
         <section role="group" aria-label="달력" className="glass-card rounded-[20px] p-[16px] shadow-sm relative overflow-hidden">

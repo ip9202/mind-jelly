@@ -13,6 +13,7 @@ import {
   getMyProfile,
   checkFriendshipStatus,
 } from '@/lib/supabase/db';
+import NavMenu from '@/components/layout/NavMenu';
 
 type Tab = 'search' | 'list' | 'feed';
 
@@ -548,6 +549,11 @@ export default function FriendsPage() {
 
   return (
     <div className="bg-background text-on-surface font-body-md min-h-screen overflow-x-hidden">
+      {/* 햄버거 메뉴 - 우측 상단 플로팅 */}
+      <div className="fixed top-4 right-4 z-50">
+        <NavMenu activeTab="friends" />
+      </div>
+
       <main className="mt-4 px-[20px] pb-8 space-y-[12px]">
         {/* Tab bar */}
         <div className="bg-surface-container rounded-full p-1 flex gap-1">

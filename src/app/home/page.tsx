@@ -14,6 +14,7 @@ import { InterstitialAd } from '@/components/ads/InterstitialAd';
 import { BannerAd } from '@/components/ads/BannerAd';
 import { canShowInterstitial } from '@/lib/ad/adFrequencyControl';
 import type { EmotionType } from '@/types/emotion';
+import NavMenu from '@/components/layout/NavMenu';
 
 const PhysicsCanvas = dynamic(
   () => import('@/components/jelly/PhysicsCanvas').then((m) => m.PhysicsCanvas),
@@ -280,7 +281,7 @@ export default function HomePage() {
   if (!mounted) {
     return (
       <div
-        className="h-screen w-full flex flex-col overflow-hidden font-dongum text-on-surface"
+        className="h-screen w-full flex flex-col overflow-hidden font-dongle text-on-surface"
         style={{
           background: `linear-gradient(135deg, ${currentTheme.bgGradientStart} 0%, #fbf9f6 40%, ${currentTheme.bgGradientEnd} 100%)`,
           transition: 'background 800ms linear',
@@ -297,33 +298,16 @@ export default function HomePage() {
 
   return (
     <div
-      className="h-screen w-full flex flex-col overflow-hidden font-dodum text-on-surface"
+      className="h-screen w-full flex flex-col overflow-hidden font-gowun text-on-surface"
       style={{
         background: `linear-gradient(135deg, ${currentTheme.bgGradientStart} 0%, #fbf9f6 40%, ${currentTheme.bgGradientEnd} 100%)`,
         transition: 'background 800ms linear',
       }}
     >
-      {/* Emotion Status Header */}
-      {uiState === 'idle' && (
-        <div className="fixed top-0 left-0 w-full z-40 px-[20px] py-2">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span
-                className="inline-block w-3 h-3 rounded-full"
-                style={{ backgroundColor: EMOTION_COLORS[lastEmotion], transition: 'background-color 800ms linear' }}
-              />
-              <span className="font-jakarta text-sm font-semibold text-text-primary">
-                {currentTheme.label}
-              </span>
-              {lastConfidence !== null && (
-                <span className="font-gamja text-sm text-on-surface-variant">
-                  {lastConfidence >= 0.8 ? '많이' : lastConfidence >= 0.5 ? '어느정도' : '살짝'}
-                </span>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
+      {/* 햄버거 메뉴 - 우측 상단 플로팅 */}
+      <div className="fixed top-4 right-4 z-50">
+        <NavMenu activeTab="jelly" />
+      </div>
 
       {/* Main Canvas Area */}
       <main id="main-content" role="main" className="relative w-full flex-1 flex flex-col items-center overflow-hidden transition-all duration-500">
