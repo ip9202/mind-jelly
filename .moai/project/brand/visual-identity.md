@@ -40,7 +40,16 @@ emotion_anger: "#FF6B6B"     # 분노 - 코랄 레드 (공격적이지 않은 �
 emotion_fear: "#4D96FF"      # 공포 - 시원한 파란색
 emotion_disgust: "#A8E6CF"   # 혐오 - 연한 민트
 
-## Typography
+## Typography (하이브리드 TDS 접근)
+
+**전략**: Toss Design System의 Semantic Token 구조를 도입하되, 폰트는 프로젝트 브랜드 유지
+
+### TDS Reference
+- **Toss Product Sans**: Toss x Sandoll 협업 (2020.07~2021.03, 9개월)
+- **TDS Typography**: font-size 13~30px, line-height 23~40px, weights 5종
+- **문서**: https://tossmini-docs.toss.im/tds-react-native/foundation/typography/
+
+### Project Fonts (브랜드 유지)
 
 primary_font: "Dongle"
   # 동글 - 귀엽고 동그란 한국어 디스플레이 폰트. 페이지 타이틀, 섹션 헤더에 사용.
@@ -54,11 +63,57 @@ accent_font: "Gamja Flower"
   # 감자꽃 - 장난스러운 손글씨 스타일. 감정 라벨, 토스트 메시지, 장난스러운 UI 카피에 사용.
   # Google Fonts에서 제공.
 
-mono_font: "none"
-  # 코딩/기술 콘텐츠 없음. 모든 텍스트에 위 3종 폰트 사용.
+latin_font: "Plus Jakarta Sans"
+  # Toss Product Sans 대체. 라틴 문자, 숫자, 영문 UI에 사용.
+  # 귀여운 브랜드 아이덴티티와 조화되는 둥글고 친근한 폰트.
 
 font_source: "google-fonts"
-  # 세 폰트 모두 Google Fonts에서 로드.
+  # 모든 폰트 Google Fonts에서 로드.
+
+### Typography Variants (TDS 스타일 Semantic Tokens)
+
+| Variant | Size | Line-Height | Weight | Use Case |
+|---------|------|-------------|--------|----------|
+| **display** | 64px | 1.0 | 700 | 가장 큰 제목 |
+| **title1** | 30px | 1.33 | 700 | 대제목 (TDS largest) |
+| **title2** | 24px | 1.4 | 700 | 중제목 (h1) |
+| **title3** | 20px | 1.4 | 600 | 소제목 |
+| **body1** | 16px | 1.5 | 500 | 본문 강조 |
+| **body2** | 15px | 1.47 | 400 | 본문 기본 |
+| **caption** | 13px | 1.46 | 400 | 캡션/주석 |
+
+### Tailwind 클래스 사용
+
+```tsx
+// TDS 스타일 Semantic Typography
+<h1 className="text-display font-primary">메인 제목</h1>
+<h2 className="text-title1 font-secondary">섹션 제목</h2>
+<p className="text-body1 font-tertiary">본문 텍스트</p>
+<span className="text-caption font-accent">캡션</span>
+
+// Legacy aliases (하위 호환)
+<h1 className="text-h1">기존 h1 스타일</h1>
+<p className="text-body-md">기존 본문 스타일</p>
+```
+
+### CSS Variables
+
+```css
+/* Font families */
+--font-family-primary: "Plus Jakarta Sans", sans-serif;
+--font-family-secondary: "Dongle", sans-serif;
+--font-family-tertiary: "Gowun Dodum", sans-serif;
+--font-family-accent: "Gamja Flower", cursive;
+
+/* Typography variants */
+--text-display-size: 64px;
+--text-title1-size: 30px;
+--text-title2-size: 24px;
+--text-title3-size: 20px;
+--text-body1-size: 16px;
+--text-body2-size: 15px;
+--text-caption-size: 13px;
+```
 
 ## Logo
 

@@ -119,6 +119,12 @@ const config: Config = {
         "gutter": "12px",
       },
       fontFamily: {
+        // TDS 스타일 Semantic Font Families
+        "primary": ["var(--font-family-primary)"],
+        "secondary": ["var(--font-family-secondary)"],
+        "tertiary": ["var(--font-family-tertiary)"],
+        "accent": ["var(--font-family-accent)"],
+        // Legacy aliases (하위 호환)
         "h1": ["Plus Jakarta Sans", "sans-serif"],
         "body-md": ["Plus Jakarta Sans", "sans-serif"],
         "caption": ["Plus Jakarta Sans", "sans-serif"],
@@ -127,10 +133,18 @@ const config: Config = {
         "gamja": ["Gamja Flower", "cursive"],
       },
       fontSize: {
+        // TDS 스타일 Typography Variants
+        // Reference: TDS font-size 13~30px, line-height 23~40px
+        "display": ["var(--text-display-size)", { lineHeight: "var(--text-display-line-height)", fontWeight: "var(--text-display-weight)" }],
+        "title1": ["var(--text-title1-size)", { lineHeight: "var(--text-title1-line-height)", fontWeight: "var(--text-title1-weight)" }],
+        "title2": ["var(--text-title2-size)", { lineHeight: "var(--text-title2-line-height)", fontWeight: "var(--text-title2-weight)" }],
+        "title3": ["var(--text-title3-size)", { lineHeight: "var(--text-title3-line-height)", fontWeight: "var(--text-title3-weight)" }],
+        "body1": ["var(--text-body1-size)", { lineHeight: "var(--text-body1-line-height)", fontWeight: "var(--text-body1-weight)" }],
+        "body2": ["var(--text-body2-size)", { lineHeight: "var(--text-body2-line-height)", fontWeight: "var(--text-body2-weight)" }],
+        "caption": ["var(--text-caption-size)", { lineHeight: "var(--text-caption-line-height)", fontWeight: "var(--text-caption-weight)" }],
+        // Legacy aliases (하위 호환)
         "h1": ["24px", { lineHeight: "1.4", fontWeight: "700" }],
         "body-md": ["16px", { lineHeight: "1.5", fontWeight: "500" }],
-        "caption": ["13px", { lineHeight: "1.6", fontWeight: "400" }],
-        "display": ["64px", { lineHeight: "1", fontWeight: "700" }],
         "tagline": ["24px", { lineHeight: "1.2", fontWeight: "400" }],
       },
       animation: {

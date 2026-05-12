@@ -95,7 +95,56 @@
   /* Surface tint */
   --color-surface-tint: #78555e;
 
-  /* Font families */
+  /* ========================================
+     TDS 스타일 Typography Tokens (하이브리드)
+     Toss Design System 구조 + 프로젝트 브랜드 폰트
+     ======================================== */
+
+  /* Font families (TDS 구조, 브랜드 폰트 유지) */
+  --font-family-primary: "Plus Jakarta Sans", sans-serif;
+  --font-family-secondary: "Dongle", sans-serif;
+  --font-family-tertiary: "Gowun Dodum", sans-serif;
+  --font-family-accent: "Gamja Flower", cursive;
+
+  /* Typography variants (TDS 스타일 Semantic Tokens) */
+  /* TDS Reference: font-size 13~30px, line-height 23~40px */
+
+  /* Display: 가장 큰 제목 (64px) */
+  --text-display-size: 64px;
+  --text-display-line-height: 1;
+  --text-display-weight: 700;
+
+  /* Title 1: 대제목 (30px → TDS largest) */
+  --text-title1-size: 30px;
+  --text-title1-line-height: 1.33; /* 40px / 30px */
+  --text-title1-weight: 700;
+
+  /* Title 2: 중제목 (24px → h1) */
+  --text-title2-size: 24px;
+  --text-title2-line-height: 1.4;
+  --text-title2-weight: 700;
+
+  /* Title 3: 소제목 (20px) */
+  --text-title3-size: 20px;
+  --text-title3-line-height: 1.4; /* 28px / 20px */
+  --text-title3-weight: 600;
+
+  /* Body 1: 본문 강조 (16px → body-md) */
+  --text-body1-size: 16px;
+  --text-body1-line-height: 1.5; /* 24px / 16px */
+  --text-body1-weight: 500;
+
+  /* Body 2: 본문 기본 (15px) */
+  --text-body2-size: 15px;
+  --text-body2-line-height: 1.47; /* 22px / 15px */
+  --text-body2-weight: 400;
+
+  /* Caption: 캡션/주석 (13px) */
+  --text-caption-size: 13px;
+  --text-caption-line-height: 1.46; /* 19px / 13px */
+  --text-caption-weight: 400;
+
+  /* Legacy aliases (하위 호환) */
   --font-h1: "Plus Jakarta Sans", sans-serif;
   --font-body-md: "Plus Jakarta Sans", sans-serif;
   --font-caption: "Plus Jakarta Sans", sans-serif;
