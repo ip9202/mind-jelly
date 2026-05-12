@@ -78,6 +78,14 @@
   --color-emotion-bg-fear-end: #B39DDB;
   --color-emotion-bg-disgust-start: #E8F5E9;
   --color-emotion-bg-disgust-end: #81C784;
+  --color-emotion-bg-surprise-start: #FFFDE7;
+  --color-emotion-bg-surprise-end: #FFD93D;
+  --color-emotion-bg-love-start: #FFF0F3;
+  --color-emotion-bg-love-end: #FF6B8A;
+  --color-emotion-bg-gratitude-start: #FFF8E1;
+  --color-emotion-bg-gratitude-end: #FFB347;
+  --color-emotion-bg-hope-start: #E1F5FE;
+  --color-emotion-bg-hope-end: #5BC0EB;
 
   /* Background variations */
   --color-bg-base: #FAF8F5;
@@ -333,6 +341,38 @@ body {
 .animate-fade-in-delayed {
   opacity: 0;
   animation: fadeIn 800ms ease-out 600ms forwards;
+}
+
+/* 차트 draw-in: 데이터 포인트 순차 등장 */
+@keyframes drawIn {
+  from {
+    opacity: 0;
+    clip-path: inset(0 100% 0 0);
+  }
+  to {
+    opacity: 1;
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+.animate-draw-in {
+  animation: drawIn 1500ms ease-out forwards;
+}
+
+/* 차트 reveal: 중심에서 외곽 확장 */
+@keyframes reveal {
+  from {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-reveal {
+  animation: reveal 1200ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }
 
 /* 다크 모드 제거됨: 앱인토스는 라이트 모드만 지원

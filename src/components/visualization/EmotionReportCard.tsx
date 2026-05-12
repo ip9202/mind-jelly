@@ -1,45 +1,19 @@
 /**
  * 감정 리포트 카드 컴포넌트
- * REQ-VIS-003: 3단계 시각적 계층 구조 (요약/시각화/인사이트)
+ * REQ-VIS-003: 요약/인사이트 계층 구조 (SPEC-UI-002: 시각화 레이어 바텀시트로 이동)
  * REQ-VIS-006: 개인화 기능 (상위 감정, 스트릭, 패턴 변화)
  * @MX:ANCHOR: 홈 화면 감정 리포트 영역 핵심 컴포넌트
  * @MX:REASON: 사용자가 자신의 감정 패턴을 직관적으로 이해하는 진입점
- * @MX:SPEC: SPEC-UI-001
+ * @MX:SPEC: SPEC-UI-002
  */
 
 'use client';
 
-import { useState } from 'react';
-import dynamic from 'next/dynamic';
-import { EmotionDetailPanel } from './EmotionDetailPanel';
 import { EmotionFace } from '@/components/jelly/EmotionFace';
 import { useEmotionChartData } from '@/hooks/useEmotionChartData';
 import { useEmotionInsights } from '@/hooks/useEmotionInsights';
 import { EMOTION_COLORS, EMOTION_THEME, UI_COLORS } from '@/lib/constants/emotion';
 import type { EmotionType } from '@/types/emotion';
-
-// REQ-VIS-010: Recharts 동적 임포트로 초기 번들 크기 최적화
-// @MX:NOTE: next/dynamic으로 코드 분할하여 초기 로딩 시간 단축
-// @MX:REASON: Recharts는 큰 라이브러리로, 초기 번들에 포함 시 페이지 로딩 지연 발생
-const WeeklyTrendChart = dynamic(
-  () => import('./WeeklyTrendChart').then((mod) => mod.WeeklyTrendChart),
-  {
-    loading: () => (
-      <div className="h-48 bg-gray-100 dark:bg-gray-800 animate-pulse rounded-xl" aria-hidden="true" />
-    ),
-    ssr: false, // Recharts는 window 객체 필요 (클라이언트 전용)
-  }
-);
-
-const EmotionDonutChart = dynamic(
-  () => import('./EmotionDonutChart').then((mod) => mod.EmotionDonutChart),
-  {
-    loading: () => (
-      <div className="h-48 bg-gray-100 dark:bg-gray-800 animate-pulse rounded-xl" aria-hidden="true" />
-    ),
-    ssr: false, // Recharts는 window 객체 필요 (클라이언트 전용)
-  }
-);
 
 interface EmotionReportCardProps {
   userName?: string | null;
@@ -86,14 +60,11 @@ function safeEmotionKey(key: string | undefined | null): EmotionType {
 
 /**
  * 감정 리포트 카드 컴포넌트
- * 3단계 시각적 계층 구조 + 개인화 인사이트 제공
+ * 요약 + 인사이트 계층 구조 (시각화 레이어는 EmotionStatsBottomSheet로 이동)
  */
 export function EmotionReportCard({ userName }: EmotionReportCardProps) {
   const { distribution } = useEmotionChartData();
   const { topEmotions, patternChange, streak, currentInsight } = useEmotionInsights();
-
-  // @MX:NOTE: 선택된 감정 상태 (REQ-VIS-004 도넛 차트 섹터 클릭 연결)
-  const [selectedEmotion, setSelectedEmotion] = useState<EmotionType | null>(null);
 
   // @MX:NOTE: 빈 distribution 처리 - 데이터가 없으면 기본값 사용
   const hasData = distribution.length > 0;
@@ -211,19 +182,9 @@ export function EmotionReportCard({ userName }: EmotionReportCardProps) {
         </div>
       )}
 
-      {/* 2단계: 시각화 레이어 - 반응형 레이아웃 */}
-      {hasData ? (
-        <div className="mb-4">
-          {/* 모바일: 수직 스택, 태블릿: 2열 그리드 */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <WeeklyTrendChart />
-            <EmotionDonutChart
-              selectedEmotion={selectedEmotion}
-              onEmotionSelect={setSelectedEmotion}
-            />
-          </div>
-        </div>
-      ) : (
+      {/* SPEC-UI-002: 2단계(시각화 레이어)는 바텀시트로 이동 */}
+      {/* 빈 데이터 안내 메시지만 인라인에 유지 */}
+      {!hasData && (
         <div className="flex items-center justify-center py-8 mb-4 text-text-secondary/50 dark:text-gray-400 font-gamja text-sm">
           아직 기록된 감정이 없어요. 일기를 써보세요!
         </div>
@@ -239,13 +200,6 @@ export function EmotionReportCard({ userName }: EmotionReportCardProps) {
         </span>
         {currentInsight.advice}
       </div>
-
-      {/* REQ-VIS-004: 도넛 차트 섹터 클릭 시 EmotionDetailPanel 표시 */}
-      <EmotionDetailPanel
-        isOpen={selectedEmotion !== null}
-        emotionKey={selectedEmotion || DEFAULT_EMOTION}
-        onClose={() => setSelectedEmotion(null)}
-      />
     </div>
   );
 }

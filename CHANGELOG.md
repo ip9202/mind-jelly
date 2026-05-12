@@ -7,6 +7,55 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added (SPEC-UI-002)
+- 감정 통계 바텀시트 모달 (`EmotionStatsBottomSheet` 컴포넌트)
+  - WeeklyTrendChart와 EmotionDonutChart를 바텀시트 내부에 렌더링
+  - 5가지 닫기 방법 지원 (백드롭 탭, 스와이프 다운, ESC 키, X 버튼, CTA 토글)
+  - 부드러운 슬라이드 업/다운 애니메이션 (300ms/250ms)
+  - WCAG 2.1 AA 접근성 준수 (포커스 트랩, aria-modal, 키보드 네비게이션)
+  - 터치/마우스 제스처 지원 (드래그 핸들 스와이프)
+  - `prefers-reduced-motion` 미디어 쿼리 지원
+- 듀얼 CTA 레이아웃
+  - "감정 표현하기" (기존 기능, 핑크 그라데이션)
+  - "감정 통계 보기" (신규, 차트 아이콘 포함 투명 보더 버튼)
+  - 모바일 화면에서 flex-1로 균등 분할
+- EmotionInput 바텀시트와의 충돌 방지 로직
+  - uiState가 'idle'일 때만 "감정 통계 보기" 버튼 활성화
+  - 감정 입력 중에는 통계 바텀시트 열기 방지
+
+### Changed (SPEC-UI-002)
+- `EmotionReportCard` 컴포넌트 구조 변경
+  - 인라인 차트 렌더링(2단계 시각화) 제거
+  - 요약 레이어(1단계)와 인사이트 레이어(3단계)만 인라인 유지
+  - 차트 데이터 로딩 훅(`useEmotionChartData`)은 유지하되 바텀시트로 props 전달
+- 홈 화면(`src/app/home/page.tsx`) CTA 영역 수정
+  - 단일 "감정 표현하기" 버튼 → 듀얼 CTA 레이아웃으로 변경
+  - "감정 통계 보기" 버튼 클릭 시 바텀시트 오픈
+
+### Removed (SPEC-UI-002)
+- `EmotionReportCard` 인라인 차트 그리드 렌더링 코드 제거
+  - WeeklyTrendChart와 EmotionDonutChart의 인라인 표시 제거
+  - 바텀시트 내부로만 렌더링되도록 변경
+
+### Testing (SPEC-UI-002)
+- TDD 방식론(RED-GREEN-REFACTOR) 적용
+- 테스트 커버리지: 33개 테스트 전체 통과
+  - EmotionStatsBottomSheet: 21개 새로운 테스트
+  - EmotionReportCard 변경사항: 8개 새로운 테스트
+  - 기존 테스트 업데이트: 5개
+- EmotionStatsBottomSheet 컴포넌트 커버리지: 96%
+- 접근성 테스트: ARIA 속성, 포커스 관리, 키보드 네비게이션 검증
+
+### Technical Notes (SPEC-UI-002)
+- 바텀시트 최대 높이: 뷰포트의 85%
+- 바텀시트 최소 높이: 뷰포트의 60%
+- 드래그 핸들: 36px x 4px, 색상 `bg-gray-300`
+- 백드롭 투명도: 40% (`bg-black/40`)
+- Recharts 동적 임포트 유지 (`ssr: false`)
+- 바텀시트 닫혀 있을 때 차트 컴포넌트 렌더링 안 함 (조건부 렌더링)
+- 애니메이션 60fps 유지 (CSS transform 기반)
+- 이모지 사용 ("📊") 대신 Lucide React 아이콘 사용 (`BarChart3`)
+
 ### Added (SPEC-UI-001)
 - 감정 리포트 시각화 기능
   - 주간 감정 트렌드 차트 (`WeeklyTrendChart` 컴포넌트)

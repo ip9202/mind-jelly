@@ -7,6 +7,17 @@
 
 import type { EmotionType } from '@/types/emotion';
 
+// @MX:NOTE: UI 보조 색상 (감정 외 고정 색상)
+// @MX:SPEC: SPEC-UI-001
+export const UI_COLORS = {
+  /** 기타 섹터 색상 */
+  otherSector: '#E0E0E0',
+  /** 스트릭 아이콘/텍스트 색상 */
+  streak: '#FF6D3F',
+  /** 트렌드 하락 색상 */
+  trendDown: '#5BC0EB',
+} as const;
+
 // @MX:NOTE: 기본 감정 색상 매핑
 // @MX:SPEC: REQ-EVT-005
 export const EMOTION_COLORS = {

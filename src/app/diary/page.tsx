@@ -73,7 +73,6 @@ const EMOTION_UI: Record<
 
 // 요일 헤더
 const WEEK_HEADERS = ['일', '월', '화', '수', '목', '금', '토'];
-const DAY_LABELS = ['월', '화', '수', '목', '금', '토', '일'];
 
 /**
  * 시간을 한국어 오전/오후 형식으로 변환
@@ -118,18 +117,6 @@ function getCalendarDays(year: number, month: number): (number | null)[] {
   }
 
   return days;
-}
-
-/**
- * 특정 날짜가 속한 주의 월요일 인덱스 계산 (0=월, 6=일)
- */
-function getMondayIndex(date: Date): Date {
-  const d = new Date(date);
-  const day = d.getDay();
-  const diff = day === 0 ? -6 : 1 - day;
-  d.setDate(d.getDate() + diff);
-  d.setHours(0, 0, 0, 0);
-  return d;
 }
 
 export default function DiaryPage() {
@@ -220,51 +207,6 @@ export default function DiaryPage() {
         ),
     [selectedDate],
   );
-
-  // 주간 차트용 데이터 (월~일 순서)
-  const weekChartData = useMemo(() => {
-    const monday = getMondayIndex(selectedDate);
-    const emotionTypes: EmotionType[] = [
-      'joy',
-      'sadness',
-      'anger',
-      'fear',
-      'disgust',
-      'surprise',
-      'love',
-      'gratitude',
-      'hope',
-    ];
-
-    return Array.from({ length: 7 }, (_, i) => {
-      const day = new Date(monday);
-      day.setDate(day.getDate() + i);
-      const dayEntries = diaryStore
-        .getState()
-        .getEntriesByDate(day);
-
-      const total = dayEntries.length;
-      if (total === 0) return null;
-
-      const segments: { emotion: EmotionType; percent: number }[] = [];
-      emotionTypes.forEach((emotion) => {
-        const count = dayEntries.filter((e) => e.emotion === emotion).length;
-        if (count > 0) {
-          segments.push({
-            emotion,
-            percent: Math.round((count / total) * 100),
-          });
-        }
-      });
-
-      return {
-        dayIndex: i,
-        label: DAY_LABELS[i],
-        isToday: formatDateKey(day) === formatDateKey(today),
-        segments,
-      };
-    });
-  }, [selectedDate, today]);
 
   return (
     <div className="text-on-background min-h-screen pb-6 font-gowun">
@@ -367,77 +309,12 @@ export default function DiaryPage() {
               </p>
             </div>
           ) : (
-            <div aria-live="polite" className="relative pl-8 space-y-[12px] before:content-[''] before:absolute before:left-[15px] before:top-2 before:bottom-2 before:w-[2px] before:bg-outline-variant/30">
+            <div aria-live="polite" className="space-y-[12px]">
               {dayEntries.map((entry) => (
                 <TimelineEntry key={entry.id} entry={entry} />
               ))}
             </div>
           )}
-        </section>
-
-        {/* Weekly Emotion Flow Chart */}
-        <section className="glass-card rounded-[20px] p-[16px] shadow-sm">
-          <h2 className="text-primary mb-[16px] font-gowun text-[24px] font-bold">
-            이번 주 감정 흐름
-          </h2>
-
-          {!mounted || weekChartData.every((d) => d === null) ? (
-            /* 빈 상태 */
-            <div className="text-center py-[16px]">
-              <p className="text-on-surface-variant text-[14px]">
-                이번 주 감정 기록이 아직 없어요
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-[8px]">
-              {weekChartData.map((data, idx) => {
-                if (!data) {
-                  return (
-                    <div
-                      key={`empty-week-${idx}`}
-                      className="flex items-center gap-[16px]"
-                    >
-                      <span className="w-8 text-on-surface-variant font-gamja text-[16px] opacity-40">
-                        {DAY_LABELS[idx]}
-                      </span>
-                      <div className="flex-1 h-3 rounded-full bg-surface-container-high" />
-                    </div>
-                  );
-                }
-
-                return (
-                  <div
-                    key={`week-${idx}`}
-                    className="flex items-center gap-[16px]"
-                  >
-                    <span
-                      className={`w-8 font-gamja text-[16px] ${
-                        data.isToday
-                          ? 'text-primary font-bold'
-                          : 'text-on-surface-variant'
-                      }`}
-                    >
-                      {data.isToday ? '오늘' : data.label}
-                    </span>
-                    <div
-                      className={`flex-1 ${
-                        data.isToday ? 'h-4 ring-2 ring-primary/10' : 'h-3'
-                      } flex rounded-full overflow-hidden bg-surface-container-high`}
-                    >
-                      {data.segments.map((seg, si) => (
-                        <div
-                          key={`${seg.emotion}-${si}`}
-                          className={`h-full ${EMOTION_UI[seg.emotion].bg}`}
-                          style={{ width: `${seg.percent}%` }}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-
         </section>
       </main>
 

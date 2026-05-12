@@ -129,15 +129,13 @@ describe('EmotionReportCard - SPEC-UI-001', () => {
       expect(face).toBeInTheDocument();
     });
 
-    it('시각화 레이어에 차트들을 렌더링해야 함', async () => {
+    it('시각화 레이어 차트는 인라인에 렌더링되지 않아야 함 (SPEC-UI-002: 바텀시트로 이동)', async () => {
       const { EmotionReportCard } = await import('../EmotionReportCard');
       render(<EmotionReportCard />);
 
-      const trendChart = screen.getByTestId('weekly-trend-chart');
-      expect(trendChart).toBeInTheDocument();
-
-      const donutChart = screen.getByTestId('emotion-donut-chart');
-      expect(donutChart).toBeInTheDocument();
+      // SPEC-UI-002: 차트는 바텀시트로 이동, 인라인에 없어야 함
+      expect(screen.queryByTestId('weekly-trend-chart')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('emotion-donut-chart')).not.toBeInTheDocument();
     });
 
     it('인사이트 레이어에 개인화된 조언을 렌더링해야 함', async () => {
@@ -171,15 +169,25 @@ describe('EmotionReportCard - SPEC-UI-001', () => {
   });
 
   describe('접근성 (REQ-VIS-007)', () => {
-    it('차트 요소가 role 속성을 포함해야 함', async () => {
+    it('차트 요소가 인라인에 없어야 함 (SPEC-UI-002: 바텀시트로 이동)', async () => {
       const { EmotionReportCard } = await import('../EmotionReportCard');
       render(<EmotionReportCard />);
 
-      const trendChart = screen.getByTestId('weekly-trend-chart');
-      expect(trendChart).toHaveAttribute('role', 'img');
+      // SPEC-UI-002: 차트는 바텀시트로 이동
+      expect(screen.queryByTestId('weekly-trend-chart')).not.toBeInTheDocument();
     });
 
-    it('aria-label을 포함해야 함', async () => {
+    it('aria-label을 포함해야 함 (개인화 데이터가 있을 때)', async () => {
+      mockInsights = {
+        topEmotions: [{ emotion: 'joy', count: 3, percentage: 100 }],
+        patternChange: null,
+        streak: 1,
+        currentInsight: {
+          summary: '마음이 평온한 상태예요',
+          advice: '평온한 조언',
+        },
+      };
+
       const { EmotionReportCard } = await import('../EmotionReportCard');
       render(<EmotionReportCard />);
 
@@ -189,7 +197,7 @@ describe('EmotionReportCard - SPEC-UI-001', () => {
   });
 
   describe('반응형 대응 (REQ-VIS-009)', () => {
-    it('모바일 환경에서 세로 스택 배치되어야 함', async () => {
+    it('모바일 환경에서도 인라인 차트 없이 렌더링되어야 함 (SPEC-UI-002)', async () => {
       Object.defineProperty(window, 'innerWidth', {
         writable: true,
         configurable: true,
@@ -199,8 +207,9 @@ describe('EmotionReportCard - SPEC-UI-001', () => {
       const { EmotionReportCard } = await import('../EmotionReportCard');
       render(<EmotionReportCard />);
 
-      expect(screen.getByTestId('weekly-trend-chart')).toBeInTheDocument();
-      expect(screen.getByTestId('emotion-donut-chart')).toBeInTheDocument();
+      // SPEC-UI-002: 차트는 바텀시트로 이동
+      expect(screen.queryByTestId('weekly-trend-chart')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('emotion-donut-chart')).not.toBeInTheDocument();
     });
   });
 
@@ -480,15 +489,14 @@ describe('EmotionReportCard - SPEC-UI-001', () => {
       }
     });
 
-    it('EmotionDetailPanel에 전달되는 emotionKey는 유효한 EmotionType이어야 함', async () => {
+    it('EmotionDetailPanel은 인라인에 렌더링되지 않아야 함 (SPEC-UI-002: 바텀시트로 이동)', async () => {
       mockChartData = defaultData;
 
       const { EmotionReportCard } = await import('../EmotionReportCard');
       render(<EmotionReportCard />);
 
-      const detailPanel = screen.getByTestId('emotion-detail-panel');
-      expect(detailPanel).toBeInTheDocument();
-      expect(detailPanel).toHaveAttribute('data-open', 'false');
+      // SPEC-UI-002: EmotionDetailPanel은 바텀시트로 이동
+      expect(screen.queryByTestId('emotion-detail-panel')).not.toBeInTheDocument();
     });
 
     it('유효하지 않은 감정키가 들어와도 컴포넌트가 크래시 없이 렌더링되어야 함', async () => {

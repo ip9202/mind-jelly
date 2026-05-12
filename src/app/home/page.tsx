@@ -41,6 +41,16 @@ const HeartParticle = dynamic(
   { ssr: false }
 );
 
+const EmotionReportCard = dynamic(
+  () => import('@/components/visualization/EmotionReportCard').then((m) => m.EmotionReportCard),
+  { ssr: false }
+);
+
+const EmotionStatsBottomSheet = dynamic(
+  () => import('@/components/visualization/EmotionStatsBottomSheet').then((m) => m.EmotionStatsBottomSheet),
+  { ssr: false }
+);
+
 const emptySubscribe = () => () => {};
 
 // @MX:NOTE: [AUTO] 감정 표현 UI 상태머신 (idle→input→restoring→beads→report→idle)
@@ -79,6 +89,8 @@ export default function HomePage() {
   const [uiState, setUiState] = useState<UiState>('idle');
   const [showInterstitial, setShowInterstitial] = useState(false);
   const [keyboardHeight, setKeyboardHeight] = useState(0);
+  const [showStatsSheet, setShowStatsSheet] = useState(false);
+  const statsButtonRef = useRef<HTMLButtonElement>(null);
 
   // SPEC-TOUCH-001: 하트 파티클 상태
   const [heartParticles, setHeartParticles] = useState<Array<{
@@ -415,42 +427,29 @@ export default function HomePage() {
         {/* Bottom Content Area (idle: message card + CTA, report: fade-in card) */}
         {(uiState === 'idle' || uiState === 'report') && (
           <div className="w-full flex flex-col items-center gap-3 px-[20px] pb-6">
-            {/* Emotional Message Card */}
+            {/* Emotional Message Card - EmotionReportCard로 교체 (REQ-VIS-003) */}
             <div
               role={uiState === 'report' ? 'status' : undefined}
               aria-live={uiState === 'report' ? 'polite' : undefined}
               className={`w-full max-w-md ${uiState === 'report' ? 'animate-fade-in' : ''}`}
             >
-              <div
-                className="glass-card rounded-3xl px-5 py-4"
-                style={{ transition: 'all 800ms linear' }}
-              >
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="material-symbols-outlined text-primary text-lg" style={{ fontVariationSettings: "'FILL' 1" }}>auto_awesome</span>
-                  <span className="font-jakarta text-xs font-semibold text-text-primary">오늘의 감정 리포트</span>
-                </div>
-                <p className="font-gamja text-base text-text-primary leading-relaxed">
-                  {userName
-                    ? `${userName}님, ${currentTheme.message}`
-                    : currentTheme.message}
-                </p>
-                <p
-                  className="font-gamja text-sm mt-2 leading-relaxed"
-                  style={{ color: EMOTION_COLORS[lastEmotion], transition: 'color 800ms linear' }}
-                >
-                  <span className="material-symbols-outlined text-sm align-middle mr-1" style={{ fontVariationSettings: "'FILL' 1", color: EMOTION_COLORS[lastEmotion] }} aria-hidden="true">tips_and_updates</span>
-                  {currentTheme.advice[adviceIndex]}
-                </p>
-              </div>
+              <EmotionReportCard userName={userName} />
             </div>
 
-            {/* CTA Button (report에서는 fade-in 지연 등장, idle에서는 항상 표시) */}
-            <div className={`w-full max-w-md ${uiState === 'report' ? 'animate-fade-in-delayed' : ''}`}>
+            {/* SPEC-UI-002: 듀얼 CTA 레이아웃 */}
+            <div className={`w-full max-w-md flex gap-3 ${uiState === 'report' ? 'animate-fade-in-delayed' : ''}`}>
+              {/* 좌측: 감정 표현하기 (기존) */}
               <button
-                onClick={() => setUiState('input')}
+                onClick={() => {
+                  // AC-010: 바텀시트가 열린 상태에서 먼저 닫기
+                  if (showStatsSheet) {
+                    setShowStatsSheet(false);
+                  }
+                  setUiState('input');
+                }}
                 disabled={uiState === 'report'}
                 aria-label="감정 표현하기"
-                className="w-full h-14 rounded-full bg-accent text-on-primary font-gamja text-lg font-bold shadow-lg hover:scale-[0.98] active:scale-95 transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-default hover:shadow-xl hover:-translate-y-0.5"
+                className="flex-1 h-14 rounded-full bg-accent text-on-primary font-gamja text-lg font-bold shadow-lg hover:scale-[0.98] active:scale-95 transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-default hover:shadow-xl hover:-translate-y-0.5"
                 style={{
                   background: 'linear-gradient(135deg, #FF9ECD 0%, #FFD1DC 100%)',
                   boxShadow: '0 4px 14px rgba(255, 158, 205, 0.4)',
@@ -458,6 +457,18 @@ export default function HomePage() {
               >
                 <span className="material-symbols-outlined text-2xl" style={{ fontVariationSettings: "'FILL' 1" }} aria-hidden="true">edit_note</span>
                 감정 표현하기
+              </button>
+
+              {/* 우측: 감정 통계 보기 (신규) */}
+              <button
+                ref={statsButtonRef}
+                onClick={() => setShowStatsSheet(true)}
+                disabled={uiState !== 'idle'}
+                aria-label="감정 통계 보기"
+                className="flex-1 h-14 rounded-full bg-transparent border border-accent text-accent font-gamja text-lg font-bold hover:scale-[0.98] active:scale-95 transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-default hover:shadow-xl hover:-translate-y-0.5"
+              >
+                <span className="material-symbols-outlined text-2xl" style={{ fontVariationSettings: "'FILL' 1" }} aria-hidden="true">bar_chart</span>
+                통계 보기
               </button>
             </div>
           </div>
@@ -478,6 +489,13 @@ export default function HomePage() {
           ))}
         </div>
       )}
+
+      {/* SPEC-UI-002: 감정 통계 바텀시트 */}
+      <EmotionStatsBottomSheet
+        isOpen={showStatsSheet}
+        onClose={() => setShowStatsSheet(false)}
+        triggerRef={statsButtonRef}
+      />
 
       {/* EmotionInput Bottom Sheet (input mode only) */}
       {uiState === 'input' && (
