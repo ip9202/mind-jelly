@@ -84,8 +84,8 @@ export default function HomePage() {
   const mounted = useSyncExternalStore(emptySubscribe, () => true, () => false);
   const [matterReady, setMatterReady] = useState(false);
   const [matterError, setMatterError] = useState<string | null>(null);
-  // @MX:NOTE: 초기 placeholder — 물리 엔진 초기화 후 매 프레임 갱신됨 (usePhysicsInit cy=330과 동기화)
-  const jellyPosRef = useRef({ x: 400, y: 330 });
+  // @MX:NOTE: 초기 placeholder — 물리 엔진 초기화 후 매 프레임 갱신됨 (usePhysicsInit cy=300과 동기화)
+  const jellyPosRef = useRef({ x: 400, y: 300 });
   const matterRef = useRef<typeof import('matter-js') | null>(null);
   const [uiState, setUiState] = useState<UiState>('idle');
   const [showInterstitial, setShowInterstitial] = useState(false);
@@ -382,11 +382,13 @@ export default function HomePage() {
           }}
           onPointerDown={(e) => {
             // SPEC-TOUCH-001: 젤리 터치 감지
-            const rect = e.currentTarget.getBoundingClientRect();
+            // PhysicsCanvas 컨테이너 rect 사용 (외부 컨테이너보다 작아 중앙 정렬됨)
+            const canvasEl = e.currentTarget.querySelector('[data-canvas-container]') as HTMLElement;
+            const rect = canvasEl?.getBoundingClientRect() ?? e.currentTarget.getBoundingClientRect();
             const relX = e.clientX - rect.left;
             const relY = e.clientY - rect.top;
 
-            // 컨테이너 너비를 기준으로 캔버스 좌표(800x600)로 변환
+            // 캔버스 좌표(800x600)로 변환
             const canvasX = (relX / rect.width) * 800;
             const canvasY = (relY / rect.height) * 600;
 

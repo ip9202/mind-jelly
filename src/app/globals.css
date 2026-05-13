@@ -179,7 +179,8 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-jakarta), var(--font-dongle), var(--font-gowun), var(--font-gamja), sans-serif;
-  min-height: max(884px, 100dvh);
+  min-height: 100svh;
+  min-height: 100dvh;
 }
 
 .material-symbols-outlined {

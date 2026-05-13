@@ -69,7 +69,7 @@ export function usePhysicsInit(options: UsePhysicsInitOptions): UsePhysicsInitRe
       const W = 800;
       const H = 600;
       const cx = W / 2;
-      const cy = H * 0.55; // 캔버스 중앙보다 살짝 아래
+      const cy = H * 0.5; // 캔버스 중앙
 
       // 젤리 바디 생성
       const jellyBody = Matter.Bodies.circle(cx, cy, 40, {
@@ -143,6 +143,13 @@ export function usePhysicsInit(options: UsePhysicsInitOptions): UsePhysicsInitRe
           const jelly = allBodies.find((b) => b.label === 'jelly');
           if (jelly) {
             jellyPosRef.current = { x: jelly.position.x, y: jelly.position.y };
+
+            // 중력 상쇄: 스프링만으로 정확한 타겟 위치 유지
+            const gScale = eng.gravity.scale ?? 0.001;
+            Matter.Body.applyForce(jelly, jelly.position, {
+              x: 0,
+              y: -(jelly.mass * eng.gravity.y * gScale),
+            });
 
             // 속도 제한 (부드러운 떠다님)
             const maxSpeed = 15;

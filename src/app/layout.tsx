@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Dongle, Gowun_Dodum, Gamja_Flower, Plus_Jakarta_Sans } from "next/font/google";
 import BridgeInitializer from "@/components/bridge/BridgeInitializer";
 import { ThemeInitializer } from "@/components/ui/ThemeInitializer";
@@ -26,6 +26,15 @@ const jakartaSans = Plus_Jakarta_Sans({
   variable: "--font-jakarta",
   display: "optional",
 });
+
+// @MX:NOTE: [AUTO] Next.js Viewport API로 모바일 뷰포트 설정. viewport-fit: cover 필수 - env(safe-area-inset-*) 활성화
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: "cover",
+};
 
 export const metadata: Metadata = {
   title: "Mind Jelly - 마음 젤리",
