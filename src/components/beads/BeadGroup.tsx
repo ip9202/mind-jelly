@@ -1,7 +1,7 @@
 'use client';
 
 // T-015: BeadGroup 컴포넌트 (REQ-EVT-005)
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useReducer, useRef, useState } from 'react';
 import * as Matter from 'matter-js';
 import { EMOTION_COLORS, BEAD_SIZES } from '@/lib/constants/emotion';
 
@@ -27,6 +27,9 @@ interface BeadInfo {
 export function BeadGroup({ count, engine, emotion }: BeadGroupProps) {
   const lastCreatedCountRef = useRef(0);
   const [beadInfos, setBeadInfos] = useState<Map<number, BeadInfo>>(new Map());
+  // @MX:ANCHOR: rAF 강제 리렌더 — Matter.js bead.position을 매 프레임 SVG에 반영
+  // @MX:REASON: 부모 page는 매 프레임 리렌더되지 않아 BeadGroup이 freeze. 구슬이 있을 때만 활성화하여 idle 시 불필요 리렌더 방지
+  const [, forceUpdate] = useReducer((x: number) => x + 1, 0);
 
   // count 변화 감지: 증가 시 새 구슬 생성, 0 되면 리셋
   useEffect(() => {
@@ -85,6 +88,31 @@ export function BeadGroup({ count, engine, emotion }: BeadGroupProps) {
         setBeadInfos(new Map());
         lastCreatedCountRef.current = 0;
       }
+    };
+  }, [engine]);
+
+  // @MX:ANCHOR: rAF 루프 — 구슬이 있는 동안 매 프레임 리렌더로 SVG 위치 동기화
+  // @MX:REASON: Matter.Runner는 위치를 매 프레임 갱신하지만 React가 모름 → 직접 강제 리렌더로 부드러운 낙하 보장
+  useEffect(() => {
+    if (!engine) return;
+    let rafId = 0;
+    let active = true;
+
+    const tick = () => {
+      if (!active) return;
+      const allBodies = Matter.Composite.allBodies(engine.world);
+      const hasBead = allBodies.some((b) => b.label === 'bead');
+      if (hasBead) {
+        forceUpdate();
+      }
+      rafId = requestAnimationFrame(tick);
+    };
+
+    rafId = requestAnimationFrame(tick);
+
+    return () => {
+      active = false;
+      cancelAnimationFrame(rafId);
     };
   }, [engine]);
 

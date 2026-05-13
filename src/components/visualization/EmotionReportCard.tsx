@@ -9,14 +9,19 @@
 
 'use client';
 
+import type { ReactNode } from 'react';
 import { EmotionFace } from '@/components/jelly/EmotionFace';
 import { useEmotionChartData } from '@/hooks/useEmotionChartData';
 import { useEmotionInsights } from '@/hooks/useEmotionInsights';
-import { EMOTION_COLORS } from '@/lib/constants/emotion';
+import { EMOTION_COLORS, EMOTION_THEME } from '@/lib/constants/emotion';
 import type { EmotionType } from '@/types/emotion';
 
 interface EmotionReportCardProps {
   userName?: string | null;
+  // @MX:NOTE: 현재 젤리 감정(jellyStore.lastEmotion). 지정되면 7일 누적 통계 대신 이 감정을 표시
+  currentEmotion?: EmotionType | null;
+  // @MX:NOTE: 카드 하단 액션 영역 (버튼 등). 지정되면 카드 내부 마지막에 렌더링
+  actions?: ReactNode;
 }
 
 // @MX:NOTE: 모든 유효한 감정 키 집합 (불변 참조)
@@ -62,18 +67,17 @@ function safeEmotionKey(key: string | undefined | null): EmotionType {
  * 감정 리포트 카드 컴포넌트
  * 요약 + 인사이트 계층 구조 (시각화 레이어는 EmotionStatsBottomSheet로 이동)
  */
-export function EmotionReportCard({ userName }: EmotionReportCardProps) {
+export function EmotionReportCard({ userName, currentEmotion, actions }: EmotionReportCardProps) {
   // SPEC-UI-003: userName은 인터페이스 호환성을 위해 유지 (개인화 메시지는 바텀시트로 이동)
   void userName;
   const { distribution } = useEmotionChartData();
-  // @MX:NOTE: [AUTO] SPEC-UI-003 - currentInsight만 사용 (topEmotions, streak, patternChange는 바텀시트 인사이트 탭으로 이동)
-  const { currentInsight } = useEmotionInsights();
+  // @MX:NOTE: [AUTO] SPEC-UI-003 - insight만 사용 (topEmotions, streak, patternChange는 바텀시트 인사이트 탭으로 이동)
+  const { currentInsight: aggregatedInsight } = useEmotionInsights();
 
   // @MX:NOTE: 빈 distribution 처리 - 데이터가 없으면 기본값 사용
   const hasData = distribution.length > 0;
 
-  // @MX:NOTE: 가장 빈번한 감정 계산 (요약 레이어 표시용)
-  // 빈 distribution 처리를 위한 기본값 제공
+  // @MX:NOTE: 가장 빈번한 감정 계산 (currentEmotion 없을 때만 사용)
   const mostFrequentEmotion = hasData
     ? distribution.reduce((prev, current) =>
         current.count > prev.count ? current : prev,
@@ -81,10 +85,25 @@ export function EmotionReportCard({ userName }: EmotionReportCardProps) {
     )
     : null;
 
-  // @MX:NOTE: 표시할 감정 키 결정 - 유효성 검증 포함
-  const displayEmotion: EmotionType = mostFrequentEmotion
-    ? safeEmotionKey(mostFrequentEmotion.emotionKey)
-    : DEFAULT_EMOTION;
+  // @MX:ANCHOR: 표시할 감정 결정 우선순위
+  // @MX:REASON: 1) currentEmotion(현재 젤리 감정) 우선 - "오늘의 감정 리포트" 헤더와 일치
+  //             2) 없으면 7일 누적 1위 감정 fallback
+  const displayEmotion: EmotionType = currentEmotion && isValidEmotionKey(currentEmotion)
+    ? currentEmotion
+    : mostFrequentEmotion
+      ? safeEmotionKey(mostFrequentEmotion.emotionKey)
+      : DEFAULT_EMOTION;
+
+  // @MX:NOTE: currentEmotion 지정 시 해당 감정 테마에서 직접 summary/advice 추출
+  //           (useEmotionInsights는 7일 통계 기반이므로 즉각적 감정 반영 불가)
+  const insight = currentEmotion && isValidEmotionKey(currentEmotion)
+    ? (() => {
+        const theme = EMOTION_THEME[currentEmotion];
+        const emotionCode = currentEmotion.slice(0, 3).charCodeAt(0);
+        const adviceIndex = emotionCode % theme.advice.length;
+        return { summary: theme.message, advice: theme.advice[adviceIndex] };
+      })()
+    : aggregatedInsight;
 
   return (
     <div className="glass-card animate-fade-in rounded-3xl px-5 py-4 bg-white/10 backdrop-blur-md border border-white/20 dark:bg-gray-900/30 dark:border-white/10">
@@ -101,7 +120,7 @@ export function EmotionReportCard({ userName }: EmotionReportCardProps) {
       <div className="flex items-center gap-2 mb-2">
         <EmotionFace emotion={displayEmotion} size={32} />
         <p className="font-gamja text-base text-text-primary leading-relaxed">
-          {currentInsight.summary}
+          {insight.summary}
         </p>
       </div>
 
@@ -122,8 +141,15 @@ export function EmotionReportCard({ userName }: EmotionReportCardProps) {
         <span className="material-symbols-outlined text-sm align-middle mr-1" style={{ fontVariationSettings: "'FILL' 1", color: EMOTION_COLORS[displayEmotion] }} aria-hidden="true">
           tips_and_updates
         </span>
-        {currentInsight.advice}
+        {insight.advice}
       </div>
+
+      {/* 4단계: 액션 슬롯 (감정 표현하기 / 통계 보기 등) */}
+      {actions && (
+        <div className="mt-4 pt-3 border-t border-white/20 dark:border-white/10">
+          {actions}
+        </div>
+      )}
     </div>
   );
 }

@@ -14,7 +14,7 @@ import { InterstitialAd } from '@/components/ads/InterstitialAd';
 import { BannerAd } from '@/components/ads/BannerAd';
 import { canShowInterstitial } from '@/lib/ad/adFrequencyControl';
 import type { EmotionType } from '@/types/emotion';
-import NavMenu from '@/components/layout/NavMenu';
+import BottomNav from '@/components/layout/BottomNav';
 
 const PhysicsCanvas = dynamic(
   () => import('@/components/jelly/PhysicsCanvas').then((m) => m.PhysicsCanvas),
@@ -84,7 +84,8 @@ export default function HomePage() {
   const mounted = useSyncExternalStore(emptySubscribe, () => true, () => false);
   const [matterReady, setMatterReady] = useState(false);
   const [matterError, setMatterError] = useState<string | null>(null);
-  const [jellyPos, setJellyPos] = useState({ x: 400, y: 240 });
+  // @MX:NOTE: 초기 placeholder — 물리 엔진 초기화 후 매 프레임 갱신됨 (usePhysicsInit cy=330과 동기화)
+  const jellyPosRef = useRef({ x: 400, y: 330 });
   const matterRef = useRef<typeof import('matter-js') | null>(null);
   const [uiState, setUiState] = useState<UiState>('idle');
   const [showInterstitial, setShowInterstitial] = useState(false);
@@ -101,6 +102,9 @@ export default function HomePage() {
     offsetX: number;
   }>>([]);
 
+  // SPEC-TOUCH-001: CSS keyframe 바운스 트리거 (key 변화로 애니메이션 재시작)
+  const [bounceKey, setBounceKey] = useState(0);
+
 
 
   // 젤리 시각적 감정 상태 (persist된 store에서 복원)
@@ -116,6 +120,7 @@ export default function HomePage() {
     return EMOTION_COLORS[lastEmotion || JELLY_COLOR];
   });
 
+  // Zustand store에서 필요한 값들을 구독
   const currentState = jellyStore((s) => s.currentState);
   const lastEmotion = jellyStore((s) => s.lastEmotion);
   const jellyName = jellyStore((s) => s.jellyName);
@@ -138,45 +143,39 @@ export default function HomePage() {
   const userName = userInfo?.name || (jellyName && jellyName !== '내 젤리' ? jellyName : null);
 
   // 물리 엔진 초기화 훅
+  // @MX:NOTE: activateBounce는 SPEC-TOUCH-001 CSS 전환 후 더 이상 사용하지 않음 (호환성 유지)
   const { engineRef, initPhysics } = usePhysicsInit({
     matterReady,
     matterRef,
-    setJellyPos,
+    jellyPosRef,
   });
 
   // @MX:NOTE: [AUTO] SPEC-TOUCH-001: 젤리 터치 핸들러
   // @MX:REASON: idle 상태에서만 반응, 1초 쿨다운, hit-test 후 happy 전이 + 바운스 + 파티클
   const handleJellyTouch = useCallback(
-    (pointerX: number, pointerY: number) => {
+    (screenX: number, screenY: number, canvasX: number, canvasY: number) => {
       const st = jellyStore.getState();
+      const onJelly = isTouchOnJelly(canvasX, canvasY, jellyPosRef.current, 60);
 
-      // PhysicsCanvas 내부 좌표로 변환 (캔버스 800x600 기준)
-      const canvasX = (pointerX / (typeof window !== 'undefined' ? window.innerWidth : 375)) * 800;
-      const canvasY = (pointerY / (typeof window !== 'undefined' ? window.innerHeight : 667)) * 600;
-
-      const onJelly = isTouchOnJelly(canvasX, canvasY, jellyPos, 60);
-
-      if (!shouldHandleTouch({
+      const shouldHandle = shouldHandleTouch({
         currentState: st.currentState,
         canTouch: st.canTouch(),
         isOnJelly: onJelly,
-      })) return;
+      });
+
+      if (!shouldHandle) {
+        return;
+      }
 
       // happy 상태 전이
       st.triggerHappy();
 
-      // 물리 임펄스 (위쪽 바운스)
-      if (engineRef.current && matterRef.current) {
-        const Matter = matterRef.current;
-        const allBodies = Matter.Composite.allBodies(engineRef.current.world);
-        const jelly = allBodies.find((b: Matter.Body) => b.label === 'jelly');
-        if (jelly) {
-          Matter.Body.applyForce(jelly, jelly.position, { x: 0, y: -0.015 });
-        }
-      }
+      // SPEC-TOUCH-001: CSS keyframe 바운스 트리거 (key 변화로 애니메이션 재시작)
+      // @MX:NOTE: Matter.js 물리 임펄스 대신 CSS squash & stretch 애니메이션으로 부드러움 확보
+      setBounceKey((k) => k + 1);
 
       // 하트 파티클 생성
-      const particles = createHeartParticles(pointerX, pointerY);
+      const particles = createHeartParticles(screenX, screenY);
       setHeartParticles(particles);
 
       // 1.5초 후 파티클 제거
@@ -184,7 +183,7 @@ export default function HomePage() {
         setHeartParticles([]);
       }, 1500);
     },
-    [jellyPos, engineRef, matterRef],
+    [],
   );
 
   useEffect(() => {
@@ -248,14 +247,28 @@ export default function HomePage() {
   }, [uiState, currentState, lastEmotion]);
 
   // 리포트 표시 후 idle로 복귀
+  // @MX:ANCHOR: SPEC-TOUCH-001 — jellyStore.currentState도 idle로 함께 리셋
+  // @MX:REASON: satisfied → idle 전이가 없으면 다음 사이클 터치 핸들러가 currentState !== 'idle' 가드에 막혀 무반응
   useEffect(() => {
     if (uiState === 'report') {
       const timer = setTimeout(() => {
+        const st = jellyStore.getState();
+        if (st.currentState === 'satisfied') {
+          st.transitionState('idle');
+        }
         setUiState('idle');
       }, REPORT_DISPLAY_MS);
       return () => clearTimeout(timer);
     }
   }, [uiState]);
+
+  // 안전망: uiState가 'idle'인데 jellyStore가 'satisfied'에 stuck된 경우 강제 복구
+  // @MX:NOTE: 외부 경로(예: 페이지 리프레시, persist 복원 직후)로 idle 진입 시에도 정상화 보장
+  useEffect(() => {
+    if (uiState === 'idle' && currentState === 'satisfied') {
+      jellyStore.getState().transitionState('idle');
+    }
+  }, [uiState, currentState]);
 
   // 모바일 키보드 높이 추적 (입력 모드)
   useEffect(() => {
@@ -303,7 +316,9 @@ export default function HomePage() {
     );
   }
 
-  const bodies = [{ position: jellyPos, circleRadius: 60 }];
+  // @MX:NOTE: PhysicsCanvas의 render prop이 매 프레임 호출되어 최신 ref 값을 JSX로 전달
+  // eslint-disable-next-line react-hooks/refs
+  const bodies = [{ position: jellyPosRef.current, circleRadius: 60 }];
 
   return (
     <div
@@ -313,13 +328,8 @@ export default function HomePage() {
         transition: 'background 800ms linear',
       }}
     >
-      {/* 햄버거 메뉴 - 우측 상단 플로팅 */}
-      <div className="fixed top-4 right-4 z-50">
-        <NavMenu activeTab="jelly" />
-      </div>
-
       {/* Main Canvas Area */}
-      <main id="main-content" role="main" className="relative w-full flex-1 flex flex-col items-center overflow-hidden transition-all duration-500">
+      <main id="main-content" role="main" className="relative w-full flex-1 flex flex-col items-center overflow-hidden pb-24 transition-all duration-500">
 
         {/* Decorative Atmosphere */}
         <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
@@ -373,7 +383,15 @@ export default function HomePage() {
           onPointerDown={(e) => {
             // SPEC-TOUCH-001: 젤리 터치 감지
             const rect = e.currentTarget.getBoundingClientRect();
-            handleJellyTouch(e.clientX - rect.left, e.clientY - rect.top);
+            const relX = e.clientX - rect.left;
+            const relY = e.clientY - rect.top;
+
+            // 컨테이너 너비를 기준으로 캔버스 좌표(800x600)로 변환
+            const canvasX = (relX / rect.width) * 800;
+            const canvasY = (relY / rect.height) * 600;
+
+            // 화면 좌표(하트 파티클용)와 캔버스 좌표(hit-test용) 함께 전달
+            handleJellyTouch(e.clientX, e.clientY, canvasX, canvasY);
           }}
         >
           {matterError ? (
@@ -394,6 +412,7 @@ export default function HomePage() {
                         emotionColor={jellyVisualColor}
                         emotion={jellyVisualEmotion}
                         jellyShape={jellyShape}
+                        bounceKey={bounceKey}
                       />
                       {/* 감정 분석 결과가 있을 때만 구슬 렌더링 */}
                       {engineRef.current && uiState === 'beads' && (
@@ -424,54 +443,56 @@ export default function HomePage() {
 
         {/* Bottom Content Area (idle: message card + CTA, report: fade-in card) */}
         {(uiState === 'idle' || uiState === 'report') && (
-          <div className="w-full flex flex-col items-center gap-3 px-[20px] pb-6">
-            {/* Emotional Message Card - EmotionReportCard로 교체 (REQ-VIS-003) */}
+          <div className="w-full flex flex-col items-center px-[20px] pb-6">
+            {/* SPEC-UI-002/003: EmotionReportCard 내부에 듀얼 CTA 통합 */}
             <div
               role={uiState === 'report' ? 'status' : undefined}
               aria-live={uiState === 'report' ? 'polite' : undefined}
               className={`w-full max-w-md ${uiState === 'report' ? 'animate-fade-in' : ''}`}
             >
-              <EmotionReportCard userName={userName} />
-            </div>
+              <EmotionReportCard
+                userName={userName}
+                currentEmotion={lastEmotion}
+                actions={
+                  <div className={`flex gap-2 ${uiState === 'report' ? 'animate-fade-in-delayed' : ''}`}>
+                    {/* 좌측 primary: 감정 표현하기 */}
+                    <button
+                      onClick={() => {
+                        if (showStatsSheet) setShowStatsSheet(false);
+                        setUiState('input');
+                      }}
+                      disabled={uiState === 'report'}
+                      aria-label="감정 표현하기"
+                      className="flex-[2] h-11 rounded-xl text-on-primary font-gowun text-sm font-bold flex items-center justify-center gap-1.5 transition-all duration-200 disabled:opacity-50 disabled:cursor-default active:scale-[0.97] hover:shadow-md"
+                      style={{
+                        background: 'linear-gradient(135deg, #FF9ECD 0%, #FFD1DC 100%)',
+                        boxShadow: '0 2px 8px rgba(255, 158, 205, 0.35)',
+                      }}
+                    >
+                      <span className="material-symbols-outlined text-lg" style={{ fontVariationSettings: "'FILL' 1" }} aria-hidden="true">edit_note</span>
+                      감정 표현하기
+                    </button>
 
-            {/* SPEC-UI-002: 듀얼 CTA 레이아웃 */}
-            <div className={`w-full max-w-md flex gap-3 ${uiState === 'report' ? 'animate-fade-in-delayed' : ''}`}>
-              {/* 좌측: 감정 표현하기 (기존) */}
-              <button
-                onClick={() => {
-                  // AC-010: 바텀시트가 열린 상태에서 먼저 닫기
-                  if (showStatsSheet) {
-                    setShowStatsSheet(false);
-                  }
-                  setUiState('input');
-                }}
-                disabled={uiState === 'report'}
-                aria-label="감정 표현하기"
-                className="flex-1 h-14 rounded-full bg-accent text-on-primary font-gamja text-lg font-bold shadow-lg hover:scale-[0.98] active:scale-95 transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-default hover:shadow-xl hover:-translate-y-0.5"
-                style={{
-                  background: 'linear-gradient(135deg, #FF9ECD 0%, #FFD1DC 100%)',
-                  boxShadow: '0 4px 14px rgba(255, 158, 205, 0.4)',
-                }}
-              >
-                <span className="material-symbols-outlined text-2xl" style={{ fontVariationSettings: "'FILL' 1" }} aria-hidden="true">edit_note</span>
-                감정 표현하기
-              </button>
-
-              {/* 우측: 감정 통계 보기 (신규) */}
-              <button
-                ref={statsButtonRef}
-                onClick={() => setShowStatsSheet(true)}
-                disabled={uiState !== 'idle'}
-                aria-label="감정 통계 보기"
-                className="flex-1 h-14 rounded-full bg-transparent border border-accent text-accent font-gamja text-lg font-bold hover:scale-[0.98] active:scale-95 transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-default hover:shadow-xl hover:-translate-y-0.5"
-              >
-                <span className="material-symbols-outlined text-2xl" style={{ fontVariationSettings: "'FILL' 1" }} aria-hidden="true">bar_chart</span>
-                통계 보기
-              </button>
+                    {/* 우측 secondary: 통계 보기 (아이콘만, 정사각형) */}
+                    <button
+                      ref={statsButtonRef}
+                      onClick={() => setShowStatsSheet(true)}
+                      disabled={uiState !== 'idle'}
+                      aria-label="감정 통계 보기"
+                      className="w-11 h-11 rounded-xl bg-white/40 dark:bg-white/10 border border-accent/40 text-accent flex items-center justify-center transition-all duration-200 disabled:opacity-50 disabled:cursor-default active:scale-[0.97] hover:bg-white/60 hover:shadow-md"
+                    >
+                      <span className="material-symbols-outlined text-xl" style={{ fontVariationSettings: "'FILL' 1" }} aria-hidden="true">bar_chart</span>
+                    </button>
+                  </div>
+                }
+              />
             </div>
           </div>
         )}
       </main>
+
+      {/* 전역 BottomNav (햄버거 메뉴 대체) — input 모드에서는 입력폼과 충돌하므로 숨김 */}
+      {uiState !== 'input' && <BottomNav activeTab="jelly" />}
 
       {/* SPEC-TOUCH-001: 하트 파티클 오버레이 */}
       {heartParticles.length > 0 && (

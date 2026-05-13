@@ -6,37 +6,111 @@ interface BottomNavProps {
   activeTab?: 'jelly' | 'history' | 'garden';
 }
 
-export default function BottomNav({ activeTab = 'jelly' }: BottomNavProps) {
+/**
+ * 플로팅 캡슐형 BottomNav
+ * - 화면 하단에서 16px 떠있는 글래스 카드 형태
+ * - 활성 탭: 핑크 그라데이션 + 위로 살짝 떠오름 + 도트 인디케이터
+ * - 비활성: 부드러운 회색, 호버 시 살짝 강조
+ * @MX:ANCHOR: 전역 내비게이션 - home/diary/settings 3개 페이지에서 공유
+ * @MX:REASON: 햄버거 메뉴 대체 + 서비스의 "이쁘고 귀여운" 브랜드 컨셉 반영
+ */
+export default function BottomNav({ activeTab }: BottomNavProps) {
   const tabs = [
-    { id: 'jelly', label: 'Jelly', icon: 'pets', href: '/home' },
-    { id: 'history', label: 'History', icon: 'analytics', href: '/diary' },
-    { id: 'garden', label: 'Garden', icon: 'eco', href: '/settings' },
+    { id: 'jelly', label: '젤리', icon: 'bubble_chart', href: '/home' },
+    { id: 'history', label: '기록', icon: 'auto_stories', href: '/diary' },
+    { id: 'garden', label: '설정', icon: 'tune', href: '/settings' },
   ] as const;
 
   return (
-    <nav className="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pb-6 pt-3 bg-surface-container/80 backdrop-blur-lg border-t border-white/20 rounded-t-lg shadow-sm nav-safe-bottom">
-      {tabs.map((tab) => {
-        const isActive = activeTab === tab.id;
-        return (
-          <Link
-            key={tab.id}
-            href={tab.href}
-            className={`flex flex-col items-center justify-center active:scale-95 transition-all duration-300 ${
-              isActive
-                ? 'bg-primary-container text-on-primary-container rounded-xl px-4 py-1'
-                : 'text-text-primary px-4 py-1 hover:bg-surface-variant/50'
-            }`}
-          >
-            <span
-              className="material-symbols-outlined"
-              style={{ fontVariationSettings: isActive ? '"FILL" 1, "wght" 400, "GRAD" 0, "opsz" 24' : '"FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24' }}
-            >
-              {tab.icon}
-            </span>
-            <span className="font-caption text-caption">{tab.label}</span>
-          </Link>
-        );
-      })}
+    <nav
+      aria-label="주요 메뉴"
+      className="fixed bottom-0 left-0 right-0 z-50 px-4 pb-4 pt-2 nav-safe-bottom pointer-events-none"
+    >
+      <div className="max-w-md mx-auto pointer-events-auto">
+        <div
+          className="relative bg-white/70 dark:bg-gray-900/70 backdrop-blur-2xl rounded-[28px] border border-white/60 dark:border-white/10 px-3 py-2"
+          style={{
+            boxShadow: '0 10px 36px rgba(255, 158, 205, 0.22), 0 2px 8px rgba(0, 0, 0, 0.04)',
+          }}
+        >
+          <div className="flex items-stretch justify-around">
+            {tabs.map((tab) => {
+              const isActive = activeTab === tab.id;
+              return (
+                <Link
+                  key={tab.id}
+                  href={tab.href}
+                  aria-current={isActive ? 'page' : undefined}
+                  aria-label={tab.label}
+                  className="relative flex-1 flex flex-col items-center justify-center py-1 group focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 rounded-2xl"
+                >
+                  {/* 활성 도트 인디케이터 (캡슐 상단) */}
+                  {isActive && (
+                    <span
+                      aria-hidden="true"
+                      className="absolute -top-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-accent animate-pulse"
+                      style={{ boxShadow: '0 0 10px rgba(255, 158, 205, 0.9)' }}
+                    />
+                  )}
+
+                  {/* 아이콘 캡슐 */}
+                  <div
+                    className={`relative flex items-center justify-center w-11 h-11 rounded-2xl transition-all duration-300 ease-out ${
+                      isActive
+                        ? '-translate-y-1.5 scale-105'
+                        : 'group-hover:bg-surface-variant/40 group-active:scale-95'
+                    }`}
+                    style={
+                      isActive
+                        ? {
+                            background:
+                              'linear-gradient(135deg, #FF9ECD 0%, #FFD1DC 60%, #FFE4EC 100%)',
+                            boxShadow:
+                              '0 6px 16px rgba(255, 158, 205, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.6)',
+                          }
+                        : undefined
+                    }
+                  >
+                    <span
+                      className={`material-symbols-outlined transition-all duration-300 ${
+                        isActive ? 'text-white' : 'text-on-surface-variant/80'
+                      }`}
+                      style={{
+                        fontSize: isActive ? '26px' : '24px',
+                        fontVariationSettings: isActive
+                          ? '"FILL" 1, "wght" 500, "GRAD" 0, "opsz" 24'
+                          : '"FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24',
+                      }}
+                    >
+                      {tab.icon}
+                    </span>
+
+                    {/* 활성 시 미세 스파클 장식 */}
+                    {isActive && (
+                      <span
+                        aria-hidden="true"
+                        className="absolute -top-1 -right-1 text-white"
+                        style={{ fontSize: '10px' }}
+                      >
+                        ✦
+                      </span>
+                    )}
+                  </div>
+
+                  {/* 라벨 */}
+                  <span
+                    className={`font-gowun text-[11px] mt-0.5 leading-none transition-all duration-300 ${
+                      isActive ? 'text-accent font-bold' : 'text-on-surface-variant/70'
+                    }`}
+                  >
+                    {tab.label}
+                  </span>
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      </div>
     </nav>
   );
 }

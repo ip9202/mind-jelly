@@ -234,6 +234,36 @@ body {
   75% { transform: translate(-15px, -5px) scale(1.05); }
 }
 
+/* SPEC-TOUCH-001: 터치 바운스 - squash & stretch 디즈니 원리 */
+/* 980ms cubic-bezier로 크고 느린 위→정점→착지 + 변형 */
+@keyframes jelly-bounce-pop {
+  0% {
+    transform: translateY(0) scale(1, 1);
+    animation-timing-function: cubic-bezier(0.22, 0.61, 0.36, 1);
+  }
+  12% {
+    transform: translateY(-22px) scale(0.94, 1.1);
+  }
+  48% {
+    transform: translateY(-140px) scale(1.06, 0.92);
+    animation-timing-function: cubic-bezier(0.55, 0.06, 0.68, 0.19);
+  }
+  82% {
+    transform: translateY(-6px) scale(1, 1);
+    animation-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  93% {
+    transform: translateY(5px) scale(1.08, 0.9);
+  }
+  100% {
+    transform: translateY(0) scale(1, 1);
+  }
+}
+
+.jelly-bounce-pop {
+  animation: jelly-bounce-pop 980ms forwards;
+}
+
 /* 블롭 형태 미세 진동 - CSS 변수 기반 border-radius 전환 */
 @keyframes jelly-wobble {
   0%, 100% { border-radius: var(--jelly-br1); }

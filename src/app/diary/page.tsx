@@ -6,7 +6,7 @@ import { diaryStore } from '@/stores/diaryStore';
 import type { DiaryEntry } from '@/types/diary';
 import type { EmotionType } from '@/types/emotion';
 import { EMOTION_COLORS } from '@/lib/constants/emotion';
-import NavMenu from '@/components/layout/NavMenu';
+import BottomNav from '@/components/layout/BottomNav';
 
 const emptySubscribe = () => () => {};
 
@@ -209,39 +209,32 @@ export default function DiaryPage() {
   );
 
   return (
-    <div className="text-on-background min-h-screen pb-6 font-gowun">
-      {/* 햄버거 메뉴 - 우측 상단 플로팅 */}
-      <div className="fixed top-4 right-4 z-50">
-        <NavMenu activeTab="history" />
-      </div>
-
+    <div className="text-on-background min-h-screen pb-24 font-gowun">
       <main id="main-content" className="px-[20px] mt-[16px] space-y-[24px]">
         {/* Calendar Section */}
         <section role="group" aria-label="달력" className="glass-card rounded-[20px] p-[16px] shadow-sm relative overflow-hidden">
-          <div className="flex justify-between items-center mb-[8px]">
-            <span className="text-primary font-dongle text-[28px] font-normal">
+          <div className="grid grid-cols-3 items-center mb-[8px]">
+            <button
+              onClick={goToPrevMonth}
+              className="cursor-pointer justify-self-start"
+              aria-label="이전 달"
+            >
+              <span className="material-symbols-outlined text-on-surface-variant">
+                chevron_left
+              </span>
+            </button>
+            <span className="justify-self-center text-primary font-gowun text-lg font-bold leading-tight">
               {formatMonthKo(currentYear, currentMonth)}
             </span>
-            <div className="flex gap-[4px]">
-              <button
-                onClick={goToPrevMonth}
-                className="cursor-pointer"
-                aria-label="이전 달"
-              >
-                <span className="material-symbols-outlined text-on-surface-variant">
-                  chevron_left
-                </span>
-              </button>
-              <button
-                onClick={goToNextMonth}
-                className="cursor-pointer"
-                aria-label="다음 달"
-              >
-                <span className="material-symbols-outlined text-on-surface-variant">
-                  chevron_right
-                </span>
-              </button>
-            </div>
+            <button
+              onClick={goToNextMonth}
+              className="cursor-pointer justify-self-end"
+              aria-label="다음 달"
+            >
+              <span className="material-symbols-outlined text-on-surface-variant">
+                chevron_right
+              </span>
+            </button>
           </div>
           <div className="grid grid-cols-7 gap-2 text-center">
             {WEEK_HEADERS.map((day) => (
@@ -291,7 +284,7 @@ export default function DiaryPage() {
 
         {/* Emotion Timeline */}
         <section className="space-y-[12px]">
-          <h2 className="text-primary px-1 font-gowun text-[24px] font-bold">
+          <h2 className="font-gowun text-xl font-bold text-primary leading-tight px-2">
             타임라인
           </h2>
 
@@ -318,6 +311,8 @@ export default function DiaryPage() {
         </section>
       </main>
 
+      {/* 전역 BottomNav (햄버거 메뉴 대체) */}
+      <BottomNav activeTab="history" />
     </div>
   );
 }

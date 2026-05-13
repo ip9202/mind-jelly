@@ -13,7 +13,7 @@ import {
   getMyProfile,
   checkFriendshipStatus,
 } from '@/lib/supabase/db';
-import NavMenu from '@/components/layout/NavMenu';
+import BottomNav from '@/components/layout/BottomNav';
 
 type Tab = 'search' | 'list' | 'feed';
 
@@ -548,12 +548,7 @@ export default function FriendsPage() {
   ];
 
   return (
-    <div className="bg-background text-on-surface font-body-md min-h-screen overflow-x-hidden">
-      {/* 햄버거 메뉴 - 우측 상단 플로팅 */}
-      <div className="fixed top-4 right-4 z-50">
-        <NavMenu activeTab="friends" />
-      </div>
-
+    <div className="bg-background text-on-surface font-body-md min-h-screen overflow-x-hidden pb-24">
       <main className="mt-4 px-[20px] pb-8 space-y-[12px]">
         {/* Tab bar */}
         <div className="bg-surface-container rounded-full p-1 flex gap-1">
@@ -596,6 +591,9 @@ export default function FriendsPage() {
         <div className="absolute top-[10%] right-[5%] w-64 h-64 bg-primary-container rounded-full blur-[80px]"></div>
         <div className="absolute bottom-[20%] left-[5%] w-48 h-48 bg-secondary-container rounded-full blur-[60px]"></div>
       </div>
+
+      {/* 전역 BottomNav (friends 탭은 BottomNav에 없으므로 activeTab 미지정) */}
+      <BottomNav />
     </div>
   );
 }

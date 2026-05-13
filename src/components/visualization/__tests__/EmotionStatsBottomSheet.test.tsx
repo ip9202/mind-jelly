@@ -149,7 +149,7 @@ describe('EmotionStatsBottomSheet - SPEC-UI-002', () => {
     // window.matchMedia mock (jsdom에 없음)
     Object.defineProperty(window, 'matchMedia', {
       writable: true,
-      // @ts-ignore - jest.fn() mock 타입 무시
+      // @ts-expect-error - jest.fn() mock 타입 무시
       value: jest.fn().mockImplementation((query: string) => ({
         matches: false,
         media: query,
@@ -391,7 +391,7 @@ describe('EmotionStatsBottomSheet - SPEC-UI-002', () => {
   describe('AC-013: reduced-motion 대응', () => {
     it('prefers-reduced-motion이 설정되면 애니메이션 없이 즉시 표시되어야 함', async () => {
       // reduced-motion matchMedia mock
-      // @ts-ignore - jest.fn() mock 타입 무시
+      // @ts-expect-error - jest.fn() mock 타입 무시
       window.matchMedia = jest.fn().mockImplementation((query: string) => ({
         matches: query === '(prefers-reduced-motion: reduce)',
         media: query,

@@ -14,8 +14,8 @@ interface UsePhysicsInitOptions {
   matterReady: boolean;
   /** 동적으로 로드된 Matter.js 모듈 참조 */
   matterRef: React.RefObject<typeof import('matter-js') | null>;
-  /** 젤리 위치 업데이트 콜백 */
-  setJellyPos: (pos: { x: number; y: number }) => void;
+  /** 젤리 위치 업데이트 콜백 (useRef로 변경하여 리렌링 방지) */
+  jellyPosRef: React.MutableRefObject<{ x: number; y: number }>;
 }
 
 /**
@@ -36,7 +36,7 @@ interface UsePhysicsInitReturn {
  * 언마운트 시 모든 리소스를 자동으로 정리한다.
  */
 export function usePhysicsInit(options: UsePhysicsInitOptions): UsePhysicsInitReturn {
-  const { matterReady, matterRef, setJellyPos } = options;
+  const { matterReady, matterRef, jellyPosRef } = options;
 
   const engineRef = useRef<Engine | null>(null);
   const collisionSetupRef = useRef(false);
@@ -59,21 +59,25 @@ export function usePhysicsInit(options: UsePhysicsInitOptions): UsePhysicsInitRe
       engineRef.current = engine;
       const Matter = matterRef.current!;
 
-      // 전체 시뮬레이션 속도 절반 (젤리/구슬 동작이 시각적으로 보이도록)
-      engine.timing.timeScale = 0.5;
+      // 시뮬레이션 속도 기본값
+      engine.timing.timeScale = 1.0;
+
+      // 중력 설정 (떠다님 + 구슬 낙하용, 표준)
+      engine.gravity.y = 1;
 
       // 캔버스 논리 크기 (모바일에서 축소 렌더링)
       const W = 800;
       const H = 600;
       const cx = W / 2;
-      const cy = H * 0.4;
+      const cy = H * 0.55; // 캔버스 중앙보다 살짝 아래
 
       // 젤리 바디 생성
       const jellyBody = Matter.Bodies.circle(cx, cy, 40, {
         label: 'jelly',
-        restitution: 0.5,
-        friction: 0.1,
-        density: 0.002,
+        restitution: 0.6,
+        friction: 0.05,
+        frictionAir: 0.015, // 풍선 같은 가벼운 공기 저항
+        density: 0.001,
       });
       Matter.Composite.add(engine.world, jellyBody);
 
@@ -138,13 +142,25 @@ export function usePhysicsInit(options: UsePhysicsInitOptions): UsePhysicsInitRe
           const allBodies = Matter.Composite.allBodies(eng.world);
           const jelly = allBodies.find((b) => b.label === 'jelly');
           if (jelly) {
-            setJellyPos({ x: jelly.position.x, y: jelly.position.y });
+            jellyPosRef.current = { x: jelly.position.x, y: jelly.position.y };
 
-            // 젤리 중앙 복귀 스프링 힘 (항상 중앙으로 약하게 당김)
-            const springK = 0.00015;
+            // 속도 제한 (부드러운 떠다님)
+            const maxSpeed = 15;
+            const speed = Math.sqrt(jelly.velocity.x ** 2 + jelly.velocity.y ** 2);
+            if (speed > maxSpeed) {
+              const scale = maxSpeed / speed;
+              Matter.Body.setVelocity(jelly, {
+                x: jelly.velocity.x * scale,
+                y: jelly.velocity.y * scale,
+              });
+            }
+
+            // 젤리 중앙 복귀 스프링 힘
+            const springKX = 0.00006;
+            const springKY = 0.00015;
             Matter.Body.applyForce(jelly, jelly.position, {
-              x: (cx - jelly.position.x) * springK,
-              y: (cy - jelly.position.y) * springK,
+              x: (cx - jelly.position.x) * springKX,
+              y: (cy - jelly.position.y) * springKY,
             });
 
             // 수평 둥둥 떠다니는 힘 - sin파로 좌우 드리프트
@@ -159,12 +175,13 @@ export function usePhysicsInit(options: UsePhysicsInitOptions): UsePhysicsInitRe
             if (beadBodies.length > 0) {
               applyMagneticField(beadBodies, jelly.position);
 
-              // 구슬 부유력: 중력의 40%를 상쇄하여 가벼운 부유감
+              // 구슬 부유력: 중력의 70%를 상쇄하여 천천히 떨어짐
+              // @MX:NOTE: 0.8은 자기장과의 평형으로 정지 발생 → 0.7로 완화 (이전 -0.6 대비 약 25% 느림)
               const gScale = eng.gravity.scale ?? 0.001;
               beadBodies.forEach((bead) => {
                 Matter.Body.applyForce(bead, bead.position, {
                   x: 0,
-                  y: -0.6 * bead.mass * eng.gravity.y * gScale,
+                  y: -0.7 * bead.mass * eng.gravity.y * gScale,
                 });
               });
 
@@ -187,7 +204,7 @@ export function usePhysicsInit(options: UsePhysicsInitOptions): UsePhysicsInitRe
       };
       animRef.current = requestAnimationFrame(track);
     },
-    [matterReady, matterRef, setJellyPos],
+    [matterReady, matterRef, jellyPosRef],
   );
 
   return { engineRef, initPhysics };

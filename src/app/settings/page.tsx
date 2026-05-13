@@ -6,7 +6,7 @@ import { diaryStore } from '@/stores/diaryStore';
 import { jellyStore } from '@/stores/jellyStore';
 import { JELLY_SHAPE_CONFIGS } from '@/lib/constants/jellyShapes';
 import type { JellyShape } from '@/types/physics';
-import NavMenu from '@/components/layout/NavMenu';
+import BottomNav from '@/components/layout/BottomNav';
 
 function ProfileSection() {
   const supabaseUserId = diaryStore((s) => s.supabaseUserId);
@@ -265,12 +265,7 @@ function EmotionPersistenceSection() {
 
 export default function SettingsPage() {
   return (
-    <div className="bg-background text-on-surface font-body-md min-h-screen overflow-x-hidden">
-      {/* 햄버거 메뉴 - 우측 상단 플로팅 */}
-      <div className="fixed top-4 right-4 z-50">
-        <NavMenu activeTab="garden" />
-      </div>
-
+    <div className="bg-background text-on-surface font-body-md min-h-screen overflow-x-hidden pb-24">
       <main className="mt-4 px-[20px] space-y-[12px]">
         <ProfileSection />
 
@@ -311,6 +306,9 @@ export default function SettingsPage() {
         <div className="absolute top-[10%] right-[5%] w-64 h-64 bg-primary-container rounded-full blur-[80px]"></div>
         <div className="absolute bottom-[20%] left-[5%] w-48 h-48 bg-secondary-container rounded-full blur-[60px]"></div>
       </div>
+
+      {/* 전역 BottomNav (햄버거 메뉴 대체) */}
+      <BottomNav activeTab="garden" />
     </div>
   );
 }

@@ -232,35 +232,41 @@ export function EmotionInput({
         </span>
       </div>
 
-      {/* 제출 버튼 + 로딩 */}
-      {isAnalyzing ? (
-        <div
-          data-testid="loading-indicator"
-          className="flex items-center justify-center gap-2 py-3 text-primary"
-          aria-busy="true"
-        >
-          <span className="inline-block w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" aria-hidden="true" />
-          <span className="text-sm font-medium">분석 중...</span>
-          <span className="sr-only" aria-live="polite">감정을 분석하고 있습니다...</span>
-        </div>
-      ) : (
-        <button
-          onClick={handleSubmit}
-          disabled={isSubmitDisabled}
-          aria-label="감정 분석하기"
-          aria-busy={isAnalyzing}
-          className="w-full h-14 rounded-full bg-accent text-on-primary font-gamja text-lg font-bold shadow-lg hover:scale-[0.98] active:scale-95 transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed hover:shadow-xl hover:-translate-y-0.5"
-          style={{
-            background: 'linear-gradient(135deg, #FF9ECD 0%, #FFD1DC 100%)',
-            boxShadow: '0 4px 14px rgba(255, 158, 205, 0.4)',
-          }}
-        >
-          <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.3375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z" />
-          </svg>
-          감정 분석
-        </button>
-      )}
+      {/* 제출 버튼 (로딩 상태 통합으로 layout shift 제거) */}
+      <button
+        onClick={handleSubmit}
+        disabled={isSubmitDisabled}
+        aria-label="감정 분석하기"
+        aria-busy={isAnalyzing}
+        data-testid={isAnalyzing ? 'loading-indicator' : undefined}
+        className="w-full h-11 rounded-xl text-on-primary font-gowun text-sm font-bold flex items-center justify-center gap-1.5 transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.97] hover:shadow-md"
+        style={{
+          background: 'linear-gradient(135deg, #FF9ECD 0%, #FFD1DC 100%)',
+          boxShadow: '0 2px 8px rgba(255, 158, 205, 0.35)',
+        }}
+      >
+        {isAnalyzing ? (
+          <>
+            <span
+              className="inline-block w-4 h-4 border-2 border-white/80 border-t-transparent rounded-full animate-spin"
+              aria-hidden="true"
+            />
+            <span>분석 중...</span>
+            <span className="sr-only" aria-live="polite">감정을 분석하고 있습니다...</span>
+          </>
+        ) : (
+          <>
+            <span
+              className="material-symbols-outlined text-lg"
+              style={{ fontVariationSettings: "'FILL' 1" }}
+              aria-hidden="true"
+            >
+              auto_awesome
+            </span>
+            <span>감정 분석</span>
+          </>
+        )}
+      </button>
     </div>
   );
 }

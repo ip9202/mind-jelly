@@ -17,11 +17,13 @@ interface JellyRendererProps {
   emotion?: EmotionType | null;
   // 사용자가 선택한 젤리 외형 모양 (기본값: 'circle')
   jellyShape?: JellyShape;
+  // SPEC-TOUCH-001: CSS keyframe 바운스 트리거
+  bounceKey?: number;
 }
 
 // @MX:ANCHOR: 3D 글로시 풍선 젤리 렌더러 (홈/감정플로우/다이어리 3곳 이상에서 사용)
 // @MX:REASON: SVG 네이티브 렌더링 + radialGradient + SMIL 애니메이션으로 풍선형 3D 입체감 구현
-export function JellyRenderer({ bodies, face, emotionColor, emotion, jellyShape }: JellyRendererProps) {
+export function JellyRenderer({ bodies, face, emotionColor, emotion, jellyShape, bounceKey }: JellyRendererProps) {
   if (bodies.length === 0) return null;
 
   const jelly = bodies[0];
@@ -72,7 +74,8 @@ export function JellyRenderer({ bodies, face, emotionColor, emotion, jellyShape 
   return (
     <div
       data-testid="jelly-renderer"
-      className="absolute pointer-events-none"
+      key={bounceKey ? `bounce-${bounceKey}` : 'idle'}
+      className={`absolute${bounceKey ? ' jelly-bounce-pop' : ''}`}
       style={{
         left: cx - r * 2.5,
         top: cy - r * 2.5,
@@ -152,7 +155,7 @@ export function JellyRenderer({ bodies, face, emotionColor, emotion, jellyShape 
 
         {/* 표정 그룹 - 젤리 바디와 함께 움직이도록 mask 적용 */}
         <g mask="url(#jelly-mask)" className="jelly-face">
-          {/* eating은 emotion보다 우선: 구슬 먹는 애니메이션이 감정 표정을 덮어씀 */}
+          {/* eating과 happy는 emotion보다 우선: 구슬 먹는 애니메이션과 터치 반응이 감정 표정을 덮어씀 */}
           {face === 'eating' ? (
             <>
               <path
@@ -172,6 +175,19 @@ export function JellyRenderer({ bodies, face, emotionColor, emotion, jellyShape 
                 fill="rgba(80, 45, 55, 0.50)"
               />
             </>
+          ) : face === 'happy' ? (
+            // SPEC-TOUCH-001 REQ-TOUCH-002: happy 표정 (^ ^ 눈 + 큰 U자 미소)
+            <path
+              d={`
+                M 0.34 ${faceOffset.eyeY + 0.02} Q 0.38 ${faceOffset.eyeY - 0.04} 0.42 ${faceOffset.eyeY + 0.02}
+                M 0.58 ${faceOffset.eyeY + 0.02} Q 0.62 ${faceOffset.eyeY - 0.04} 0.66 ${faceOffset.eyeY + 0.02}
+                M 0.30 ${faceOffset.mouthY - 0.02} Q 0.50 ${faceOffset.mouthY + 0.18} 0.70 ${faceOffset.mouthY - 0.02}
+              `}
+              stroke="#7a5761"
+              strokeWidth="0.008"
+              fill="none"
+              strokeLinecap="round"
+            />
           ) : emotion && EMOTION_THEME[emotion] ? (
             // 감정 표정 (SVG 기반) - faceOffset 적용
             <>
@@ -200,20 +216,6 @@ export function JellyRenderer({ bodies, face, emotionColor, emotion, jellyShape 
                     M 0.34 ${faceOffset.eyeY - 0.01} L 0.42 ${faceOffset.eyeY - 0.01}
                     M 0.58 ${faceOffset.eyeY - 0.01} L 0.66 ${faceOffset.eyeY - 0.01}
                     M 0.38 ${faceOffset.mouthY - 0.06} Q 0.50 ${faceOffset.mouthY + 0.06} 0.62 ${faceOffset.mouthY - 0.06}
-                  `}
-                  stroke="#7a5761"
-                  strokeWidth="0.008"
-                  fill="none"
-                  strokeLinecap="round"
-                />
-              )}
-              {/* SPEC-TOUCH-001 REQ-TOUCH-002: happy 표정 (^ ^ 눈 + 큰 U자 미소) */}
-              {face === 'happy' && (
-                <path
-                  d={`
-                    M 0.34 ${faceOffset.eyeY + 0.02} Q 0.38 ${faceOffset.eyeY - 0.04} 0.42 ${faceOffset.eyeY + 0.02}
-                    M 0.58 ${faceOffset.eyeY + 0.02} Q 0.62 ${faceOffset.eyeY - 0.04} 0.66 ${faceOffset.eyeY + 0.02}
-                    M 0.30 ${faceOffset.mouthY - 0.02} Q 0.50 ${faceOffset.mouthY + 0.18} 0.70 ${faceOffset.mouthY - 0.02}
                   `}
                   stroke="#7a5761"
                   strokeWidth="0.008"
