@@ -11,7 +11,7 @@ import { PieChart, Pie, ResponsiveContainer, Cell, Tooltip } from 'recharts';
 import { EmotionFace } from '@/components/jelly/EmotionFace';
 import { useEmotionChartData } from '@/hooks/useEmotionChartData';
 import { getPieChartAnimationProps } from './ChartAnimations';
-import { UI_COLORS } from '@/lib/constants/emotion';
+import { EMOTION_THEME, UI_COLORS } from '@/lib/constants/emotion';
 import type { EmotionDistribution } from '@/types/emotion-chart';
 import type { EmotionType } from '@/types/emotion';
 
@@ -142,10 +142,16 @@ export function EmotionDonutChart({ selectedEmotion, onEmotionSelect }: EmotionD
               content={({ active, payload }) => {
                 if (!active || !payload || !payload.length) return null;
                 const data = payload[0].payload as DonutSector;
+
+                // emotionKey가 있으면 한글 라벨 사용, 없으면 name 사용 (기타의 경우)
+                const displayName = data.emotionKey && data.emotionKey in EMOTION_THEME
+                  ? EMOTION_THEME[data.emotionKey as EmotionType]?.label ?? data.name
+                  : data.name;
+
                 return (
                   <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-lg px-3 py-2 shadow-lg">
                     <p className="text-sm font-gamja font-medium text-gray-800 dark:text-gray-100">
-                      {data.name}: {data.value}%
+                      {displayName}: {data.value}%
                     </p>
                     <p className="text-xs font-jakarta text-gray-600 dark:text-gray-300">
                       {data.count}회
