@@ -148,13 +148,24 @@ describe('EmotionStatsBottomSheet - SPEC-UI-002', () => {
       expect(screen.getByTestId('weekly-trend-chart')).toBeInTheDocument();
     });
 
-    it('바텀시트 내부에 EmotionDonutChart가 렌더링되어야 함', async () => {
+    it('바텀시트 내부에 EmotionDonutChart가 탭 전환 후 렌더링되어야 함', async () => {
       const { EmotionStatsBottomSheet } = await import('../EmotionStatsBottomSheet');
       render(
         <EmotionStatsBottomSheet isOpen={true} onClose={mockOnClose} triggerRef={mockTriggerRef} />
       );
 
-      expect(screen.getByTestId('emotion-donut-chart')).toBeInTheDocument();
+      // 기본 상태에서는 WeeklyTrendChart만 렌더링됨
+      expect(screen.getByTestId('weekly-trend-chart')).toBeInTheDocument();
+      expect(screen.queryByTestId('emotion-donut-chart')).not.toBeInTheDocument();
+
+      // 도넛 탭으로 전환
+      const donutTabButton = screen.getByRole('button', { name: '도넛 차트' });
+      await userEvent.click(donutTabButton);
+
+      // 도넛 차트가 렌더링되는지 확인
+      await waitFor(() => {
+        expect(screen.getByTestId('emotion-donut-chart')).toBeInTheDocument();
+      });
     });
 
     it('드래그 핸들이 표시되어야 함', async () => {
@@ -280,8 +291,18 @@ describe('EmotionStatsBottomSheet - SPEC-UI-002', () => {
         <EmotionStatsBottomSheet isOpen={true} onClose={mockOnClose} triggerRef={mockTriggerRef} />
       );
 
+      // 먼저 도넛 탭으로 전환
+      const donutTabButton = screen.getByRole('button', { name: '도넛 차트' });
+      await userEvent.click(donutTabButton);
+
+      // 도넛 차트가 렌더링될 때까지 기다린 후 섹터 클릭
+      await waitFor(() => {
+        const sector = screen.getByTestId('donut-sector-joy');
+        expect(sector).toBeInTheDocument();
+      });
+
       const sector = screen.getByTestId('donut-sector-joy');
-      fireEvent.click(sector);
+      await userEvent.click(sector);
 
       const panel = screen.getByTestId('emotion-detail-panel');
       expect(panel).toHaveAttribute('data-open', 'true');

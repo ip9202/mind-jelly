@@ -30,7 +30,13 @@ const EMOTION_KO: Record<EmotionType, string> = {
  * 텍스트 기반 감정 입력 컴포넌트
  * M1-T6: textarea + 분석 요청 + 결과 표시
  */
-export function EmotionInput({ onCompleteAction }: { onCompleteAction?: () => void }) {
+export function EmotionInput({
+  onCompleteAction,
+  onCancel
+}: {
+  onCompleteAction?: () => void;
+  onCancel?: () => void;
+}) {
   const [text, setText] = useState('');
   const [result, setResult] = useState<{ emotion: EmotionType; confidence: number } | null>(null);
   const resetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -98,8 +104,28 @@ export function EmotionInput({ onCompleteAction }: { onCompleteAction?: () => vo
     }
   };
 
+  const handleCancel = useCallback(() => {
+    setText('');
+    setResult(null);
+    onCancel?.();
+  }, [onCancel]);
+
   return (
     <div className="bg-white/30 backdrop-blur-[12px] border border-white/20 rounded-3xl p-5 flex flex-col gap-3 shadow-[0_8px_32px_0_rgba(120,85,94,0.08)]">
+
+      {/* 취소 버튼 (상단 우측) */}
+      {onCancel && (
+        <button
+          onClick={handleCancel}
+          aria-label="입력 취소"
+          className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/60 hover:bg-white/80 flex items-center justify-center transition-all duration-200 shadow-sm hover:shadow-md"
+          style={{ marginTop: '-8px', marginRight: '-8px' }}
+        >
+          <span className="material-symbols-outlined text-on-surface-variant text-xl" aria-hidden="true">
+            close
+          </span>
+        </button>
+      )}
 
       {/* 결과 표시 */}
       {result && (

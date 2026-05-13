@@ -5,7 +5,7 @@
  * @MX:NOTE: diaryStore.entries 기반 실제 데이터 집계
  */
 
-import { useMemo, useRef } from 'react';
+import { useMemo } from 'react';
 import { diaryStore } from '@/stores/diaryStore';
 import { EMOTION_THEME } from '@/lib/constants/emotion';
 import {
@@ -60,12 +60,6 @@ export function useEmotionInsights(): EmotionInsightsResult {
 
   // @MX:NOTE: 현재 인사이트 - 가장 많이 느낀 감정 기반
   // @MX:NOTE: 렌더링마다 조언이 변경되지 않도록 useMemo로 안정화
-  // @MX:NOTE: 첫 렌더링 시에만 랜덤 인덱스 생성 (purity rule 준수)
-  const adviceIndexRef = useRef<number>(0);
-  if (adviceIndexRef.current === 0) {
-    adviceIndexRef.current = Math.floor(Math.random() * 10); // 초기화 시 한 번만 실행
-  }
-
   const advice = useMemo(() => {
     const dominantEmotion = topEmotions.length > 0
       ? topEmotions[0].emotion

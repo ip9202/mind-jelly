@@ -2,7 +2,7 @@
 
 import dynamic from 'next/dynamic';
 import { JellySkeleton } from '@/components/jelly/JellySkeleton';
-import { useEffect, useState, useRef, useMemo, useCallback, useSyncExternalStore } from 'react';
+import { useEffect, useState, useRef, useCallback, useSyncExternalStore } from 'react';
 import { jellyStore } from '@/stores/jellyStore';
 import { tossStore } from '@/stores/tossStore';
 import { usePhysicsInit } from './usePhysicsInit';
@@ -117,15 +117,22 @@ export default function HomePage() {
   });
 
   const currentState = jellyStore((s) => s.currentState);
-  const beadCount = jellyStore((s) => s.beadCount);
   const lastEmotion = jellyStore((s) => s.lastEmotion);
-  const emotionHistory = jellyStore((s) => s.emotionHistory);
-  const isAnalyzing = jellyStore((s) => s.isAnalyzing);
   const jellyName = jellyStore((s) => s.jellyName);
   const jellyShape = jellyStore((s) => s.jellyShape);
+  const isInitialized = jellyStore((s) => s.isInitialized);
 
   // M4-T5: Toss WebView 사용자 정보 (감정 리포트 개인화)
   const userInfo = tossStore((s) => s.userInfo);
+
+  // store의 lastEmotion 변경 시 로컬 시각 상태 동기화
+  // (checkDiaryAndReset으로 joy 리셋 시 visual 상태도 함께 갱신)
+  /* eslint-disable react-hooks/set-state-in-effect */
+  useEffect(() => {
+    setJellyVisualEmotion(lastEmotion);
+    setJellyVisualColor(EMOTION_COLORS[lastEmotion]);
+  }, [lastEmotion]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   // 감정 리포트에 표시할 사용자 이름 (WebView > 온보딩 jellyName)
   const userName = userInfo?.name || (jellyName && jellyName !== '내 젤리' ? jellyName : null);
@@ -202,8 +209,7 @@ export default function HomePage() {
           st.transitionState('idle');
         }
         setUiState('beads');
-        // 젤리가 원래 크기로 복원된 후 구슬 생성
-        jellyStore.getState().incrementBeadCount(5);
+        // 젤리가 원래 크기로 복원된 후 구슬 생성 (BeadGroup에 상수 5 전달)
       }, RESTORE_DURATION_MS);
       return () => clearTimeout(timer);
     }
@@ -276,21 +282,12 @@ export default function HomePage() {
 
   // 감정 분포 계산 (최근 분석 기록 기준)
 
-  // 마지막 분석 신뢰도
-  const lastConfidence = emotionHistory.length > 0 ? emotionHistory[emotionHistory.length - 1].confidence : null;
-
   // 감정 테마 (동적 배경용)
   const currentTheme = EMOTION_THEME[lastEmotion];
 
-  // 감정이 바뀔 때마다 조언 1개 랜덤 선택
-  const adviceIndex = useMemo(
-    // eslint-disable-next-line react-hooks/purity
-    () => Math.floor(Math.random() * EMOTION_THEME[lastEmotion].advice.length),
-    [lastEmotion],
-  );
-
   // 모바일 hydration 차단 방지: SSR에서도 전체 렌더링 (로딩 UI는 CSS로 처리)
-  if (!mounted) {
+  // isInitialized: 비동기 초기화(checkDiaryAndReset) 완료 전까지 스켈레톤 유지
+  if (!mounted || !isInitialized) {
     return (
       <div
         className="h-screen w-full flex flex-col overflow-hidden font-dongle text-on-surface"
@@ -398,8 +395,9 @@ export default function HomePage() {
                         emotion={jellyVisualEmotion}
                         jellyShape={jellyShape}
                       />
-                      {engineRef.current && (
-                        <BeadGroup count={beadCount} engine={engineRef.current} emotion={lastEmotion} />
+                      {/* 감정 분석 결과가 있을 때만 구슬 렌더링 */}
+                      {engineRef.current && uiState === 'beads' && (
+                        <BeadGroup count={5} engine={engineRef.current} emotion={lastEmotion} />
                       )}
                     </>
                   );
@@ -504,7 +502,10 @@ export default function HomePage() {
           style={{ bottom: (uiState === 'input' ? keyboardHeight : 0) + 24 }}
         >
           <div className="animate-slide-up">
-            <EmotionInput onCompleteAction={() => setUiState('restoring')} />
+            <EmotionInput
+              onCompleteAction={() => setUiState('restoring')}
+              onCancel={() => setUiState('idle')}
+            />
           </div>
         </section>
       )}

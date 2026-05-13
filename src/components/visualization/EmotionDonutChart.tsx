@@ -163,12 +163,12 @@ export function EmotionDonutChart({ selectedEmotion, onEmotionSelect }: EmotionD
               <div className="flex justify-center mb-1">
                 <EmotionFace emotion={mostFrequent.emotionKey} size={32} />
               </div>
-              <p className="text-2xl font-bold font-gamja text-gray-800 dark:text-gray-100">
+              <p className="text-2xl font-bold font-gamja text-white drop-shadow-sm">
                 {mostFrequent.percentage}%
               </p>
             </div>
           ) : (
-            <p className="text-gray-400 dark:text-gray-500 text-sm text-center px-4 font-gamja">
+            <p className="text-white/80 text-sm text-center px-4 font-gamja">
               아직 감정 데이터가 없어요
             </p>
           )}
@@ -178,7 +178,7 @@ export function EmotionDonutChart({ selectedEmotion, onEmotionSelect }: EmotionD
       {/* 선택된 감정 상세 정보 */}
       {selectedEmotion && (
         <div className="mt-4 p-3 bg-white/20 dark:bg-gray-700/30 rounded-xl backdrop-blur-sm" role="status" aria-live="polite">
-          <p className="text-sm font-gamja text-gray-700 dark:text-gray-200">
+          <p className="text-sm font-gamja text-white">
             <span className="font-medium">
               {selectedEmotion}
             </span>

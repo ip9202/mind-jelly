@@ -57,6 +57,7 @@ const SWIPE_THRESHOLD_PX = 50;
 export function EmotionStatsBottomSheet({ isOpen, onClose, triggerRef }: EmotionStatsBottomSheetProps) {
   const { distribution } = useEmotionChartData();
   const [selectedEmotion, setSelectedEmotion] = useState<EmotionType | null>(null);
+  const [chartTab, setChartTab] = useState<'trend' | 'donut'>('trend');
   const sheetRef = useRef<HTMLDivElement>(null);
   const touchStartY = useRef<number | null>(null);
 
@@ -170,14 +171,53 @@ export function EmotionStatsBottomSheet({ isOpen, onClose, triggerRef }: Emotion
           </button>
         </div>
 
+        {/* 탭 전환 버튼 */}
+        {hasData && (
+          <div className="flex gap-2 px-5 pb-3">
+            <button
+              onClick={() => setChartTab('trend')}
+              className={`flex-1 h-12 rounded-full text-sm font-gamja font-medium transition-all duration-300 min-h-[48px] focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${
+                chartTab === 'trend'
+                  ? 'bg-white dark:bg-gray-100 text-gray-800 shadow-sm'
+                  : 'bg-white/30 dark:bg-white/10 text-gray-700 dark:text-gray-200 hover:bg-white/50 dark:hover:bg-white/20'
+              }`}
+              aria-label="트렌드 차트"
+              aria-pressed={chartTab === 'trend'}
+            >
+              <span className="material-symbols-outlined text-base align-middle mr-1" aria-hidden="true">
+                show_chart
+              </span>
+              트렌드
+            </button>
+            <button
+              onClick={() => setChartTab('donut')}
+              className={`flex-1 h-12 rounded-full text-sm font-gamja font-medium transition-all duration-300 min-h-[48px] focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${
+                chartTab === 'donut'
+                  ? 'bg-white dark:bg-gray-100 text-gray-800 shadow-sm'
+                  : 'bg-white/30 dark:bg-white/10 text-gray-700 dark:text-gray-200 hover:bg-white/50 dark:hover:bg-white/20'
+              }`}
+              aria-label="도넛 차트"
+              aria-pressed={chartTab === 'donut'}
+            >
+              <span className="material-symbols-outlined text-base align-middle mr-1" aria-hidden="true">
+                donut_large
+              </span>
+              도넛
+            </button>
+          </div>
+        )}
+
         {/* REQ-SHEET-006: 차트 영역 */}
         {hasData ? (
-          <div className="px-5 pb-6 space-y-4">
-            <WeeklyTrendChart />
-            <EmotionDonutChart
-              selectedEmotion={selectedEmotion}
-              onEmotionSelect={setSelectedEmotion}
-            />
+          <div className="px-5 pb-6">
+            {chartTab === 'trend' ? (
+              <WeeklyTrendChart />
+            ) : (
+              <EmotionDonutChart
+                selectedEmotion={selectedEmotion}
+                onEmotionSelect={setSelectedEmotion}
+              />
+            )}
           </div>
         ) : (
           // AC-014: 빈 데이터 상태

@@ -35,10 +35,10 @@ function CustomTooltip({ active, payload, label }: TooltipProps<number, string>)
 
   return (
     <div
-      className="glass-card rounded-2xl border border-white/20 bg-white/10 backdrop-blur-md p-3 shadow-lg transition-all duration-300"
+      className="glass-card rounded-2xl border border-white/20 bg-white/95 dark:bg-gray-800/95 backdrop-blur-md p-3 shadow-lg transition-all duration-300"
       role="tooltip"
     >
-      <p className="text-white/90 dark:text-white/80 text-xs font-jakarta font-semibold mb-2 text-center">
+      <p className="text-gray-800 dark:text-gray-200 text-xs font-jakarta font-semibold mb-2 text-center">
         {formattedDate}
       </p>
       <table className="w-full text-xs" aria-label={`${formattedDate} 감정 빈도`}>
@@ -57,9 +57,9 @@ function CustomTooltip({ active, payload, label }: TooltipProps<number, string>)
                     style={{ backgroundColor: color }}
                     aria-hidden="true"
                   />
-                  <span className="text-white/80 dark:text-white/70 font-jakarta">{label}</span>
+                  <span className="text-gray-700 dark:text-gray-300 font-jakarta">{label}</span>
                 </td>
-                <td className="text-right text-white/90 dark:text-white/80 font-medium font-jakarta py-0.5">
+                <td className="text-right text-gray-900 dark:text-gray-100 font-medium font-jakarta py-0.5">
                   {value}
                 </td>
               </tr>
@@ -127,17 +127,14 @@ export function WeeklyTrendChart() {
   return (
     <div className="glass-card animate-draw-in rounded-3xl border border-white/20 bg-white/10 backdrop-blur-md dark:bg-gray-900/30 dark:border-white/10 p-4">
       {/* 뷰 전환 토글 버튼 */}
-      <div className="flex justify-between items-center mb-4">
-        <span className="material-symbols-outlined text-primary text-sm" style={{ fontVariationSettings: "'FILL' 1" }} aria-hidden="true">
-          show_chart
-        </span>
+      <div className="flex justify-end items-center mb-4">
         <div className="flex gap-2" role="group" aria-label="차트 기간 선택">
           <button
             onClick={() => setViewMode('weekly')}
             className={`px-3 py-2 rounded-full text-xs font-jakarta font-medium transition-all duration-300 min-h-[44px] min-w-[44px] focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-transparent ${
               viewMode === 'weekly'
                 ? 'bg-white dark:bg-gray-100 text-gray-800 shadow-sm'
-                : 'bg-white/20 dark:bg-white/10 text-white/70 hover:bg-white/30 dark:hover:bg-white/20'
+                : 'bg-white/30 dark:bg-white/20 text-gray-700 dark:text-gray-200 hover:bg-white/50 dark:hover:bg-white/30'
             }`}
             aria-label="주간 뷰"
             aria-pressed={viewMode === 'weekly'}
@@ -149,7 +146,7 @@ export function WeeklyTrendChart() {
             className={`px-3 py-2 rounded-full text-xs font-jakarta font-medium transition-all duration-300 min-h-[44px] min-w-[44px] focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-transparent ${
               viewMode === 'monthly'
                 ? 'bg-white dark:bg-gray-100 text-gray-800 shadow-sm'
-                : 'bg-white/20 dark:bg-white/10 text-white/70 hover:bg-white/30 dark:hover:bg-white/20'
+                : 'bg-white/30 dark:bg-white/20 text-gray-700 dark:text-gray-200 hover:bg-white/50 dark:hover:bg-white/30'
             }`}
             aria-label="월간 뷰"
             aria-pressed={viewMode === 'monthly'}
@@ -173,16 +170,16 @@ export function WeeklyTrendChart() {
             role="img"
             aria-label={`${viewMode === 'weekly' ? '주간' : '월간'} 감정 트렌드 차트`}
           >
-            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.2)" />
+            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.15)" />
             <XAxis
               dataKey="date"
               tickFormatter={formatXAxisLabel}
-              stroke="rgba(255,255,255,0.7)"
-              style={{ fontSize: '12px' }}
+              stroke="rgba(100,100,100,0.6)"
+              style={{ fontSize: '12px', fill: 'rgba(100,100,100,0.8)' }}
             />
             <YAxis
-              stroke="rgba(255,255,255,0.7)"
-              style={{ fontSize: '12px' }}
+              stroke="rgba(100,100,100,0.6)"
+              style={{ fontSize: '12px', fill: 'rgba(100,100,100,0.8)' }}
             />
             <Tooltip
               content={<CustomTooltip />}
