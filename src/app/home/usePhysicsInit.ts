@@ -102,10 +102,7 @@ export function usePhysicsInit(options: UsePhysicsInitOptions): UsePhysicsInitRe
           // 이미 eating 상태 — 유지 (추가 전이 불필요)
         }
 
-        // 구슬 개수 감소
-        state.decrementBeadCount();
-
-        // 남은 구슬 확인
+        // 남은 구슬 확인 (Matter.js 바디 기준)
         const remainingBeads = Matter.Composite.allBodies(engine.world)
           .filter((b) => b.label === 'bead').length;
 

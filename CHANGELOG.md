@@ -7,10 +7,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added (SPEC-UI-003)
+- 인사이트 탭 3-tier 대시보드 레이아웃
+  - Hero 섹션: 주간 TOP 3 감정 인라인 카드 (스트릭 헤더 통합)
+  - Achievement 섹션: 감정 스트릭 카드 (연속 기록 일수 표시)
+  - Trend 섹션: 감정 트렌드 분석 (주간 패턴 변화 감지)
+- 스트릭 카드 인라인 통합
+  - 상위 감정 카드 헤더에 스트릭 정보 표시
+  - 별도 섹션 제거로 화면 공간 최적화
+  - 연속 일수에 따른 동적 아이콘 표시
+- `EMOTION_TEXT_COLORS` 상수 추가
+  - 감정별 어두운 음영(shade) 색상 매핑
+  - 밝은 배경에서 가독성 확보 (SPEC-UI-003 개선)
+- 감정 키워드 추출 기능
+  - `emotion-insights.ts`에 키워드 추출 로직 추가
+  - 텍스트 감정 분석 후 주요 키워드 5개 추출
+
+### Changed (SPEC-UI-003)
+- `EmotionStatsBottomSheet` 구조 재설계
+  - 3단계 시각화(요약/시각화/인사이트)에서 3-tier 레이아웃으로 변경
+  - 인사이트 탭에 스트릭 및 트렌드 분석 통합
+  - 상단 감정 카드에 스트릭 헤더 인라인 통합
+- 바텀시트 UI 일관성 개선
+  - `EmotionStatsBottomSheet`와 `EmotionInput`에서 X 버튼 제거
+  - 드래그 핸들 추가 (36px x 4px, 회색 배경)
+  - 부드러운 드래그 팔로우 애니메이션 구현
+  - 스와이프 제스처로 닫기 기능 유지
+- `NavMenu` Friends 항목 숨김 처리
+  - `@MX:TODO` 태그로 추후 복구 가능하도록 처리
+  - 사용자 요청에 따른 일시적 메뉴 구성 변경
+
 ### Added (SPEC-UI-002)
 - 감정 통계 바텀시트 모달 (`EmotionStatsBottomSheet` 컴포넌트)
   - WeeklyTrendChart와 EmotionDonutChart를 바텀시트 내부에 렌더링
-  - 5가지 닫기 방법 지원 (백드롭 탭, 스와이프 다운, ESC 키, X 버튼, CTA 토글)
+  - 5가지 닫기 방법 지원 (백드롭 탭, 스와이프 다운, ESC 키, 드래그 핸들)
   - 부드러운 슬라이드 업/다운 애니메이션 (300ms/250ms)
   - WCAG 2.1 AA 접근성 준수 (포커스 트랩, aria-modal, 키보드 네비게이션)
   - 터치/마우스 제스처 지원 (드래그 핸들 스와이프)
@@ -31,11 +61,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 홈 화면(`src/app/home/page.tsx`) CTA 영역 수정
   - 단일 "감정 표현하기" 버튼 → 듀얼 CTA 레이아웃으로 변경
   - "감정 통계 보기" 버튼 클릭 시 바텀시트 오픈
+- 바텀시트 드래그 핸들 애니메이션 개선
+  - 드래그 중 실시간 transform 추적 (dragOffset 상태)
+  - 부드러운 드래그 팔로우 구현 (스프링 물리 시뮬레이션)
+  - 터치 시작/이동/종료 이벤트 핸들링 개선
 
 ### Removed (SPEC-UI-002)
 - `EmotionReportCard` 인라인 차트 그리드 렌더링 코드 제거
   - WeeklyTrendChart와 EmotionDonutChart의 인라인 표시 제거
   - 바텀시트 내부로만 렌더링되도록 변경
+- 바텀시트 X 버튼 제거 (SPEC-UI-003 UI 일관성 개선)
+  - `EmotionStatsBottomSheet`와 `EmotionInput`에서 X 닫기 버튼 제거
+  - 드래그 핸들과 스와이프 제스처로 닫기 기능 유지
+
+### Testing (SPEC-UI-003)
+- TDD 방식론(RED-GREEN-REFACTOR) 적용
+- 테스트 커버리지: 245개 테스트 전체 통과
+  - 바텀시트 드래그 애니메이션 테스트 추가
+  - 스트릭 카드 인라인 통합 테스트
+  - EMOTION_TEXT_COLORS 상수 테스트
+  - 접근성: 드래그 핸더 터치 타겟 크기 준수
 
 ### Testing (SPEC-UI-002)
 - TDD 방식론(RED-GREEN-REFACTOR) 적용
@@ -46,7 +91,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - EmotionStatsBottomSheet 컴포넌트 커버리지: 96%
 - 접근성 테스트: ARIA 속성, 포커스 관리, 키보드 네비게이션 검증
 
-### Technical Notes (SPEC-UI-002)
+### Technical Notes (SPEC-UI-003)
 - 바텀시트 최대 높이: 뷰포트의 85%
 - 바텀시트 최소 높이: 뷰포트의 60%
 - 드래그 핸들: 36px x 4px, 색상 `bg-gray-300`
@@ -55,6 +100,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 바텀시트 닫혀 있을 때 차트 컴포넌트 렌더링 안 함 (조건부 렌더링)
 - 애니메이션 60fps 유지 (CSS transform 기반)
 - 이모지 사용 ("📊") 대신 Lucide React 아이콘 사용 (`BarChart3`)
+- 스트릭 데이터 연속성 검증 로직 추가
+- 감정 키워드 추출 알고리즘: 빈도수 기반 상위 5개 선택
+
+### Technical Notes (SPEC-UI-002)
+- 드래그 애니메이션: 스프링 물리 시뮬레이션 (damping, stiffness)
+- 스와이프 감지: 50px 임계값 (SWIPE_THRESHOLD_PX)
+- 터치 이벤트 핸들링: touchstart, touchmove, touchend
+- 애니메이션 프레임: requestAnimationFrame 사용 (60fps 보장)
 
 ### Added (SPEC-UI-001)
 - 감정 리포트 시각화 기능

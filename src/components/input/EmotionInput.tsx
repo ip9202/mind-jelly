@@ -12,6 +12,8 @@ const MAX_TEXT_LENGTH = 500;
 const WARNING_THRESHOLD = 450;
 // @MX:NOTE: 결과 표시 후 자동 초기화 시간 (ms) — restoring 전환 전 짧은 대기
 const AUTO_RESET_MS = 1000;
+// @MX:NOTE: [AUTO] 스와이프 감지 최소 거리 (EmotionStatsBottomSheet와 동일)
+const SWIPE_THRESHOLD_PX = 50;
 
 // @MX:NOTE: 한국어 감정명 매핑
 const EMOTION_KO: Record<EmotionType, string> = {
@@ -32,14 +34,20 @@ const EMOTION_KO: Record<EmotionType, string> = {
  */
 export function EmotionInput({
   onCompleteAction,
-  onCancel
+  onCancelAction
 }: {
   onCompleteAction?: () => void;
-  onCancel?: () => void;
+  onCancelAction?: () => void;
 }) {
   const [text, setText] = useState('');
   const [result, setResult] = useState<{ emotion: EmotionType; confidence: number } | null>(null);
   const resetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // @MX:NOTE: [AUTO] 스와이프다운 감지용 터치 추적 refs
+  const touchStartY = useRef<number | null>(null);
+  const touchLastY = useRef<number | null>(null);
+  // @MX:NOTE: [AUTO] 드래그-팔로우 애니메이션 상태 (드래그 중 실시간 transform 추적)
+  const [dragOffset, setDragOffset] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
 
   const isAnalyzing = jellyStore((s) => s.isAnalyzing);
   const analysisError = jellyStore((s) => s.analysisError);
@@ -104,28 +112,69 @@ export function EmotionInput({
     }
   };
 
-  const handleCancel = useCallback(() => {
-    setText('');
-    setResult(null);
-    onCancel?.();
-  }, [onCancel]);
+  // @MX:NOTE: [AUTO] 드래그-팔로우: 터치 즉시 컨테이너가 손가락을 따라 이동
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    touchStartY.current = e.touches[0].clientY;
+    touchLastY.current = e.touches[0].clientY;
+    setIsDragging(true);
+  }, []);
+
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    if (touchStartY.current === null) return;
+
+    const currentY = e.touches[0].clientY;
+    const deltaY = currentY - touchStartY.current;
+
+    // 아래로만 드래그 허용 (양수 deltaY)
+    if (deltaY > 0) {
+      setDragOffset(deltaY);
+      touchLastY.current = currentY;
+    }
+  }, []);
+
+  const handleTouchEnd = useCallback(() => {
+    if (touchStartY.current === null || touchLastY.current === null) return;
+
+    const deltaY = touchLastY.current - touchStartY.current;
+
+    setIsDragging(false);
+
+    if (deltaY > SWIPE_THRESHOLD_PX) {
+      // 임계값 초과: 화면 밖으로 슬라이드 애니메이션 후 닫기
+      setDragOffset(window.innerHeight);
+      setTimeout(() => {
+        onCancelAction?.();
+        setDragOffset(0);
+      }, 300);
+    } else {
+      // 임계값 미만: 원래 위치로 스냅백
+      setDragOffset(0);
+    }
+
+    touchStartY.current = null;
+    touchLastY.current = null;
+  }, [onCancelAction]);
 
   return (
-    <div className="bg-white/30 backdrop-blur-[12px] border border-white/20 rounded-3xl p-5 flex flex-col gap-3 shadow-[0_8px_32px_0_rgba(120,85,94,0.08)]">
+    <div
+      className="bg-white/30 backdrop-blur-[12px] border border-white/20 rounded-3xl p-5 flex flex-col gap-3 shadow-[0_8px_32px_0_rgba(120,85,94,0.08)]"
+      style={{
+        transform: `translateY(${dragOffset}px)`,
+        transition: isDragging ? 'none' : 'transform 0.3s ease-out',
+        willChange: isDragging ? 'transform' : undefined,
+      }}
+    >
 
-      {/* 취소 버튼 (상단 우측) */}
-      {onCancel && (
-        <button
-          onClick={handleCancel}
-          aria-label="입력 취소"
-          className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/60 hover:bg-white/80 flex items-center justify-center transition-all duration-200 shadow-sm hover:shadow-md"
-          style={{ marginTop: '-8px', marginRight: '-8px' }}
-        >
-          <span className="material-symbols-outlined text-on-surface-variant text-xl" aria-hidden="true">
-            close
-          </span>
-        </button>
-      )}
+      {/* 드래그 핸들 */}
+      <div
+        className="flex justify-center pt-1 pb-1"
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        data-testid="drag-handle"
+      >
+        <div className="w-9 h-1 rounded-full bg-gray-300" />
+      </div>
 
       {/* 결과 표시 */}
       {result && (

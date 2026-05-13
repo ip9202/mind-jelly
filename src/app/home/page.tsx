@@ -504,7 +504,7 @@ export default function HomePage() {
           <div className="animate-slide-up">
             <EmotionInput
               onCompleteAction={() => setUiState('restoring')}
-              onCancel={() => setUiState('idle')}
+              onCancelAction={() => setUiState('idle')}
             />
           </div>
         </section>

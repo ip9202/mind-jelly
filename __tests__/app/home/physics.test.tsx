@@ -28,11 +28,13 @@ jest.mock('@/lib/physics/forces', () => ({
 
 import Home from '@/app/home/page';
 import { tossStore } from '@/stores/tossStore';
+import { jellyStore } from '@/stores/jellyStore';
 
 describe('HomePage WebView 분기', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     tossStore.getState().reset();
+    jellyStore.getState().setInitialized(true);
   });
 
   it('WebView가 아닐 때 홈 페이지가 렌더링된다', () => {

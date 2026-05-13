@@ -18,6 +18,21 @@ export const UI_COLORS = {
   trendDown: '#5BC0EB',
 } as const;
 
+// @MX:NOTE: 인사이트 탭 텍스트/아이콘용 어두운 감정 색상 (SPEC-UI-003 가독성 개선)
+// @MX:REASON: 밝은 배경에서 가독성 확보를 위해 감정색의 어두운 음영(shade) 사용
+// @MX:SPEC: SPEC-UI-003
+export const EMOTION_TEXT_COLORS = {
+  joy: '#E58696',        // 평온: 어두운 벚꽃핑크 (원본 #FFB7C5의 shade)
+  sadness: '#5A9EC3',    // 우울: 어두운 하늘파랑 (원본 #7EB8D8의 shade)
+  anger: '#D8655C',      // 분노: 어두운 산호빨강 (원본 #F28B82의 shade)
+  fear: '#9478C7',       // 불안: 어두운 보라라벤더 (원본 #B39DDB의 shade)
+  disgust: '#5FAF62',    // 혐오: 어두운 청록그린 (원본 #81C784의 shade)
+  surprise: '#E5BD15',   // 놀람: 어두운 앰버옐로우 (원본 #FFD93D의 shade)
+  love: '#E53956',       // 사랑: 어두운 따뜻한핑크 (원본 #FF6B8A의 shade)
+  gratitude: '#E59423',  // 감사: 어두운 오렌지골드 (원본 #FFB347의 shade)
+  hope: '#3DA7D8',       // 희망: 어두운 하늘시안 (원본 #5BC0EB의 shade)
+} as const;
+
 // @MX:NOTE: 기본 감정 색상 매핑
 // @MX:SPEC: REQ-EVT-005
 export const EMOTION_COLORS = {

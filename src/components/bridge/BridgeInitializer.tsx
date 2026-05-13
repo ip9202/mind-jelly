@@ -29,6 +29,17 @@ export default function BridgeInitializer() {
         // 일기 데이터 로드
         await diaryStore.getState().setUserId(supabaseUserId);
 
+        // @MX:NOTE: [AUTO] 다이어리 존재 여부에 따른 젤리 상태 초기화
+        // @MX:REASON: 오늘 작성한 다이어리가 없으면 감정 상태를 기본값으로 리셋
+        if (!cancelled) {
+          await jellyStore.getState().checkDiaryAndReset(supabaseUserId);
+        }
+
+        // 초기화 완료: 깜빡임 방지를 위해 스켈레톤 해제
+        if (!cancelled) {
+          jellyStore.getState().setInitialized(true);
+        }
+
         // Supabase nickname → jellyStore 동기화 (서버가 단일 소스)
         const profile = await getMyProfile(supabaseUserId);
         if (profile?.nickname && !cancelled) {

@@ -223,6 +223,46 @@ function JellyShapeSection() {
   );
 }
 
+function EmotionPersistenceSection() {
+  const persistEmotion = jellyStore((s) => s.persistEmotion);
+  const setPersistEmotion = jellyStore((s) => s.setPersistEmotion);
+
+  return (
+    <section className="space-y-[8px]">
+      <h2 className="font-gowun text-xl font-bold text-primary leading-tight px-2">젤리 정보</h2>
+      <div className="glass-card rounded-lg p-[20px] shadow-[0_4px_20px_0_rgba(0,0,0,0.05)] border border-white/40">
+        <div className="flex items-center justify-between">
+          <div className="space-y-[4px]">
+            <p className="font-gowun text-[16px] text-on-surface">감정 상태 유지</p>
+            <p className="font-gowun text-[12px] text-on-surface-variant">
+              켜면 매일 초기화되지 않고 이전 감정이 유지돼요
+            </p>
+          </div>
+          <button
+            onClick={() => setPersistEmotion(!persistEmotion)}
+            role="switch"
+            aria-checked={persistEmotion}
+            aria-label="감정 상태 유지 토글"
+            className={`relative w-[52px] h-[28px] rounded-full transition-colors duration-200 ${
+              persistEmotion
+                ? 'bg-primary'
+                : 'bg-surface-container'
+            }`}
+          >
+            <span
+              className={`absolute top-[2px] left-[2px] w-[24px] h-[24px] rounded-full bg-white shadow-sm transition-transform duration-200 ${
+                persistEmotion
+                  ? 'translate-x-[24px]'
+                  : 'translate-x-0'
+              }`}
+            />
+          </button>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 export default function SettingsPage() {
   return (
     <div className="bg-background text-on-surface font-body-md min-h-screen overflow-x-hidden">
@@ -236,6 +276,9 @@ export default function SettingsPage() {
 
         {/* Jelly Shape Section */}
         <JellyShapeSection />
+
+        {/* Emotion Persistence Section */}
+        <EmotionPersistenceSection />
 
         {/* About Section */}
         <section className="space-y-[8px]">

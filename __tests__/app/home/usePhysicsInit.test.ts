@@ -81,11 +81,9 @@ jest.mock('matter-js', () => ({
 
 // jellyStore 모킹
 const mockTransitionState = jest.fn(() => true);
-const mockDecrementBeadCount = jest.fn();
 const mockGetState = jest.fn(() => ({
   currentState: 'idle',
   transitionState: mockTransitionState,
-  decrementBeadCount: mockDecrementBeadCount,
 }));
 
 jest.mock('@/stores/jellyStore', () => ({
@@ -127,11 +125,9 @@ describe('usePhysicsInit', () => {
     rafCallbacks = [];
     rafIdCounter = 0;
     mockTransitionState.mockClear();
-    mockDecrementBeadCount.mockClear();
     mockGetState.mockReturnValue({
       currentState: 'idle',
       transitionState: mockTransitionState,
-      decrementBeadCount: mockDecrementBeadCount,
     });
   });
 
@@ -220,7 +216,6 @@ describe('usePhysicsInit', () => {
     mockGetState.mockReturnValue({
       currentState: 'idle',
       transitionState: mockTransitionState,
-      decrementBeadCount: mockDecrementBeadCount,
     });
 
     act(() => {
@@ -229,8 +224,8 @@ describe('usePhysicsInit', () => {
 
     // idle -> anticipation 전이 확인
     expect(mockTransitionState).toHaveBeenCalledWith('anticipation');
-    // 구슬 개수 감소 확인
-    expect(mockDecrementBeadCount).toHaveBeenCalled();
+    // 충돌 감지 후 상태 전이 확인
+    expect(mockTransitionState).toHaveBeenCalled();
   });
 
   it('충돌 콜백이 anticipation 상태에서 eating 전이를 트리거해야 함', () => {
@@ -254,7 +249,6 @@ describe('usePhysicsInit', () => {
     mockGetState.mockReturnValue({
       currentState: 'anticipation',
       transitionState: mockTransitionState,
-      decrementBeadCount: mockDecrementBeadCount,
     });
 
     act(() => {
@@ -345,7 +339,6 @@ describe('usePhysicsInit', () => {
     mockGetState.mockReturnValue({
       currentState: 'idle',
       transitionState: mockTransitionState,
-      decrementBeadCount: mockDecrementBeadCount,
     });
 
     // RAF 콜백 실행
@@ -437,7 +430,6 @@ describe('usePhysicsInit', () => {
     mockGetState.mockReturnValue({
       currentState: 'idle',
       transitionState: mockTransitionState,
-      decrementBeadCount: mockDecrementBeadCount,
     });
 
     act(() => {
@@ -448,7 +440,6 @@ describe('usePhysicsInit', () => {
     mockGetState.mockReturnValue({
       currentState: 'idle',
       transitionState: mockTransitionState,
-      decrementBeadCount: mockDecrementBeadCount,
     });
 
     act(() => {
@@ -496,7 +487,6 @@ describe('usePhysicsInit', () => {
     mockGetState.mockReturnValue({
       currentState: 'idle',
       transitionState: mockTransitionState,
-      decrementBeadCount: mockDecrementBeadCount,
     });
 
     act(() => {
@@ -535,7 +525,6 @@ describe('usePhysicsInit', () => {
     mockGetState.mockReturnValue({
       currentState: 'eating',
       transitionState: mockTransitionState,
-      decrementBeadCount: mockDecrementBeadCount,
     });
 
     mockTransitionState.mockClear();
@@ -570,7 +559,6 @@ describe('usePhysicsInit', () => {
     mockGetState.mockReturnValue({
       currentState: 'idle',
       transitionState: mockTransitionState,
-      decrementBeadCount: mockDecrementBeadCount,
     });
 
     mockTransitionState.mockClear();

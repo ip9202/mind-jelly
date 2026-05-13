@@ -1,8 +1,8 @@
 /**
  * EmotionReportCard 컴포넌트 테스트
+ * SPEC-UI-003: 카드 간소화 (요약 + 조언만 표시)
  * SPEC-UI-001: 3단계 시각적 계층 구조 + props 검증
- * REQ-VIS-006: 개인화 인사이트 섹션
- * @MX:SPEC: SPEC-UI-001
+ * @MX:SPEC: SPEC-UI-003
  */
 
 import { render, screen } from '@testing-library/react';
@@ -122,11 +122,11 @@ describe('EmotionReportCard - SPEC-UI-001', () => {
       render(<EmotionReportCard />);
 
       const summaryTitle = screen.queryByText(/오늘의 감정 리포트/i);
-      expect(summaryTitle).toBeInTheDocument();
+      expect(summaryTitle).toBeDefined();
 
       // EmotionFace mock 렌더링 확인
       const face = screen.getByTestId('emotion-face');
-      expect(face).toBeInTheDocument();
+      expect(face).toBeDefined();
     });
 
     it('시각화 레이어 차트는 인라인에 렌더링되지 않아야 함 (SPEC-UI-002: 바텀시트로 이동)', async () => {
@@ -134,8 +134,8 @@ describe('EmotionReportCard - SPEC-UI-001', () => {
       render(<EmotionReportCard />);
 
       // SPEC-UI-002: 차트는 바텀시트로 이동, 인라인에 없어야 함
-      expect(screen.queryByTestId('weekly-trend-chart')).not.toBeInTheDocument();
-      expect(screen.queryByTestId('emotion-donut-chart')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('weekly-trend-chart')).toBeNull();
+      expect(screen.queryByTestId('emotion-donut-chart')).toBeNull();
     });
 
     it('인사이트 레이어에 개인화된 조언을 렌더링해야 함', async () => {
@@ -143,10 +143,10 @@ describe('EmotionReportCard - SPEC-UI-001', () => {
       render(<EmotionReportCard />);
 
       const adviceIcon = screen.getByText('tips_and_updates', { selector: '.material-symbols-outlined' });
-      expect(adviceIcon).toBeInTheDocument();
+      expect(adviceIcon).toBeDefined();
 
       const adviceText = screen.queryByText(/지금 이 순간을 음미하며/);
-      expect(adviceText).toBeInTheDocument();
+      expect(adviceText).toBeDefined();
     });
   });
 
@@ -156,7 +156,7 @@ describe('EmotionReportCard - SPEC-UI-001', () => {
       const { container } = render(<EmotionReportCard />);
 
       const card = container.querySelector('.glass-card');
-      expect(card).toBeInTheDocument();
+      expect(card).toBeDefined();
     });
 
     it('감정별 동적 색상을 적용해야 함', async () => {
@@ -174,10 +174,10 @@ describe('EmotionReportCard - SPEC-UI-001', () => {
       render(<EmotionReportCard />);
 
       // SPEC-UI-002: 차트는 바텀시트로 이동
-      expect(screen.queryByTestId('weekly-trend-chart')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('weekly-trend-chart')).toBeNull();
     });
 
-    it('aria-label을 포함해야 함 (개인화 데이터가 있을 때)', async () => {
+    it('카드에 핵심 요소가 렌더링되어야 함 (SPEC-UI-003 간소화 후)', async () => {
       mockInsights = {
         topEmotions: [{ emotion: 'joy', count: 3, percentage: 100 }],
         patternChange: null,
@@ -191,8 +191,10 @@ describe('EmotionReportCard - SPEC-UI-001', () => {
       const { EmotionReportCard } = await import('../EmotionReportCard');
       render(<EmotionReportCard />);
 
-      const labeledElements = document.querySelectorAll('[aria-label]');
-      expect(labeledElements.length).toBeGreaterThan(0);
+      // SPEC-UI-003: EmotionFace + summary + advice 만 표시
+      expect(screen.getByTestId('emotion-face')).toBeDefined();
+      expect(screen.getByText(/마음이 평온한 상태예요/)).toBeDefined();
+      expect(screen.getByText('tips_and_updates', { selector: '.material-symbols-outlined' })).toBeDefined();
     });
   });
 
@@ -208,8 +210,8 @@ describe('EmotionReportCard - SPEC-UI-001', () => {
       render(<EmotionReportCard />);
 
       // SPEC-UI-002: 차트는 바텀시트로 이동
-      expect(screen.queryByTestId('weekly-trend-chart')).not.toBeInTheDocument();
-      expect(screen.queryByTestId('emotion-donut-chart')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('weekly-trend-chart')).toBeNull();
+      expect(screen.queryByTestId('emotion-donut-chart')).toBeNull();
     });
   });
 
@@ -227,7 +229,7 @@ describe('EmotionReportCard - SPEC-UI-001', () => {
 
       // EmotionFace mock이 data-testid="emotion-face"를 렌더링
       const face = screen.getByTestId('emotion-face');
-      expect(face).toHaveAttribute('data-emotion', 'sadness');
+      expect(face.getAttribute('data-emotion')).toBe('sadness');
     });
 
     it('유효하지 않은 emotionKey는 기본값(joy)으로 대체해야 함', async () => {
@@ -294,9 +296,9 @@ describe('EmotionReportCard - SPEC-UI-001', () => {
       const { EmotionReportCard } = await import('../EmotionReportCard');
       render(<EmotionReportCard />);
 
-      expect(screen.getByText(/아직 기록된 감정이 없어요/)).toBeInTheDocument();
-      expect(screen.queryByTestId('weekly-trend-chart')).not.toBeInTheDocument();
-      expect(screen.queryByTestId('emotion-donut-chart')).not.toBeInTheDocument();
+      expect(screen.getByText(/아직 기록된 감정이 없어요/)).toBeDefined();
+      expect(screen.queryByTestId('weekly-trend-chart')).toBeNull();
+      expect(screen.queryByTestId('emotion-donut-chart')).toBeNull();
     });
 
     it('빈 distribution에서도 인사이트 레이어는 기본 감정으로 렌더링해야 함', async () => {
@@ -309,7 +311,7 @@ describe('EmotionReportCard - SPEC-UI-001', () => {
       expect(coloredElements.length).toBeGreaterThan(0);
 
       const adviceIcon = screen.getByText('tips_and_updates', { selector: '.material-symbols-outlined' });
-      expect(adviceIcon).toBeInTheDocument();
+      expect(adviceIcon).toBeDefined();
     });
 
     it('빈 distribution에서는 차트 대신 안내 메시지가 표시되어야 함', async () => {
@@ -319,13 +321,13 @@ describe('EmotionReportCard - SPEC-UI-001', () => {
       render(<EmotionReportCard />);
 
       const emptyMessage = screen.getByText(/아직 기록된 감정이 없어요/);
-      expect(emptyMessage).toBeInTheDocument();
-      expect(emptyMessage).toHaveClass('font-gamja');
+      expect(emptyMessage).toBeDefined();
+      expect(emptyMessage.classList.contains('font-gamja')).toBe(true);
     });
   });
 
-  describe('REQ-VIS-006: 개인화 인사이트 섹션', () => {
-    it('데이터가 있고 topEmotions이 있으면 상위 감정을 표시해야 함', async () => {
+  describe('REQ-UI-003-2: 개인화 인사이트 섹션 제거 (SPEC-UI-003)', () => {
+    it('데이터가 있어도 topEmotions를 표시하지 않아야 함', async () => {
       mockInsights = {
         topEmotions: [
           { emotion: 'joy', count: 5, percentage: 50 },
@@ -343,13 +345,12 @@ describe('EmotionReportCard - SPEC-UI-001', () => {
       const { EmotionReportCard } = await import('../EmotionReportCard');
       render(<EmotionReportCard />);
 
-      expect(screen.getByText(/가장 많이 느낀 감정/)).toBeInTheDocument();
-      expect(screen.getByText(/평온 50%/)).toBeInTheDocument();
-      expect(screen.getByText(/우울 30%/)).toBeInTheDocument();
-      expect(screen.getByText(/감사 20%/)).toBeInTheDocument();
+      // SPEC-UI-003 REQ-UI-003-2: 상위 감정 순위 제거
+      expect(screen.queryByText(/가장 많이 느낀 감정/)).toBeNull();
+      expect(screen.queryByText(/평온 50%/)).toBeNull();
     });
 
-    it('userName이 있으면 개인화 메시지에 이름을 포함해야 함', async () => {
+    it('userName이 있어도 개인화 메시지를 표시하지 않아야 함', async () => {
       mockInsights = {
         topEmotions: [
           { emotion: 'joy', count: 5, percentage: 100 },
@@ -365,31 +366,12 @@ describe('EmotionReportCard - SPEC-UI-001', () => {
       const { EmotionReportCard } = await import('../EmotionReportCard');
       render(<EmotionReportCard userName="민수" />);
 
-      expect(screen.getByText(/민수님이/)).toBeInTheDocument();
-      expect(screen.getByText(/가장 많이 느낀 감정/)).toBeInTheDocument();
+      // SPEC-UI-003: userName 관련 메시지도 제거됨
+      expect(screen.queryByText(/민수님이/)).toBeNull();
+      expect(screen.queryByText(/가장 많이 느낀 감정/)).toBeNull();
     });
 
-    it('userName이 없으면 기본 메시지를 표시해야 함', async () => {
-      mockInsights = {
-        topEmotions: [
-          { emotion: 'joy', count: 5, percentage: 100 },
-        ],
-        patternChange: null,
-        streak: 0,
-        currentInsight: {
-          summary: '마음이 평온한 상태예요',
-          advice: '평온한 조언',
-        },
-      };
-
-      const { EmotionReportCard } = await import('../EmotionReportCard');
-      render(<EmotionReportCard />);
-
-      expect(screen.getByText(/가장 많이 느낀 감정/)).toBeInTheDocument();
-      expect(screen.queryByText(/님이/)).not.toBeInTheDocument();
-    });
-
-    it('스트릭이 있으면 불꽃 아이콘과 일수를 표시해야 함', async () => {
+    it('스트릭이 있어도 표시하지 않아야 함', async () => {
       mockInsights = {
         topEmotions: [{ emotion: 'joy', count: 3, percentage: 100 }],
         patternChange: null,
@@ -403,11 +385,12 @@ describe('EmotionReportCard - SPEC-UI-001', () => {
       const { EmotionReportCard } = await import('../EmotionReportCard');
       render(<EmotionReportCard />);
 
-      expect(screen.getByText('whatshot', { selector: '.material-symbols-outlined' })).toBeInTheDocument();
-      expect(screen.getByText(/5일 연속 작성 중/)).toBeInTheDocument();
+      // SPEC-UI-003 REQ-UI-003-2: 스트릭 제거
+      expect(screen.queryByText('whatshot', { selector: '.material-symbols-outlined' })).toBeNull();
+      expect(screen.queryByText(/5일 연속 작성 중/)).toBeNull();
     });
 
-    it('패턴 변화가 있으면 트렌드 메시지를 표시해야 함', async () => {
+    it('패턴 변화가 있어도 표시하지 않아야 함', async () => {
       mockInsights = {
         topEmotions: [{ emotion: 'joy', count: 3, percentage: 100 }],
         patternChange: {
@@ -425,8 +408,9 @@ describe('EmotionReportCard - SPEC-UI-001', () => {
       const { EmotionReportCard } = await import('../EmotionReportCard');
       render(<EmotionReportCard />);
 
-      expect(screen.getByText(/이번 주 우울이 줄었어/)).toBeInTheDocument();
-      expect(screen.getByText('trending_down', { selector: '.material-symbols-outlined' })).toBeInTheDocument();
+      // SPEC-UI-003 REQ-UI-003-2: 패턴 변화 제거
+      expect(screen.queryByText(/이번 주 우울이 줄었어/)).toBeNull();
+      expect(screen.queryByText('trending_down', { selector: '.material-symbols-outlined' })).toBeNull();
     });
 
     it('데이터가 없으면 개인화 섹션이 렌더링되지 않아야 함', async () => {
@@ -444,11 +428,11 @@ describe('EmotionReportCard - SPEC-UI-001', () => {
       const { EmotionReportCard } = await import('../EmotionReportCard');
       render(<EmotionReportCard />);
 
-      expect(screen.queryByText(/가장 많이 느낀 감정/)).not.toBeInTheDocument();
-      expect(screen.queryByText(/연속 작성 중/)).not.toBeInTheDocument();
+      expect(screen.queryByText(/가장 많이 느낀 감정/)).toBeNull();
+      expect(screen.queryByText(/연속 작성 중/)).toBeNull();
     });
 
-    it('스트릭에 aria-label이 있어야 함', async () => {
+    it('스트릭 aria-label도 표시되지 않아야 함', async () => {
       mockInsights = {
         topEmotions: [{ emotion: 'joy', count: 3, percentage: 100 }],
         patternChange: null,
@@ -462,8 +446,8 @@ describe('EmotionReportCard - SPEC-UI-001', () => {
       const { EmotionReportCard } = await import('../EmotionReportCard');
       render(<EmotionReportCard />);
 
-      const streakEl = screen.getByLabelText(/연속 3일 일기 작성 중/);
-      expect(streakEl).toBeInTheDocument();
+      // SPEC-UI-003: 스트릭 섹션 전체가 제거되므로 aria-label도 없음
+      expect(screen.queryByLabelText(/연속 3일 일기 작성 중/)).toBeNull();
     });
   });
 
@@ -483,7 +467,7 @@ describe('EmotionReportCard - SPEC-UI-001', () => {
         const { unmount } = render(<EmotionReportCard />);
 
         const face = screen.getByTestId('emotion-face');
-        expect(face).toHaveAttribute('data-emotion', emotionKey);
+        expect(face.getAttribute('data-emotion')).toBe(emotionKey);
 
         unmount();
       }
@@ -496,7 +480,7 @@ describe('EmotionReportCard - SPEC-UI-001', () => {
       render(<EmotionReportCard />);
 
       // SPEC-UI-002: EmotionDetailPanel은 바텀시트로 이동
-      expect(screen.queryByTestId('emotion-detail-panel')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('emotion-detail-panel')).toBeNull();
     });
 
     it('유효하지 않은 감정키가 들어와도 컴포넌트가 크래시 없이 렌더링되어야 함', async () => {
@@ -513,7 +497,7 @@ describe('EmotionReportCard - SPEC-UI-001', () => {
       const { container } = render(<EmotionReportCard />);
 
       const card = container.querySelector('.glass-card');
-      expect(card).toBeInTheDocument();
+      expect(card).toBeDefined();
 
       consoleWarnSpy.mockRestore();
     });

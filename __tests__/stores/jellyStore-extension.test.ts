@@ -103,9 +103,15 @@ describe('jellyStore M1 확장', () => {
       expect(jellyStore.getState().currentState).toBe('anticipation');
     });
 
-    it('기존 구슬 개수 증가가 정상 동작한다', () => {
-      jellyStore.getState().incrementBeadCount(5);
-      expect(jellyStore.getState().beadCount).toBe(5);
+    it('SPEC-JELLY-003: beadCount 제거 후에도 상태 전이가 정상 동작한다', () => {
+      // beadCount 제거 확인: store에 beadCount 관련 함수가 없어야 함
+      const state = jellyStore.getState() as unknown as Record<string, unknown>;
+      expect(state['beadCount']).toBeUndefined();
+      expect(state['setBeadCount']).toBeUndefined();
+      expect(state['incrementBeadCount']).toBeUndefined();
+      expect(state['decrementBeadCount']).toBeUndefined();
+      // 상태 전이는 여전히 정상 동작
+      expect(state.transitionState).toBeDefined();
     });
   });
 });

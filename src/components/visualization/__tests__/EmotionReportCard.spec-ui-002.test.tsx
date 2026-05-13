@@ -1,7 +1,7 @@
 /**
  * EmotionReportCard SPEC-UI-002 회귀/변경 테스트
- * 인라인 차트 제거 후 요약/인사이트 레이어 유지 확인
- * @MX:SPEC: SPEC-UI-002
+ * SPEC-UI-003: 개인화 인사이트 섹션은 바텀시트 인사이트 탭으로 이동
+ * @MX:SPEC: SPEC-UI-003
  */
 
 import { render, screen } from '@testing-library/react';
@@ -170,7 +170,7 @@ describe('EmotionReportCard - SPEC-UI-002 인라인 차트 제거', () => {
       expect(screen.queryByTestId('emotion-detail-panel')).not.toBeInTheDocument();
     });
 
-    it('개인화 인사이트 섹션이 데이터 있을 때 표시되어야 함', async () => {
+    it('개인화 인사이트 섹션은 SPEC-UI-003에서 바텀시트로 이동하여 카드에 표시되지 않아야 함', async () => {
       mockInsights = {
         topEmotions: [{ emotion: 'joy', count: 5, percentage: 100 }],
         patternChange: null,
@@ -184,7 +184,8 @@ describe('EmotionReportCard - SPEC-UI-002 인라인 차트 제거', () => {
       const { EmotionReportCard } = await import('../EmotionReportCard');
       render(<EmotionReportCard />);
 
-      expect(screen.getByText(/3일 연속 작성 중/)).toBeInTheDocument();
+      // SPEC-UI-003: 개인화 인사이트는 바텀시트 인사이트 탭으로 이동
+      expect(screen.queryByText(/3일 연속 작성 중/)).not.toBeInTheDocument();
     });
   });
 });

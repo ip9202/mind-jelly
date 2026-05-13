@@ -116,6 +116,21 @@ export async function toggleDiaryShare(id: string, isShared: boolean) {
   if (error) throw error;
 }
 
+// @MX:NOTE: [AUTO] 오늘 작성된 다이어리 존재 여부 확인
+// @MX:REASON: 다이어리가 없으면 오늘 첫 접속으로 간주하여 젤리 감정 상태 초기화
+export async function hasTodayDiary(userId: string): Promise<boolean> {
+  const today = new Date().toISOString().split('T')[0];
+  const { data, error } = await supabase
+    .from('diary_entries')
+    .select('id')
+    .eq('user_id', userId)
+    .gte('created_at', `${today}T00:00:00`)
+    .lt('created_at', `${today}T23:59:59`)
+    .maybeSingle();
+
+  return !!data && !error;
+}
+
 // ── 친구 ──────────────────────────────────────────
 
 /** 친구 요청 전송 */

@@ -47,11 +47,13 @@ jest.mock('@/lib/physics/forces', () => ({
 
 import Home from '@/app/home/page';
 import { tossStore } from '@/stores/tossStore';
+import { jellyStore } from '@/stores/jellyStore';
 
 describe('Page Integration', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     tossStore.getState().reset();
+    jellyStore.getState().setInitialized(true);
   });
 
   it('HomePage 컴포넌트가 크래시 없이 렌더링되어야 함', () => {
