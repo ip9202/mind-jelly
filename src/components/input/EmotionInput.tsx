@@ -167,7 +167,7 @@ export function EmotionInput({
 
       {/* 드래그 핸들 */}
       <div
-        className="flex justify-center pt-1 pb-1"
+        className="flex justify-center pt-1 pb-1 touch-none"
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}

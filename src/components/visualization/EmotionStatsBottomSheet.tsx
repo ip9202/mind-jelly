@@ -180,7 +180,7 @@ export function EmotionStatsBottomSheet({ isOpen, onClose, triggerRef }: Emotion
       >
         {/* 드래그 핸들 */}
         <div
-          className="flex justify-center pt-3 pb-2"
+          className="flex justify-center pt-3 pb-2 touch-none"
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
