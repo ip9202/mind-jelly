@@ -131,6 +131,7 @@ export function EmotionDonutChart({ selectedEmotion, onEmotionSelect }: EmotionD
               {chartData.map((entry, index) => (
                 <Cell
                   key={`sector-${index}`}
+                  name={entry.name}
                   fill={entry.color}
                   stroke={selectedEmotion === entry.emotionKey ? 'white' : 'none'}
                   strokeWidth={selectedEmotion === entry.emotionKey ? 2 : 0}
