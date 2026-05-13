@@ -110,7 +110,12 @@ export function EmotionDonutChart({ selectedEmotion, onEmotionSelect }: EmotionD
       role="img"
       aria-label="감정 분포 도넛 차트"
     >
-      <div className="relative h-80">
+      {/* 기간 표시 */}
+      <p className="text-center text-xs font-gamja text-gray-600 dark:text-gray-300 mb-2">
+        최근 7일
+      </p>
+
+      <div className="relative h-72">
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
             <Pie
