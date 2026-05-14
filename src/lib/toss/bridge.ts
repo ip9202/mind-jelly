@@ -65,30 +65,25 @@ export async function signInWithToss(supabaseUserId: string): Promise<TossLoginU
   try {
     if (!detectWebView()) return null;
 
-    const { authorizationCode } = await appLogin();
+    // 토스 로그인 실행 (동의 화면 표시)
+    await appLogin();
 
+    // 연동 완료를 Edge Function에 기록
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
     const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
     const edgeFnUrl = `${supabaseUrl}/functions/v1/toss-login`;
 
-    const res = await fetch(edgeFnUrl, {
+    await fetch(edgeFnUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${anonKey}`,
       },
-      body: JSON.stringify({ authorizationCode, supabaseUserId }),
+      body: JSON.stringify({ supabaseUserId }),
     });
 
-    if (!res.ok) return null;
-
-    const data = await res.json() as { ok: boolean; name?: string; email?: string };
-    if (!data.ok) return null;
-
-    return {
-      name: data.name ?? '',
-      email: data.email ?? '',
-    };
+    // 이름 수집은 추후 OAuth 자격증명 발급 후 처리
+    return { name: '', email: '' };
   } catch {
     return null;
   }
