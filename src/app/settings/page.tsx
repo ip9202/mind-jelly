@@ -422,7 +422,7 @@ function HelpModal({ onClose }: { onClose: () => void }) {
 
         {/* 아코디언 목록 */}
         <AccordionGroup>
-          <AccordionItem title="마인드 젤리란?">
+          <AccordionItem title="마음젤리란?">
             <p>매일의 감정을 젤리로 표현하는 감정 일기 앱이에요.</p>
             <p>일기를 쓰면 AI가 감정을 분석하고, 젤리가 그 색으로 물들어요.</p>
           </AccordionItem>

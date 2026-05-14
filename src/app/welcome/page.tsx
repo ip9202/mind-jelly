@@ -326,7 +326,7 @@ export default function WelcomePage() {
               {/* Step 1: 환영 텍스트 */}
               <div className="text-center mb-[8px]">
                 <h1 className="font-gowun text-[22px] font-bold leading-snug" style={{ color: '#78555e' }}>
-                  마인드 젤리에 오신 걸
+                  마음젤리에 오신 걸
                   <br />
                   환영해요!
                 </h1>
@@ -479,7 +479,7 @@ export default function WelcomePage() {
           opacity: 0.6,
         }}
       >
-        Mind Jelly
+        마음젤리
       </p>
     </div>
   );
