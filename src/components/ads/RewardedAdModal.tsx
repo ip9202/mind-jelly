@@ -236,50 +236,26 @@ export const RewardedAdModal: React.FC<RewardedAdModalProps> = ({
   );
 };
 
-// 보상 선택 뷰
+// 보상 선택 뷰 (젤리 스킨만 선택 가능)
 const RewardSelectionView: React.FC<{
   onRewardSelect: (reward: RewardType) => void;
   rewardReady: boolean;
 }> = ({ onRewardSelect, rewardReady }) => {
-  const rewards = [
-    {
-      type: 'weekly_report' as RewardType,
-      title: '주간 감정 패턴 리포트',
-      description: '지난 7일간의 감정 변화를 시각화한 리포트',
-      icon: '📊',
-    },
-    {
-      type: 'emotion_keywords' as RewardType,
-      title: '오늘의 감정 키워드',
-      description: '오늘 기록에서 가장 많이 등장한 감정 키워드 5개',
-      icon: '🔤',
-    },
-    {
-      type: 'jelly_skin' as RewardType,
-      title: '한정판 젤리 스킨',
-      description: '24시간 동안 적용되는 귀여운 젤리 스킨',
-      icon: '🎨',
-    },
-  ];
-
   return (
     <div className="space-y-3">
-      {rewards.map((reward) => (
-        <button
-          key={reward.type}
-          onClick={() => onRewardSelect(reward.type)}
-          disabled={!rewardReady}
-          className="w-full p-4 border rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-left"
-        >
-          <div className="flex items-start gap-3">
-            <span className="text-2xl">{reward.icon}</span>
-            <div className="flex-1">
-              <h3 className="font-semibold">{reward.title}</h3>
-              <p className="text-sm text-gray-600 mt-1">{reward.description}</p>
-            </div>
+      <button
+        onClick={() => onRewardSelect('jelly_skin')}
+        disabled={!rewardReady}
+        className="w-full p-4 border rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-left"
+      >
+        <div className="flex items-start gap-3">
+          <span className="text-2xl">🎨</span>
+          <div className="flex-1">
+            <h3 className="font-semibold">한정판 젤리 스킨</h3>
+            <p className="text-sm text-gray-600 mt-1">24시간 동안 적용되는 귀여운 젤리 스킨</p>
           </div>
-        </button>
-      ))}
+        </div>
+      </button>
     </div>
   );
 };

@@ -6,8 +6,8 @@
 
 'use client';
 
-import { useMemo } from 'react';
-import { PieChart, Pie, ResponsiveContainer, Cell, Tooltip } from 'recharts';
+import { useMemo, useRef, useState } from 'react';
+import { PieChart, Pie, ResponsiveContainer, Cell } from 'recharts';
 import { EmotionFace } from '@/components/jelly/EmotionFace';
 import { useEmotionChartData } from '@/hooks/useEmotionChartData';
 import { getPieChartAnimationProps } from './ChartAnimations';
@@ -83,6 +83,9 @@ interface EmotionDonutChartProps {
 
 export function EmotionDonutChart({ selectedEmotion, onEmotionSelect }: EmotionDonutChartProps) {
   const { distribution } = useEmotionChartData();
+  const [tooltipSector, setTooltipSector] = useState<DonutSector | null>(null);
+  const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
+  const chartContainerRef = useRef<HTMLDivElement>(null);
 
   // 도넛 차트 데이터 계산 (5% 미만 통합)
   const chartData = useMemo(() => {
@@ -98,9 +101,18 @@ export function EmotionDonutChart({ selectedEmotion, onEmotionSelect }: EmotionD
   const pieAnimation = getPieChartAnimationProps();
 
   // 섹터 클릭 핸들러
-  const handleSectorClick = (data: DonutSector) => {
+  const handleSectorClick = (data: DonutSector, _index: number, event: React.MouseEvent) => {
     if (data.emotionKey) {
-      onEmotionSelect(data.emotionKey === selectedEmotion ? null : data.emotionKey as EmotionType);
+      const isSelected = data.emotionKey === selectedEmotion;
+      onEmotionSelect(isSelected ? null : data.emotionKey as EmotionType);
+      if (!isSelected && chartContainerRef.current) {
+        const rect = chartContainerRef.current.getBoundingClientRect();
+        setTooltipPos({
+          x: event.clientX - rect.left,
+          y: event.clientY - rect.top,
+        });
+      }
+      setTooltipSector(isSelected ? null : data);
     }
   };
 
@@ -115,7 +127,7 @@ export function EmotionDonutChart({ selectedEmotion, onEmotionSelect }: EmotionD
         최근 7일
       </p>
 
-      <div className="relative h-72">
+      <div ref={chartContainerRef} className="relative h-72">
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
             <Pie
@@ -143,30 +155,33 @@ export function EmotionDonutChart({ selectedEmotion, onEmotionSelect }: EmotionD
                 />
               ))}
             </Pie>
-            <Tooltip
-              content={({ active, payload }) => {
-                if (!active || !payload || !payload.length) return null;
-                const data = payload[0].payload as DonutSector;
-
-                // emotionKey가 있으면 한글 라벨 사용, 없으면 name 사용 (기타의 경우)
-                const displayName = data.emotionKey && data.emotionKey in EMOTION_THEME
-                  ? EMOTION_THEME[data.emotionKey as EmotionType]?.label ?? data.name
-                  : data.name;
-
-                return (
-                  <div className="bg-white/90 backdrop-blur-sm rounded-lg px-3 py-2 shadow-lg">
-                    <p className="text-sm font-gamja font-medium text-gray-800">
-                      {displayName}: {data.value}%
-                    </p>
-                    <p className="text-xs font-jakarta text-gray-600">
-                      {data.count}회
-                    </p>
-                  </div>
-                );
-              }}
-            />
           </PieChart>
         </ResponsiveContainer>
+
+        {/* 클릭 기반 커스텀 툴팁 */}
+        {tooltipSector && (() => {
+          const displayName = tooltipSector.emotionKey && tooltipSector.emotionKey in EMOTION_THEME
+            ? EMOTION_THEME[tooltipSector.emotionKey as EmotionType]?.label ?? tooltipSector.name
+            : tooltipSector.name;
+
+          return (
+            <div
+                  className="absolute z-10 bg-white/90 backdrop-blur-sm rounded-lg px-3 py-2 shadow-lg pointer-events-none"
+                  style={{
+                    left: tooltipPos.x,
+                    top: Math.max(tooltipPos.y - 60, 4),
+                    transform: 'translateX(-50%)',
+                  }}
+                >
+              <p className="text-sm font-gamja font-medium text-gray-800">
+                {displayName}: {tooltipSector.value}%
+              </p>
+              <p className="text-xs font-jakarta text-gray-600">
+                {tooltipSector.count}회
+              </p>
+            </div>
+          );
+        })()}
 
         {/* 중앙 표시: 가장 빈번한 감정 또는 빈 상태 메시지 */}
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">

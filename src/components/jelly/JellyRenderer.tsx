@@ -159,7 +159,11 @@ export function JellyRenderer({ bodies, face, emotionColor, emotion, jellyShape,
 
         {/* 스킨 동물 특징 - 바디 외곽에 배치 (마스크 외부) */}
         {skinId && SKIN_FEATURES[skinId] && (
-          <g className="skin-features" aria-hidden="true">
+          <g
+            className="skin-features"
+            aria-hidden="true"
+            transform={shapeConfig.skinDy ? `translate(0 ${shapeConfig.skinDy})` : undefined}
+          >
             {SKIN_FEATURES[skinId].map((feature, i) => {
               const theme = SKIN_THEMES[skinId];
               const colorMap: Record<string, string> = {
