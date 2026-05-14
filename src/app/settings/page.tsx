@@ -7,6 +7,7 @@ import { jellyStore } from '@/stores/jellyStore';
 import { rewardStore } from '@/stores/rewardStore';
 import { JELLY_SHAPE_CONFIGS } from '@/lib/constants/jellyShapes';
 import { JELLY_COLOR } from '@/lib/constants/emotion';
+import { SKIN_THEMES } from '@/lib/rewards/jellySkins';
 import { supabase } from '@/lib/supabase/client';
 import type { JellyShape } from '@/types/physics';
 import BottomNav from '@/components/layout/BottomNav';
@@ -266,6 +267,85 @@ function EmotionPersistenceSection() {
   );
 }
 
+function JellySkinSection() {
+  const activeSkin = rewardStore((s) => s.activeSkin);
+  const skinEnabled = rewardStore((s) => s.skinEnabled);
+  const toggleSkinEnabled = rewardStore((s) => s.toggleSkinEnabled);
+  const [remaining, setRemaining] = useState('');
+
+  useEffect(() => {
+    const update = () => {
+      const skin = rewardStore.getState().activeSkin;
+      if (!skin) { setRemaining(''); return; }
+      const diff = new Date(skin.expiresAt).getTime() - Date.now();
+      if (diff <= 0) {
+        rewardStore.getState().checkSkinExpiration();
+        setRemaining('');
+        return;
+      }
+      const h = Math.floor(diff / 3600000);
+      const m = Math.floor((diff % 3600000) / 60000);
+      setRemaining(`${h}시간 ${m}분 남음`);
+    };
+    update();
+    const id = setInterval(update, 60000);
+    return () => clearInterval(id);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+  }, [activeSkin?.id]);
+
+  const theme = activeSkin ? SKIN_THEMES[activeSkin.id] : null;
+  const TIER_LABEL: Record<string, string> = { rare: 'Rare', epic: 'Epic', legendary: 'Legendary' };
+
+  return (
+    <section className="space-y-[8px]">
+      <h2 className="font-gowun text-xl font-bold text-primary leading-tight px-2">젤리 스킨</h2>
+      <div className="glass-card rounded-lg p-[20px] shadow-[0_4px_20px_0_rgba(0,0,0,0.05)] border border-white/40">
+        {activeSkin ? (
+          <div className="flex items-center gap-[16px]">
+            <span className={`text-4xl transition-opacity ${skinEnabled ? 'opacity-100' : 'opacity-40'}`}>
+              {activeSkin.emoji}
+            </span>
+            <div className="flex-1 space-y-[4px]">
+              <div className="flex items-center gap-[8px]">
+                <span className="font-gowun text-[16px] font-bold text-on-surface">{activeSkin.name}</span>
+                {theme && (
+                  <span
+                    className="text-[11px] px-[8px] py-[2px] rounded-full text-white font-bold"
+                    style={{ backgroundColor: theme.primaryColor }}
+                  >
+                    {TIER_LABEL[activeSkin.id] || 'Rare'}
+                  </span>
+                )}
+              </div>
+              <p className="font-gowun text-[13px] text-on-surface-variant">{remaining}</p>
+            </div>
+            <button
+              onClick={toggleSkinEnabled}
+              className={`relative w-[48px] h-[28px] rounded-full transition-colors shrink-0 ${
+                skinEnabled ? 'bg-primary' : 'bg-gray-300'
+              }`}
+              aria-label={skinEnabled ? '스킨 해제' : '스킨 적용'}
+            >
+              <span
+                className={`absolute top-[2px] left-[2px] w-[24px] h-[24px] bg-white rounded-full shadow transition-transform ${
+                  skinEnabled ? 'translate-x-[20px]' : 'translate-x-0'
+                }`}
+              />
+            </button>
+          </div>
+        ) : (
+          <div className="text-center py-[8px]">
+            <p className="font-gowun text-[14px] text-on-surface-variant">적용된 스킨이 없습니다</p>
+            <p className="font-gowun text-[12px] text-on-surface-variant mt-[4px]">
+              광고를 시청하면 랜덤 스킨이 적용돼요
+            </p>
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
+
 export default function SettingsPage() {
   const [showResetDialog, setShowResetDialog] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
@@ -333,6 +413,9 @@ export default function SettingsPage() {
 
         {/* Jelly Shape Section */}
         <JellyShapeSection />
+
+        {/* Jelly Skin Section */}
+        <JellySkinSection />
 
         {/* Emotion Persistence Section */}
         <EmotionPersistenceSection />

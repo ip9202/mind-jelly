@@ -33,10 +33,12 @@ export interface RewardState {
   activeSkin: ActiveSkin | null;
   unlockedSkins: string[]; // 스킨 ID 목록
   rewardedAdCount: number;
+  skinEnabled: boolean; // 스킨 적용 토글 (해제해도 타이머 유지)
   addReward: (reward: Omit<RewardRecord, 'id'>) => RewardRecord;
   unlockSkin: (skinId: SkinId) => void;
   checkSkinExpiration: () => void;
   incrementRewardedAdCount: () => void;
+  toggleSkinEnabled: () => void;
   hydrate: () => void;
   reset?: () => void; // 테스트용 초기화
 }
@@ -57,6 +59,7 @@ export const rewardStore = create<RewardState>()(
       activeSkin: null as ActiveSkin | null,
       unlockedSkins: [] as string[],
       rewardedAdCount: 0,
+      skinEnabled: true,
 
       /**
        * 보상 추가
@@ -155,6 +158,7 @@ export const rewardStore = create<RewardState>()(
           activeSkin: null,
           unlockedSkins: [],
           rewardedAdCount: 0,
+          skinEnabled: true,
         }));
       },
 
@@ -165,6 +169,16 @@ export const rewardStore = create<RewardState>()(
         set((state) => ({
           ...state,
           rewardedAdCount: state.rewardedAdCount + 1,
+        }));
+      },
+
+      /**
+       * 스킨 적용 토글
+       */
+      toggleSkinEnabled: () => {
+        set((state) => ({
+          ...state,
+          skinEnabled: !state.skinEnabled,
         }));
       },
 
@@ -186,11 +200,12 @@ export const rewardStore = create<RewardState>()(
     {
       name: 'reward-storage',
       storage: createJSONStorage(() => localStorage),
-      partialize: () => ({
-        rewardsHistory: true,
-        activeSkin: true,
-        unlockedSkins: true,
-        rewardedAdCount: true,
+      partialize: (state) => ({
+        rewardsHistory: state.rewardsHistory,
+        activeSkin: state.activeSkin,
+        unlockedSkins: state.unlockedSkins,
+        rewardedAdCount: state.rewardedAdCount,
+        skinEnabled: state.skinEnabled,
       }),
     }
   )

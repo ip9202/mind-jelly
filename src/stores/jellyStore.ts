@@ -293,13 +293,15 @@ export const jellyStore = create<JellyStoreState>()(
       // @MX:SPEC: SPEC-JELLY-003, SPEC-SETTINGS-001 REQ-PERSIST-002
       checkDiaryAndReset: async (userId: string) => {
         const today = new Date().toISOString().split('T')[0];
+        const { lastAccessDate, persistEmotion } = get();
+        const isNewDay = lastAccessDate !== today;
 
         try {
           // 무조건 다이어리 확인 (날짜 상관없음)
           const hasDiary = await hasTodayDiary(userId);
 
           if (!hasDiary) {
-            const { jellyShape, jellyName, touchCooldownAt, persistEmotion } = get();
+            const { jellyShape, jellyName, touchCooldownAt } = get();
 
             if (persistEmotion) {
               // @MX:NOTE: [AUTO] SPEC-SETTINGS-001: 감정 유지 모드
@@ -312,15 +314,24 @@ export const jellyStore = create<JellyStoreState>()(
                 jellyName,
                 touchCooldownAt,
               });
-            } else {
-              // 다이어리가 없으면 무조건 감정 상태 초기화
-              // jellyShape, jellyName, touchCooldownAt은 보존
+            } else if (isNewDay) {
+              // persistEmotion=false + 새로운 날 → 감정 초기화
               set({
                 lastEmotion: 'joy',
                 emotionColor: JELLY_COLOR,
                 currentState: 'idle',
                 faceExpression: STATE_FACES.idle,
                 emotionHistory: [],
+                lastAccessDate: today,
+                jellyShape,
+                jellyName,
+                touchCooldownAt,
+              });
+            } else {
+              // persistEmotion=false + 같은 날 → 오늘 감정 유지, 상태만 리셋
+              set({
+                currentState: 'idle',
+                faceExpression: STATE_FACES.idle,
                 lastAccessDate: today,
                 jellyShape,
                 jellyName,

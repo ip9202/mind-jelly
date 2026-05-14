@@ -34,8 +34,14 @@ export function BannerAd({ show }: BannerAdProps) {
     }
 
     try {
-      // WebView 환경 지원 여부 확인
-      if (GoogleAdMob.loadAppsInTossAdMob.isSupported?.() !== true) {
+      // WebView 환경 지원 여부 확인 (isSupported 접근 자체가 에러 발생 가능)
+      let isSupported = false;
+      try {
+        isSupported = GoogleAdMob.loadAppsInTossAdMob.isSupported?.() === true;
+      } catch {
+        isSupported = false;
+      }
+      if (!isSupported) {
         return;
       }
 

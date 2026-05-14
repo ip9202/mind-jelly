@@ -69,8 +69,14 @@ export const RewardedAdModal: React.FC<RewardedAdModalProps> = ({
     let showCleanup: (() => void) | undefined;
 
     try {
-      // WebView 환경 지원 여부 확인
-      if (GoogleAdMob.loadAppsInTossAdMob.isSupported?.() !== true) {
+      // WebView 환경 지원 여부 확인 (isSupported 접근 자체가 에러 발생 가능)
+      let isSupported = false;
+      try {
+        isSupported = GoogleAdMob.loadAppsInTossAdMob.isSupported?.() === true;
+      } catch {
+        isSupported = false;
+      }
+      if (!isSupported) {
         // WebView 외 환경에서는 테스트용으로 보상 활성화
         queueMicrotask(() => setRewardReady(true));
         return;
@@ -83,7 +89,13 @@ export const RewardedAdModal: React.FC<RewardedAdModalProps> = ({
           if (event.type === 'loaded') {
             // 로드 완료 후 광고 표시
             try {
-              if (GoogleAdMob.showAppsInTossAdMob.isSupported?.() !== true) {
+              let showSupported = false;
+              try {
+                showSupported = GoogleAdMob.showAppsInTossAdMob.isSupported?.() === true;
+              } catch {
+                showSupported = false;
+              }
+              if (!showSupported) {
                 setRewardReady(true);
                 return;
               }
@@ -428,17 +440,21 @@ const JellySkinView: React.FC<{
   onRewardClaimed?: (reward: RewardType) => void;
 }> = ({ rewardedAdCount, onRewardClaimed }) => {
   const [unlockedSkin, setUnlockedSkin] = React.useState<JellySkin | null>(null);
+  const claimedRef = React.useRef(false);
 
   React.useEffect(() => {
+    if (claimedRef.current) return;
+    claimedRef.current = true;
+
     const tier = getSkinTier(rewardedAdCount);
     const skin = jellySkins.unlockRandomSkin(tier);
     setUnlockedSkin(skin);
 
-    // 보상 지급 콜백
     if (onRewardClaimed) {
       onRewardClaimed('jelly_skin');
     }
-  }, [rewardedAdCount, onRewardClaimed]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   if (!unlockedSkin) {
     // 해당 등급의 모든 스킨이 이미 해금됨

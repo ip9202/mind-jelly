@@ -67,7 +67,6 @@ type UiState = 'idle' | 'input' | 'restoring' | 'beads' | 'report';
 // @MX:NOTE: 플로우 전환 타이밍 상수
 const RESTORE_DURATION_MS = 500;
 const SATISFIED_DISPLAY_MS = 3000;
-const REPORT_DISPLAY_MS = 4000;
 
 // @MX:NOTE: 배경 장식용 9개 감정 비드 (SPEC-BEAD-AMBIENT-001)
 const AMBIENT_BEADS: Array<{
@@ -141,15 +140,17 @@ export default function HomePage() {
   const jellyShape = jellyStore((s) => s.jellyShape);
   const isInitialized = jellyStore((s) => s.isInitialized);
   const activeSkin = rewardStore((s) => s.activeSkin);
+  const skinEnabled = rewardStore((s) => s.skinEnabled);
   const rewardedAdCount = rewardStore((s) => s.rewardedAdCount);
 
   // store의 lastEmotion 변경 시 로컬 시각 상태 동기화
-  // (checkDiaryAndReset으로 joy 리셋 시 visual 상태도 함께 갱신)
+  // idle 상태에서만 동기화 (분석 플로우 중에는 구슬을 다 먹은 후에 색이 변하도록 함)
   /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
+    if (uiState !== 'idle') return;
     setJellyVisualEmotion(lastEmotion);
     setJellyVisualColor(EMOTION_COLORS[lastEmotion]);
-  }, [lastEmotion]);
+  }, [lastEmotion, uiState]);
   /* eslint-enable react-hooks/set-state-in-effect */
 
   // 감정 리포트에 표시할 사용자 이름 (온보딩에서 설정한 jellyName)
@@ -167,6 +168,16 @@ export default function HomePage() {
   // @MX:REASON: idle 상태에서만 반응, 1초 쿨다운, hit-test 후 happy 전이 + 바운스 + 파티클
   const handleJellyTouch = useCallback(
     (screenX: number, screenY: number, canvasX: number, canvasY: number) => {
+      // report 상태에서 탭하면 idle로 복귀
+      if (uiState === 'report') {
+        const st = jellyStore.getState();
+        if (st.currentState === 'satisfied') {
+          st.transitionState('idle');
+        }
+        setUiState('idle');
+        return;
+      }
+
       const st = jellyStore.getState();
       const onJelly = isTouchOnJelly(canvasX, canvasY, jellyPosRef.current, 60);
 
@@ -196,7 +207,7 @@ export default function HomePage() {
         setHeartParticles([]);
       }, 1500);
     },
-    [],
+    [uiState],
   );
 
   useEffect(() => {
@@ -264,14 +275,9 @@ export default function HomePage() {
   // @MX:REASON: satisfied → idle 전이가 없으면 다음 사이클 터치 핸들러가 currentState !== 'idle' 가드에 막혀 무반응
   useEffect(() => {
     if (uiState === 'report') {
-      const timer = setTimeout(() => {
-        const st = jellyStore.getState();
-        if (st.currentState === 'satisfied') {
-          st.transitionState('idle');
-        }
-        setUiState('idle');
-      }, REPORT_DISPLAY_MS);
-      return () => clearTimeout(timer);
+      // report 상태 유지 - 사용자가 직접 화면을 탭하거나 CTA를 클릭할 때까지 유지
+      // 빈도 제한으로 인한 report 종료는 제거 (광고 클릭 빈도 저하 방지)
+      return;
     }
   }, [uiState]);
 
@@ -462,7 +468,7 @@ export default function HomePage() {
                         emotion={jellyVisualEmotion}
                         jellyShape={jellyShape}
                         bounceKey={bounceKey}
-                        skinId={activeSkin?.id}
+                        skinId={skinEnabled ? activeSkin?.id : undefined}
                       />
                       {/* 감정 분석 결과가 있을 때만 구슬 렌더링 */}
                       {engineRef.current && uiState === 'beads' && (
