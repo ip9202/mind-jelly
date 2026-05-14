@@ -7,6 +7,7 @@
 
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
+import { canShowRewardedAd as adFrequencyCanShow } from '@/lib/ad/adFrequencyControl';
 
 // 보상 유형
 export type RewardType = 'weekly_report' | 'emotion_keywords' | 'jelly_skin';
@@ -198,13 +199,10 @@ export const rewardStore = create<RewardState>()(
 /**
  * 보상형 광고 빈도 제어
  *
- * @MX:NOTE SPEC-AD-001의 빈도 제어기와 별도 카운터 사용
- * @MX:WARN 전면형 광고와 독립적인 카운터 유지
+ * @MX:NOTE SPEC-AD-003의 보상형 광고 전용 빈도 제어 (일일 3회, 세션 1회)
  */
 export const canShowRewardedAd = (): boolean => {
-  // SPEC-AD-001의 빈도 제어기 로직 참조
-  // 실제 구현에서는 adFrequencyControl.canShowRewardedAd() 사용
-  return true; // 간단화 (GREEN phase)
+  return adFrequencyCanShow();
 };
 
 /**

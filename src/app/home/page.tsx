@@ -12,8 +12,11 @@ import { createHeartParticles } from '@/components/jelly/HeartParticle';
 import { EmotionFace } from '@/components/jelly/EmotionFace';
 import { InterstitialAd } from '@/components/ads/InterstitialAd';
 import { BannerAd } from '@/components/ads/BannerAd';
-import { canShowInterstitial } from '@/lib/ad/adFrequencyControl';
+import { canShowInterstitial, recordRewardedAdShown } from '@/lib/ad/adFrequencyControl';
+import { canShowRewardedAd } from '@/stores/rewardStore';
 import type { EmotionType } from '@/types/emotion';
+import type { RewardType } from '@/components/ads/RewardedAdModal';
+import type { EmotionHistoryItem } from '@/lib/rewards/weeklyReport';
 import BottomNav from '@/components/layout/BottomNav';
 
 const PhysicsCanvas = dynamic(
@@ -48,6 +51,11 @@ const EmotionReportCard = dynamic(
 
 const EmotionStatsBottomSheet = dynamic(
   () => import('@/components/visualization/EmotionStatsBottomSheet').then((m) => m.EmotionStatsBottomSheet),
+  { ssr: false }
+);
+
+const RewardedAdModal = dynamic(
+  () => import('@/components/ads/RewardedAdModal').then((m) => m.RewardedAdModal),
   { ssr: false }
 );
 
@@ -93,6 +101,10 @@ export default function HomePage() {
   const [showStatsSheet, setShowStatsSheet] = useState(false);
   const statsButtonRef = useRef<HTMLButtonElement>(null);
 
+  // SPEC-AD-003: 보상형 광고 모달 상태 (REQ-RWD-001)
+  const [showRewardedModal, setShowRewardedModal] = useState(false);
+  const [selectedReward, setSelectedReward] = useState<RewardType | null>(null);
+
   // SPEC-TOUCH-001: 하트 파티클 상태
   const [heartParticles, setHeartParticles] = useState<Array<{
     id: string;
@@ -123,10 +135,13 @@ export default function HomePage() {
   // Zustand store에서 필요한 값들을 구독
   const currentState = jellyStore((s) => s.currentState);
   const lastEmotion = jellyStore((s) => s.lastEmotion);
+  const emotionHistoryRaw = jellyStore((s) => s.emotionHistory);
+  const lastInputText = jellyStore((s) => s.lastInputText);
   const jellyName = jellyStore((s) => s.jellyName);
   const jellyShape = jellyStore((s) => s.jellyShape);
   const isInitialized = jellyStore((s) => s.isInitialized);
   const activeSkin = rewardStore((s) => s.activeSkin);
+  const rewardedAdCount = rewardStore((s) => s.rewardedAdCount);
 
   // store의 lastEmotion 변경 시 로컬 시각 상태 동기화
   // (checkDiaryAndReset으로 joy 리셋 시 visual 상태도 함께 갱신)
@@ -267,6 +282,40 @@ export default function HomePage() {
       jellyStore.getState().transitionState('idle');
     }
   }, [uiState, currentState]);
+
+  // SPEC-AD-003 (REQ-RWD-008): 앱 로드 시 스킨 만료 체크
+  useEffect(() => {
+    rewardStore.getState().checkSkinExpiration();
+  }, []);
+
+  // @MX:NOTE: [AUTO] emotionHistory → EmotionHistoryItem 변환 (REQ-RWD-004)
+  // @MX:REASON: jellyStore.emotionHistory는 AnalysisResponse[], weeklyReport는 EmotionHistoryItem[] 필요
+  const emotionHistory: EmotionHistoryItem[] = emotionHistoryRaw.map((item, i) => ({
+    emotion: item.emotion,
+    confidence: item.confidence,
+    timestamp: new Date(Date.now() - (emotionHistoryRaw.length - 1 - i) * 86400000).toISOString(),
+  }));
+
+  // SPEC-AD-003: 보상형 광고 CTA 클릭 핸들러 (REQ-RWD-001)
+  const handleCTAClick = useCallback(() => {
+    setShowRewardedModal(true);
+    setSelectedReward(null);
+  }, []);
+
+  // SPEC-AD-003: 보상 선택 핸들러 (REQ-RWD-002/003/006)
+  const handleRewardSelect = useCallback((reward: RewardType) => {
+    setSelectedReward(reward);
+  }, []);
+
+  // SPEC-AD-003: 보상 지급 콜백 (REQ-RWD-006/007)
+  const handleRewardClaimed = useCallback((reward: RewardType) => {
+    const store = rewardStore.getState();
+    // REQ-RWD-006: 모든 보상에 대해 이력 기록
+    store.addReward({ type: reward, claimedAt: new Date().toISOString() });
+    store.incrementRewardedAdCount();
+    // REQ-RWD-007: 빈도 제어 기록
+    recordRewardedAdShown();
+  }, []);
 
   // 모바일 키보드 높이 추적 (입력 모드)
   useEffect(() => {
@@ -488,6 +537,26 @@ export default function HomePage() {
                 }
               />
             </div>
+
+            {/* SPEC-AD-003 (REQ-RWD-001): 보상형 광고 CTA 버튼 */}
+            {uiState === 'report' && (
+              <button
+                onClick={handleCTAClick}
+                disabled={!canShowRewardedAd()}
+                aria-label="광고 보고 보상 받기"
+                className="w-full max-w-md mt-3 h-11 rounded-xl text-white font-gowun text-sm font-bold flex items-center justify-center gap-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-default active:scale-[0.97] hover:shadow-md"
+                style={{
+                  background: canShowRewardedAd()
+                    ? 'linear-gradient(135deg, #8B5CF6 0%, #A78BFA 100%)'
+                    : '#9CA3AF',
+                  boxShadow: canShowRewardedAd() ? '0 2px 8px rgba(139, 92, 246, 0.35)' : 'none',
+                }}
+                data-testid="rewarded-ad-cta"
+              >
+                <span className="material-symbols-outlined text-lg" style={{ fontVariationSettings: "'FILL' 1" }} aria-hidden="true">redeem</span>
+                {canShowRewardedAd() ? '광고 보고 보상 받기' : '오늘은 더 이상 시청할 수 없어요'}
+              </button>
+            )}
           </div>
         )}
       </main>
@@ -531,6 +600,21 @@ export default function HomePage() {
           </div>
         </section>
       )}
+
+      {/* SPEC-AD-003: 보상형 광고 모달 (REQ-RWD-001~008) */}
+      <RewardedAdModal
+        isOpen={showRewardedModal}
+        onClose={() => {
+          setShowRewardedModal(false);
+          setSelectedReward(null);
+        }}
+        onSelectReward={handleRewardSelect}
+        selectedReward={selectedReward ?? undefined}
+        emotionHistory={emotionHistory}
+        latestDiaryText={lastInputText}
+        rewardedAdCount={rewardedAdCount}
+        onRewardClaimed={handleRewardClaimed}
+      />
     </div>
   );
 }

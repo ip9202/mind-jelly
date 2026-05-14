@@ -174,3 +174,103 @@ export function recordAdShown(): void {
 
   saveAdHistory(updatedHistory);
 }
+
+// ─── 보상형 광고 빈도 제어 (SPEC-AD-003 REQ-RWD-007) ───
+
+/**
+ * 보상형 광고 빈도 이력
+ */
+interface RewardedAdFrequency {
+  lastDate: string; // YYYY-MM-DD
+  dailyCount: number;
+}
+
+const REWARDED_STORAGE_KEY = 'rewarded_ad_frequency';
+
+// 세션 내 보상형 광고 시청 횟수 (인메모리, 앱 로드 시 0으로 초기화)
+let rewardedSessionCount = 0;
+
+// 일일 최대 보상형 광고 시청 횟수
+const DAILY_REWARDED_LIMIT = 3;
+// 세션당 최대 보상형 광고 시청 횟수
+const SESSION_REWARDED_LIMIT = 1;
+
+/**
+ * 보상형 광고 빈도 이력을 localStorage에서 읽습니다
+ */
+function getRewardedFrequency(): RewardedAdFrequency {
+  const today = new Date().toISOString().split('T')[0];
+
+  if (typeof window === 'undefined') {
+    return { lastDate: today, dailyCount: 0 };
+  }
+
+  try {
+    const stored = localStorage.getItem(REWARDED_STORAGE_KEY);
+    if (stored) {
+      const data = JSON.parse(stored) as RewardedAdFrequency;
+      // 날짜가 변경되면 일일 카운터 리셋
+      if (data.lastDate !== today) {
+        return { lastDate: today, dailyCount: 0 };
+      }
+      return data;
+    }
+  } catch (error) {
+    console.error('[AdFrequency] 보상형 광고 이력 읽기 실패:', error);
+  }
+
+  return { lastDate: today, dailyCount: 0 };
+}
+
+/**
+ * 보상형 광고 빈도 이력을 localStorage에 저장합니다
+ */
+function saveRewardedFrequency(data: RewardedAdFrequency): void {
+  if (typeof window === 'undefined') return;
+
+  try {
+    localStorage.setItem(REWARDED_STORAGE_KEY, JSON.stringify(data));
+  } catch (error) {
+    console.error('[AdFrequency] 보상형 광고 이력 저장 실패:', error);
+  }
+}
+
+/**
+ * 보상형 광고 시청 가능 여부 확인
+ * 일일 최대 3회, 세션당 최대 1회
+ */
+export function canShowRewardedAd(): boolean {
+  const frequency = getRewardedFrequency();
+
+  // 일일 한도 체크
+  if (frequency.dailyCount >= DAILY_REWARDED_LIMIT) {
+    return false;
+  }
+
+  // 세션 한도 체크
+  if (rewardedSessionCount >= SESSION_REWARDED_LIMIT) {
+    return false;
+  }
+
+  return true;
+}
+
+/**
+ * 보상형 광고 시청 기록
+ * dailyCount와 sessionCount를 모두 증가시킵니다
+ */
+export function recordRewardedAdShown(): void {
+  const frequency = getRewardedFrequency();
+
+  frequency.dailyCount += 1;
+  rewardedSessionCount += 1;
+
+  saveRewardedFrequency(frequency);
+}
+
+/**
+ * 보상형 광고 세션 카운터 초기화 (테스트용)
+ */
+export function resetRewardedSessionCount(): void {
+  rewardedSessionCount = 0;
+}
