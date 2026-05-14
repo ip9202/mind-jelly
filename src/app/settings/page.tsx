@@ -5,8 +5,6 @@ import { getMyProfile, setNickname } from '@/lib/supabase/db';
 import { diaryStore } from '@/stores/diaryStore';
 import { jellyStore } from '@/stores/jellyStore';
 import { rewardStore } from '@/stores/rewardStore';
-import { tossStore } from '@/stores/tossStore';
-import { signInWithToss, checkTossLoginLinked } from '@/lib/toss/bridge';
 import { JELLY_SHAPE_CONFIGS } from '@/lib/constants/jellyShapes';
 import { JELLY_COLOR } from '@/lib/constants/emotion';
 import { SKIN_THEMES } from '@/lib/rewards/jellySkins';
@@ -202,85 +200,6 @@ function JellyShapeSection() {
         <p className="font-gowun text-[12px] text-on-surface-variant mt-[16px] text-center">
           젤리의 기본 모양을 선택해보세요 💕
         </p>
-      </div>
-    </section>
-  );
-}
-
-function TossLoginSection() {
-  const supabaseUserId = diaryStore((s) => s.supabaseUserId);
-  const isWebView = tossStore((s) => s.isWebView);
-  const tossLoginUser = tossStore((s) => s.tossLoginUser);
-  const [isLinked, setIsLinked] = useState<boolean | null>(null);
-  const [dbName, setDbName] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-
-  useEffect(() => {
-    if (!isWebView || !supabaseUserId) return;
-
-    // DB에서 toss_name 조회 → 이미 연동된 유저 감지
-    getMyProfile(supabaseUserId).then((profile) => {
-      if (profile?.toss_name) {
-        setDbName(profile.toss_name);
-        setIsLinked(true);
-        tossStore.getState().setTossLoginUser({ name: profile.toss_name, email: '' });
-      } else {
-        // DB에 없으면 SDK로 연동 여부 확인
-        checkTossLoginLinked().then(setIsLinked);
-      }
-    });
-  }, [isWebView, supabaseUserId]);
-
-  async function handleLogin() {
-    if (!supabaseUserId || isLoading) return;
-    setIsLoading(true);
-    try {
-      const user = await signInWithToss(supabaseUserId);
-      if (user) {
-        tossStore.getState().setTossLoginUser(user);
-        setDbName(user.name);
-        setIsLinked(true);
-      }
-    } finally {
-      setIsLoading(false);
-    }
-  }
-
-  if (!isWebView) return null;
-
-  const displayName = tossLoginUser?.name || dbName;
-
-  return (
-    <section className="space-y-[8px]">
-      <h2 className="font-gowun text-xl font-bold text-primary leading-tight px-2">계정</h2>
-      <div className="glass-card rounded-lg shadow-[0_4px_20px_0_rgba(0,0,0,0.05)] border border-white/40 overflow-hidden">
-        {isLinked ? (
-          <div className="p-[16px] flex items-center gap-[12px]">
-            <span className="material-symbols-outlined text-primary">verified_user</span>
-            <div>
-              <p className="font-gowun text-[15px] text-on-surface font-bold">
-                {displayName ?? '토스 계정'}
-              </p>
-              <p className="font-gowun text-[13px] text-on-surface-variant">토스 로그인 연동됨</p>
-            </div>
-          </div>
-        ) : (
-          <button
-            onClick={handleLogin}
-            disabled={isLoading}
-            className="w-full p-[16px] flex items-center gap-[12px] hover:bg-white/40 transition-colors cursor-pointer disabled:opacity-50"
-          >
-            <span className="material-symbols-outlined text-primary">login</span>
-            <div className="text-left">
-              <p className="font-gowun text-[15px] text-on-surface">
-                {isLoading ? '로그인 중...' : '토스 로그인 연동'}
-              </p>
-              <p className="font-gowun text-[12px] text-on-surface-variant">
-                토스 계정으로 연결해요
-              </p>
-            </div>
-          </button>
-        )}
       </div>
     </section>
   );
@@ -620,9 +539,6 @@ export default function SettingsPage() {
 
         {/* Emotion Persistence Section */}
         <EmotionPersistenceSection />
-
-        {/* Toss Login Section */}
-        <TossLoginSection />
 
         {/* About Section */}
         <section className="space-y-[8px]">
