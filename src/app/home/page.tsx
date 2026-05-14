@@ -4,7 +4,6 @@ import dynamic from 'next/dynamic';
 import { JellySkeleton } from '@/components/jelly/JellySkeleton';
 import { useEffect, useState, useRef, useCallback, useSyncExternalStore } from 'react';
 import { jellyStore } from '@/stores/jellyStore';
-import { tossStore } from '@/stores/tossStore';
 import { usePhysicsInit } from './usePhysicsInit';
 import { EMOTION_THEME, EMOTION_COLORS, JELLY_COLOR } from '@/lib/constants/emotion';
 import { isTouchOnJelly, shouldHandleTouch } from '@/lib/utils/touchHandler';
@@ -127,9 +126,6 @@ export default function HomePage() {
   const jellyShape = jellyStore((s) => s.jellyShape);
   const isInitialized = jellyStore((s) => s.isInitialized);
 
-  // M4-T5: Toss WebView 사용자 정보 (감정 리포트 개인화)
-  const userInfo = tossStore((s) => s.userInfo);
-
   // store의 lastEmotion 변경 시 로컬 시각 상태 동기화
   // (checkDiaryAndReset으로 joy 리셋 시 visual 상태도 함께 갱신)
   /* eslint-disable react-hooks/set-state-in-effect */
@@ -139,8 +135,8 @@ export default function HomePage() {
   }, [lastEmotion]);
   /* eslint-enable react-hooks/set-state-in-effect */
 
-  // 감정 리포트에 표시할 사용자 이름 (WebView > 온보딩 jellyName)
-  const userName = userInfo?.name || (jellyName && jellyName !== '내 젤리' ? jellyName : null);
+  // 감정 리포트에 표시할 사용자 이름 (온보딩에서 설정한 jellyName)
+  const userName = jellyName && jellyName !== '내 젤리' ? jellyName : null;
 
   // 물리 엔진 초기화 훅
   // @MX:NOTE: activateBounce는 SPEC-TOUCH-001 CSS 전환 후 더 이상 사용하지 않음 (호환성 유지)
@@ -481,7 +477,7 @@ export default function HomePage() {
                       onClick={() => setShowStatsSheet(true)}
                       disabled={uiState !== 'idle'}
                       aria-label="감정 통계 보기"
-                      className="w-11 h-11 rounded-xl bg-white/40 dark:bg-white/10 border border-accent/40 text-accent flex items-center justify-center transition-all duration-200 disabled:opacity-50 disabled:cursor-default active:scale-[0.97] hover:bg-white/60 hover:shadow-md"
+                      className="w-11 h-11 rounded-xl bg-white/40 border border-accent/40 text-accent flex items-center justify-center transition-all duration-200 disabled:opacity-50 disabled:cursor-default active:scale-[0.97] hover:bg-white/60 hover:shadow-md"
                     >
                       <span className="material-symbols-outlined text-xl" style={{ fontVariationSettings: "'FILL' 1" }} aria-hidden="true">bar_chart</span>
                     </button>

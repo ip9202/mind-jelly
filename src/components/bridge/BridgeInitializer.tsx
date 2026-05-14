@@ -1,8 +1,7 @@
 'use client';
 
 /**
- * Toss Bridge 초기화 클라이언트 컴포넌트
- * M4-T4: App Init Bridge Connection
+ * AppIntos Bridge 초기화 클라이언트 컴포넌트
  *
  * 서버 컴포넌트인 layout.tsx에서 사용하기 위한
  * 클라이언트 측 브릿지 초기화 래퍼.
@@ -16,21 +15,21 @@ import { getMyProfile } from '@/lib/supabase/db';
 import { tossStore } from '@/stores/tossStore';
 import { diaryStore } from '@/stores/diaryStore';
 import { jellyStore } from '@/stores/jellyStore';
-import { detectWebView, connectBridge } from '@/lib/toss/bridge';
+import { detectWebView, getUserIdentity } from '@/lib/toss/bridge';
 
 export default function BridgeInitializer() {
   useEffect(() => {
     let cancelled = false;
 
     async function init() {
-      // Supabase 익명 세션 초기화 (토스 로그인 여부와 무관하게 항상 실행)
+      // Supabase 익명 세션 초기화 (WebView 여부와 무관하게 항상 실행)
       const supabaseUserId = await initSupabaseSession();
       if (supabaseUserId && !cancelled) {
         // 일기 데이터 로드
         await diaryStore.getState().setUserId(supabaseUserId);
 
         // @MX:NOTE: [AUTO] 다이어리 존재 여부에 따른 젤리 상태 초기화
-        // @MX:REASON: 오늘 작성한 다이어리가 없으면 감정 상태를 기본값으로 리셋
+        // 오늘 작성한 다이어리가 없으면 감정 상태를 기본값으로 리셋
         if (!cancelled) {
           await jellyStore.getState().checkDiaryAndReset(supabaseUserId);
         }
@@ -47,7 +46,7 @@ export default function BridgeInitializer() {
         }
 
         // @MX:NOTE: [AUTO] 닉네임 미설정 시 /welcome으로 리다이렉트
-        // @MX:REASON: 데이터 초기화 후 새 익명 사용자는 닉네임이 없으므로 온보딩 페이지로 유도
+        // 데이터 초기화 후 새 익명 사용자는 닉네임이 없으므로 온보딩 페이지로 유도
         if (!cancelled) {
           const currentPath = window.location.pathname;
 
@@ -73,19 +72,19 @@ export default function BridgeInitializer() {
         return;
       }
 
-      // 브릿지 연결 시도 (non-blocking)
+      // SDK 사용자 식별 정보 조회 (non-blocking)
       try {
-        const userInfo = await connectBridge();
+        const identity = await getUserIdentity();
         if (cancelled) return;
 
-        if (userInfo) {
-          tossStore.getState().setUserInfo(userInfo);
+        if (identity) {
+          tossStore.getState().setUserIdentity(identity);
         }
         tossStore.getState().setBridgeReady(true);
       } catch {
-        // M4-T6: silent fallback
+        // silent fallback
         tossStore.getState().setWebView(false);
-        tossStore.getState().setUserInfo(null);
+        tossStore.getState().setUserIdentity(null);
       }
     }
 

@@ -28,7 +28,7 @@ export default function BottomNav({ activeTab }: BottomNavProps) {
     >
       <div className="max-w-md mx-auto pointer-events-auto">
         <div
-          className="relative bg-white/70 dark:bg-gray-900/70 backdrop-blur-2xl rounded-[28px] border border-white/60 dark:border-white/10 px-3 py-2"
+          className="relative bg-white/70 backdrop-blur-2xl rounded-[28px] border border-white/60 px-3 py-2"
           style={{
             boxShadow: '0 10px 36px rgba(255, 158, 205, 0.22), 0 2px 8px rgba(0, 0, 0, 0.04)',
           }}

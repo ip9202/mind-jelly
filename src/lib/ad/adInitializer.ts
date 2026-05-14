@@ -1,13 +1,18 @@
 /**
- * AdMob SDK Initializer
+ * AppIntos AdMob SDK Initializer
  *
- * Google AdMob SDK를 초기화합니다.
- * @apps-in-toss/web-framework의 AdMob API를 사용합니다.
+ * @apps-in-toss/web-framework의 GoogleAdMob API를 사용하여
+ * 광고를 미리 로드합니다.
  *
  * SPEC: SPEC-AD-001 (REQ-AD-001)
  */
 
-import { ADMOB_CONFIG } from './adConfig';
+import { GoogleAdMob } from '@apps-in-toss/web-framework';
+import {
+  BANNER_AD_GROUP_ID,
+  INTERSTITIAL_AD_GROUP_ID,
+  REWARDED_AD_GROUP_ID,
+} from './adConfig';
 
 /**
  * AdMob 초기화 상태
@@ -16,30 +21,91 @@ import { ADMOB_CONFIG } from './adConfig';
 let isInitialized = false;
 
 /**
- * AdMob SDK를 초기화합니다
+ * 광고 환경 지원 여부 캐시
+ */
+let supportChecked = false;
+let isSupported = false;
+
+/**
+ * AppIntos GoogleAdMob 환경 지원 여부를 확인합니다
+ */
+function checkSupport(): boolean {
+  if (supportChecked) return isSupported;
+
+  try {
+    isSupported =
+      GoogleAdMob.loadAppsInTossAdMob.isSupported?.() === true;
+    supportChecked = true;
+    return isSupported;
+  } catch {
+    // WebView 외 환경에서는 지원하지 않음
+    supportChecked = true;
+    isSupported = false;
+    return false;
+  }
+}
+
+/**
+ * AdMob 광고를 미리 로드합니다 (배너, 전면형, 보상형)
  *
- * @MX:ANCHOR: [AUTO] 외부 시스템(AdMob SDK) 연결 지점, fan_in >= 2
+ * @MX:ANCHOR: [AUTO] 외부 시스템(AppIntos AdMob SDK) 연결 지점, fan_in >= 2
  * @MX:REASON: InterstitialAd, BannerAd 컴포넌트에서 호출
- * @throws AdMob SDK 초기화 실패 시 에러 throw
  */
 export async function initializeAdMob(): Promise<void> {
   if (isInitialized) {
-    console.log('[AdMob] Already initialized');
     return;
   }
 
   try {
-    // @apps-in-toss/web-framework의 AdMob API 호출
-    // Note: 실제 구현에서는 해당 프레임워크의 API를 호출합니다
-    if (typeof window !== 'undefined' && window.AdMob) {
-      await window.AdMob.initialize(ADMOB_CONFIG);
+    if (!checkSupport()) {
+      // WebView 외 환경에서는 초기화 성공으로 처리 (광고 없이 동작)
+      isInitialized = true;
+      return;
     }
 
-    // 초기화 성공 여부와 관계없이 isInitialized를 true로 설정
+    // 배너 광고 미리 로드
+    GoogleAdMob.loadAppsInTossAdMob({
+      options: { adGroupId: BANNER_AD_GROUP_ID },
+      onEvent: (event) => {
+        if (event.type === 'loaded') {
+          console.log('[AdMob] 배너 광고 로드 완료');
+        }
+      },
+      onError: (error: unknown) => {
+        console.error('[AdMob] 배너 광고 로드 실패:', error);
+      },
+    });
+
+    // 전면형 광고 미리 로드
+    GoogleAdMob.loadAppsInTossAdMob({
+      options: { adGroupId: INTERSTITIAL_AD_GROUP_ID },
+      onEvent: (event) => {
+        if (event.type === 'loaded') {
+          console.log('[AdMob] 전면형 광고 로드 완료');
+        }
+      },
+      onError: (error: unknown) => {
+        console.error('[AdMob] 전면형 광고 로드 실패:', error);
+      },
+    });
+
+    // 보상형 광고 미리 로드
+    GoogleAdMob.loadAppsInTossAdMob({
+      options: { adGroupId: REWARDED_AD_GROUP_ID },
+      onEvent: (event) => {
+        if (event.type === 'loaded') {
+          console.log('[AdMob] 보상형 광고 로드 완료');
+        }
+      },
+      onError: (error: unknown) => {
+        console.error('[AdMob] 보상형 광고 로드 실패:', error);
+      },
+    });
+
     isInitialized = true;
-    console.log('[AdMob] SDK initialized successfully');
+    console.log('[AdMob] SDK 초기화 완료');
   } catch (error) {
-    console.error('[AdMob] Initialization failed:', error);
+    console.error('[AdMob] 초기화 실패:', error);
     // 폴백: 초기화 실패 시에도 isInitialized를 true로 설정하여 재시도 방지
     // 앱은 광고 없이 정상 동작해야 합니다
     isInitialized = true;
@@ -53,3 +119,9 @@ export async function initializeAdMob(): Promise<void> {
 export function isAdMobReady(): boolean {
   return isInitialized;
 }
+
+/**
+ * GoogleAdMob 객체를 직접 반환 (컴포넌트에서 사용)
+ * @MX:NOTE: [AUTO] 컴포넌트에서 GoogleAdMob API 직접 접근용
+ */
+export { GoogleAdMob, checkSupport as isAdMobSupported };

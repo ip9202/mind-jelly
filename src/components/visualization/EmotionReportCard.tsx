@@ -106,7 +106,7 @@ export function EmotionReportCard({ userName, currentEmotion, actions }: Emotion
     : aggregatedInsight;
 
   return (
-    <div className="glass-card animate-fade-in rounded-3xl px-5 py-4 bg-white/10 backdrop-blur-md border border-white/20 dark:bg-gray-900/30 dark:border-white/10">
+    <div className="glass-card animate-fade-in rounded-3xl px-5 py-4 bg-white/10 backdrop-blur-md border border-white/20">
       {/* 1단계: 요약 레이어 */}
       <div className="flex items-center gap-2 mb-4">
         <span className="material-symbols-outlined text-primary text-lg" style={{ fontVariationSettings: "'FILL' 1" }} aria-hidden="true">
@@ -128,14 +128,14 @@ export function EmotionReportCard({ userName, currentEmotion, actions }: Emotion
       {/* SPEC-UI-003: 개인화 인사이트(REQ-VIS-006)는 바텀시트 인사이트 탭으로 이동 */}
       {/* 빈 데이터 안내 메시지만 인라인에 유지 */}
       {!hasData && (
-        <div className="flex items-center justify-center py-4 mb-2 text-text-secondary/50 dark:text-gray-400 font-gamja text-sm">
+        <div className="flex items-center justify-center py-4 mb-2 text-text-secondary/50 font-gamja text-sm">
           아직 기록된 감정이 없어요. 일기를 써보세요!
         </div>
       )}
 
       {/* 3단계: 인사이트 레이어 */}
       <div
-        className="animate-fade-in-delayed font-gamja text-sm leading-relaxed p-3 rounded-xl bg-white/5 dark:bg-white/5"
+        className="animate-fade-in-delayed font-gamja text-sm leading-relaxed p-3 rounded-xl bg-white/5"
         style={{ color: EMOTION_COLORS[displayEmotion] }}
       >
         <span className="material-symbols-outlined text-sm align-middle mr-1" style={{ fontVariationSettings: "'FILL' 1", color: EMOTION_COLORS[displayEmotion] }} aria-hidden="true">
@@ -146,7 +146,7 @@ export function EmotionReportCard({ userName, currentEmotion, actions }: Emotion
 
       {/* 4단계: 액션 슬롯 (감정 표현하기 / 통계 보기 등) */}
       {actions && (
-        <div className="mt-4 pt-3 border-t border-white/20 dark:border-white/10">
+        <div className="mt-4 pt-3 border-t border-white/20">
           {actions}
         </div>
       )}

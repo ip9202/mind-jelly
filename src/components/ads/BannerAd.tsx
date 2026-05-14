@@ -2,6 +2,7 @@
  * Banner Ad Component
  *
  * 배너 광고를 표시합니다. report 상태일 때만 하단에 표시됩니다.
+ * @apps-in-toss/web-framework의 GoogleAdMob API를 사용합니다.
  *
  * SPEC: SPEC-AD-001 (REQ-AD-003)
  */
@@ -9,7 +10,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { ADMOB_CONFIG } from '@/lib/ad/adConfig';
+import { GoogleAdMob } from '@apps-in-toss/web-framework';
+import { BANNER_AD_GROUP_ID, BANNER_CONFIG } from '@/lib/ad/adConfig';
 
 interface BannerAdProps {
   /**
@@ -25,41 +27,43 @@ export function BannerAd({ show }: BannerAdProps) {
   const [adLoaded, setAdLoaded] = useState(false);
 
   useEffect(() => {
-    let isMounted = true;
+    let cleanup: (() => void) | undefined;
 
-    async function loadBanner() {
-      if (!show) {
-        setAdLoaded(false);
+    if (!show) {
+      return;
+    }
+
+    try {
+      // WebView 환경 지원 여부 확인
+      if (GoogleAdMob.loadAppsInTossAdMob.isSupported?.() !== true) {
         return;
       }
 
-      try {
-        // @apps-in-toss/web-framework의 AdMob API를 통해 배너 광고 로드
-        if (typeof window !== 'undefined' && window.AdMob) {
-          await window.AdMob.loadBanner();
-        }
-
-        if (isMounted) {
-          setAdLoaded(true);
-        }
-      } catch (error) {
-        console.error('[BannerAd] Failed to load ad:', error);
-        // 배너 로드 실패 시 빈 공간으로 처리 (레이아웃에 영향 없음)
-        if (isMounted) {
+      // 배너 광고 로드
+      cleanup = GoogleAdMob.loadAppsInTossAdMob({
+        options: { adGroupId: BANNER_AD_GROUP_ID },
+        onEvent: (event) => {
+          if (event.type === 'loaded') {
+            setAdLoaded(true);
+          }
+        },
+        onError: (error: unknown) => {
+          console.error('[BannerAd] 광고 로드 실패:', error);
           setAdLoaded(false);
-        }
-      }
+        },
+      });
+    } catch (error) {
+      console.error('[BannerAd] 광고 초기화 실패:', error);
     }
 
-    loadBanner();
-
     return () => {
-      isMounted = false;
+      cleanup?.();
     };
   }, [show]);
 
-  // show가 false이거나 광고가 로드되지 않았으면 아무것도 렌더링하지 않음
-  if (!show || !adLoaded) {
+  // show prop이 false면 즉시 숨김, 로드 전까지도 숨김
+  const visible = show && adLoaded;
+  if (!visible) {
     return null;
   }
 
@@ -67,11 +71,11 @@ export function BannerAd({ show }: BannerAdProps) {
     <div className="w-full h-[50px] bg-gray-100 flex items-center justify-center">
       {/* 배너 광고 컨테이너 */}
       <div
-        className="w-[320px] h-[50px] bg-white border border-gray-200 flex items-center justify-center"
-        style={{ width: ADMOB_CONFIG.banner.size.width, height: ADMOB_CONFIG.banner.size.height }}
+        className="bg-white border border-gray-200 flex items-center justify-center"
+        style={{ width: BANNER_CONFIG.size.width, height: BANNER_CONFIG.size.height }}
       >
-        {/* Note: 실제 광고는 AdMob SDK에 의해 렌더링됩니다 */}
-        <p className="text-gray-400 text-xs">배너 광고 (320x50)</p>
+        {/* 실제 광고는 AppIntos GoogleAdMob SDK에 의해 렌더링됩니다 */}
+        <p className="text-gray-400 text-xs">배너 광고 ({BANNER_CONFIG.size.width}x{BANNER_CONFIG.size.height})</p>
       </div>
     </div>
   );

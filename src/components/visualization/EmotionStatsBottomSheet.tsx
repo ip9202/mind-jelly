@@ -23,7 +23,7 @@ const WeeklyTrendChart = dynamic(
   () => import('./WeeklyTrendChart').then((mod) => mod.WeeklyTrendChart),
   {
     loading: () => (
-      <div className="h-48 bg-gray-100 dark:bg-gray-800 animate-pulse rounded-xl" aria-hidden="true" />
+      <div className="h-48 bg-gray-100 animate-pulse rounded-xl" aria-hidden="true" />
     ),
     ssr: false,
   }
@@ -33,7 +33,7 @@ const EmotionDonutChart = dynamic(
   () => import('./EmotionDonutChart').then((mod) => mod.EmotionDonutChart),
   {
     loading: () => (
-      <div className="h-48 bg-gray-100 dark:bg-gray-800 animate-pulse rounded-xl" aria-hidden="true" />
+      <div className="h-48 bg-gray-100 animate-pulse rounded-xl" aria-hidden="true" />
     ),
     ssr: false,
   }
@@ -171,7 +171,7 @@ export function EmotionStatsBottomSheet({ isOpen, onClose, triggerRef }: Emotion
         aria-label="감정 통계"
         ref={sheetRef}
         data-testid="sheet-content"
-        className="glass-card fixed bottom-0 left-0 right-0 z-50 max-h-[85vh] min-h-[60vh] rounded-t-3xl bg-white/10 backdrop-blur-md border border-white/20 dark:bg-gray-900/30 dark:border-white/10 overflow-y-auto overscroll-contain"
+        className="glass-card fixed bottom-0 left-0 right-0 z-50 max-h-[85vh] min-h-[60vh] rounded-t-3xl bg-white/10 backdrop-blur-md border border-white/20 overflow-y-auto overscroll-contain"
         style={{
           transform: `translateY(${dragOffset}px)`,
           transition: isDragging ? 'none' : 'transform 0.3s ease-out',
@@ -201,8 +201,8 @@ export function EmotionStatsBottomSheet({ isOpen, onClose, triggerRef }: Emotion
               onClick={() => setChartTab('trend')}
               className={`flex-1 h-12 rounded-full text-sm font-gamja font-medium transition-all duration-300 min-h-[48px] focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${
                 chartTab === 'trend'
-                  ? 'bg-white dark:bg-gray-100 text-gray-800 shadow-sm'
-                  : 'bg-white/30 dark:bg-white/10 text-gray-700 dark:text-gray-200 hover:bg-white/50 dark:hover:bg-white/20'
+                  ? 'bg-white text-gray-800 shadow-sm'
+                  : 'bg-white/30 text-gray-700 hover:bg-white/50'
               }`}
               aria-label="트렌드 차트"
               aria-pressed={chartTab === 'trend'}
@@ -216,8 +216,8 @@ export function EmotionStatsBottomSheet({ isOpen, onClose, triggerRef }: Emotion
               onClick={() => setChartTab('donut')}
               className={`flex-1 h-12 rounded-full text-sm font-gamja font-medium transition-all duration-300 min-h-[48px] focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${
                 chartTab === 'donut'
-                  ? 'bg-white dark:bg-gray-100 text-gray-800 shadow-sm'
-                  : 'bg-white/30 dark:bg-white/10 text-gray-700 dark:text-gray-200 hover:bg-white/50 dark:hover:bg-white/20'
+                  ? 'bg-white text-gray-800 shadow-sm'
+                  : 'bg-white/30 text-gray-700 hover:bg-white/50'
               }`}
               aria-label="도넛 차트"
               aria-pressed={chartTab === 'donut'}
@@ -232,8 +232,8 @@ export function EmotionStatsBottomSheet({ isOpen, onClose, triggerRef }: Emotion
               onClick={() => setChartTab('insights')}
               className={`flex-1 h-12 rounded-full text-sm font-gamja font-medium transition-all duration-300 min-h-[48px] focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${
                 chartTab === 'insights'
-                  ? 'bg-white dark:bg-gray-100 text-gray-800 shadow-sm'
-                  : 'bg-white/30 dark:bg-white/10 text-gray-700 dark:text-gray-200 hover:bg-white/50 dark:hover:bg-white/20'
+                  ? 'bg-white text-gray-800 shadow-sm'
+                  : 'bg-white/30 text-gray-700 hover:bg-white/50'
               }`}
               aria-label="인사이트"
               aria-pressed={chartTab === 'insights'}
@@ -262,7 +262,7 @@ export function EmotionStatsBottomSheet({ isOpen, onClose, triggerRef }: Emotion
                 {/* Tier 1: 상위 감정 순위 카드 (Hero Section) */}
                 {topEmotions.length > 0 && (
                   <div
-                    className="rounded-2xl bg-white/60 dark:bg-white/10 p-4 border border-white/30 dark:border-white/10"
+                    className="rounded-2xl bg-white/60 p-4 border border-white/30"
                     role="list"
                     aria-label="상위 감정 순위"
                   >
@@ -343,7 +343,7 @@ export function EmotionStatsBottomSheet({ isOpen, onClose, triggerRef }: Emotion
                             </div>
                             {/* 프로그레스 바 */}
                             <div
-                              className="w-full bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden"
+                              className="w-full bg-gray-100 rounded-full overflow-hidden"
                               role="progressbar"
                               aria-valuenow={item.percentage}
                               aria-valuemin={0}
@@ -368,7 +368,7 @@ export function EmotionStatsBottomSheet({ isOpen, onClose, triggerRef }: Emotion
                 {/* Tier 3: 패턴 변화 카드 (Trend) - 전체 너비 */}
                 {patternChange && (
                   <div
-                    className="rounded-2xl p-4 border border-white/30 dark:border-white/10 flex flex-col items-center justify-center text-center"
+                    className="rounded-2xl p-4 border border-white/30 flex flex-col items-center justify-center text-center"
                     style={{
                       backgroundColor: patternChange.trend === 'down'
                         ? 'rgba(91, 192, 235, 0.08)'
@@ -414,7 +414,7 @@ export function EmotionStatsBottomSheet({ isOpen, onClose, triggerRef }: Emotion
           </div>
         ) : (
           // AC-014: 빈 데이터 상태
-          <div className="flex items-center justify-center py-12 text-text-secondary/50 dark:text-gray-400 font-gamja text-sm">
+          <div className="flex items-center justify-center py-12 text-text-secondary/50 font-gamja text-sm">
             아직 기록된 감정이 없어요. 일기를 써보세요!
           </div>
         )}

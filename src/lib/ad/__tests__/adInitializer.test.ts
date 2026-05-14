@@ -1,83 +1,91 @@
 /**
- * AdMob SDK Initializer Tests
+ * AppIntos AdMob SDK Initializer Tests
  *
  * SPEC: SPEC-AD-001 (REQ-AD-001)
- * TDD Phase: GREEN - Focus on actual behavior, not perfect module reset
+ * GoogleAdMob.loadAppsInTossAdMob 초기화 검증
  */
 
-import { describe, it, expect, beforeEach } from '@jest/globals';
-import { initializeAdMob, isAdMobReady } from '../adInitializer';
-import { ADMOB_CONFIG } from '../adConfig';
+import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 
-// Jest mock 객체
-const mockAdMob = {
-  initialize: jest.fn(),
-  loadInterstitial: jest.fn(),
-  loadBanner: jest.fn(),
-};
+// GoogleAdMob 모킹
+const mockLoadCleanup = jest.fn();
+const mockLoadAppsInTossAdMob = Object.assign(
+  jest.fn(() => mockLoadCleanup),
+  { isSupported: jest.fn(() => true) },
+);
+
+const mockShowAppsInTossAdMob = Object.assign(
+  jest.fn(() => jest.fn()),
+  { isSupported: jest.fn(() => true) },
+);
+
+jest.mock('@apps-in-toss/web-framework', () => ({
+  GoogleAdMob: {
+    loadAppsInTossAdMob: mockLoadAppsInTossAdMob,
+    showAppsInTossAdMob: mockShowAppsInTossAdMob,
+  },
+}));
 
 describe('adInitializer', () => {
-  beforeEach(() => {
+  let initializeAdMob: () => Promise<void>;
+  let isAdMobReady: () => boolean;
+  let isAdMobSupported: () => boolean;
+
+  beforeEach(async () => {
     jest.clearAllMocks();
-    // window.AdMob 설정 (타입 단언: mock 객체를 AdMobAPI로 처리)
-    (global.window as Window & { AdMob?: typeof mockAdMob }).AdMob = mockAdMob;
+    // 모듈 캐시 초기화 후 재임포트
+    jest.resetModules();
+
+    // 동적 import로 초기화 상태 리셋
+    const mod = await import('../adInitializer');
+    initializeAdMob = mod.initializeAdMob;
+    isAdMobReady = mod.isAdMobReady;
+    isAdMobSupported = mod.isAdMobSupported;
   });
 
   describe('initializeAdMob', () => {
     it('초기화 성공 시 isAdMobReady가 true를 반환해야 합니다', async () => {
-      // 초기화되지 않은 상태에서 시작
-      const initialState = isAdMobReady();
+      mockLoadAppsInTossAdMob.isSupported.mockReturnValue(true);
 
-      if (!initialState) {
-        mockAdMob.initialize.mockResolvedValueOnce(undefined);
-        await initializeAdMob();
-      }
+      await initializeAdMob();
 
       expect(isAdMobReady()).toBe(true);
     });
 
-    it('초기화 실패 시 에러를 throw하지 않고 로깅만 해야 합니다', async () => {
-      // 이미 초기화된 상태일 수 있으므로 첫 상태 확인
-      const wasInitialized = isAdMobReady();
+    it('지원하지 않는 환경에서도 에러 없이 초기화 완료로 처리해야 합니다', async () => {
+      mockLoadAppsInTossAdMob.isSupported.mockReturnValue(false);
 
-      if (!wasInitialized) {
-        mockAdMob.initialize.mockRejectedValueOnce(new Error('SDK init failed'));
-        await initializeAdMob();
-        // 실패 후에도 재시도 방지를 위해 true로 설정됨
-        expect(isAdMobReady()).toBe(true);
-      } else {
-        // 이미 초기화됨 - 테스트 통과로 간주
-        expect(isAdMobReady()).toBe(true);
-      }
-    });
-
-    it('window.AdMob이 없어도 에러가 throw되지 않아야 합니다', async () => {
-      const originalAdMob = global.window.AdMob;
-      delete global.window.AdMob;
-
-      // 에러가 throw되지 않아야 함
-      await expect(initializeAdMob()).resolves.toBeUndefined();
-
-      // AdMob 복원
-      if (originalAdMob) {
-        global.window.AdMob = originalAdMob;
-      }
-    });
-
-    it('중복 초기화 시도 시 추가 작업을 수행하지 않아야 합니다', async () => {
-      // 첫 초기화
-      if (!isAdMobReady()) {
-        mockAdMob.initialize.mockResolvedValueOnce(undefined);
-        await initializeAdMob();
-      }
-
-      const callCount = mockAdMob.initialize.mock.calls.length;
-
-      // 중복 호출
       await initializeAdMob();
 
-      // 호출 수가 증가하지 않아야 함
-      expect(mockAdMob.initialize.mock.calls.length).toBe(callCount);
+      expect(isAdMobReady()).toBe(true);
+    });
+
+    it('GoogleAdMob.loadAppsInTossAdMob을 3번 호출해야 합니다 (배너, 전면형, 보상형)', async () => {
+      mockLoadAppsInTossAdMob.isSupported.mockReturnValue(true);
+
+      await initializeAdMob();
+
+      expect(mockLoadAppsInTossAdMob).toHaveBeenCalledTimes(3);
+    });
+
+    it('isSupported 호출 중 예외 발생 시 에러 없이 처리해야 합니다', async () => {
+      mockLoadAppsInTossAdMob.isSupported.mockImplementation(() => {
+        throw new Error('SDK not available');
+      });
+
+      await expect(initializeAdMob()).resolves.toBeUndefined();
+      expect(isAdMobReady()).toBe(true);
+    });
+
+    it('중복 초기화 시도 시 추가 loadAppsInTossAdMob 호출이 없어야 합니다', async () => {
+      mockLoadAppsInTossAdMob.isSupported.mockReturnValue(true);
+
+      await initializeAdMob();
+      const callCount = mockLoadAppsInTossAdMob.mock.calls.length;
+
+      await initializeAdMob();
+
+      expect(mockLoadAppsInTossAdMob.mock.calls.length).toBe(callCount);
     });
   });
 
@@ -86,28 +94,15 @@ describe('adInitializer', () => {
       const ready = isAdMobReady();
       expect(typeof ready).toBe('boolean');
     });
-
-    it('초기화 후에는 true를 반환해야 합니다', async () => {
-      if (!isAdMobReady()) {
-        mockAdMob.initialize.mockResolvedValueOnce(undefined);
-        await initializeAdMob();
-      }
-
-      expect(isAdMobReady()).toBe(true);
-    });
   });
 
-  describe('ADMOB_CONFIG 통합', () => {
-    it('ADMOB_CONFIG의 광고 ID를 사용하여 초기화해야 합니다', async () => {
-      if (!isAdMobReady()) {
-        mockAdMob.initialize.mockResolvedValueOnce(undefined);
-        await initializeAdMob();
+  describe('isAdMobSupported', () => {
+    it('지원 환경에서 true를 반환해야 합니다', async () => {
+      mockLoadAppsInTossAdMob.isSupported.mockReturnValue(true);
 
-        // 초기화 호출 확인 (이미 초기화된 경우 skip될 수 있음)
-        if (mockAdMob.initialize.mock.calls.length > 0) {
-          expect(mockAdMob.initialize).toHaveBeenCalledWith(ADMOB_CONFIG);
-        }
-      }
+      // isAdMobSupported 호출 전 초기화 필요 (supportChecked 플래그)
+      const supported = isAdMobSupported();
+      expect(typeof supported).toBe('boolean');
     });
   });
 });

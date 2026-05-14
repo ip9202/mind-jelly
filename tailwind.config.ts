@@ -1,7 +1,6 @@
 import type { Config } from "tailwindcss";
 
 const config: Config = {
-  darkMode: "class",
   content: [
     "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
@@ -82,7 +81,6 @@ const config: Config = {
 
         // Background variations
         "bg-base": "#FAF8F5",
-        "bg-dark": "#191F28",
 
         // Fixed colors
         "primary-fixed": "#ffd9e2",

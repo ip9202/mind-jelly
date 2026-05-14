@@ -2,7 +2,7 @@
  * Interstitial Ad Component
  *
  * 전면형 광고를 표시합니다.
- * 5초 후 스킵 버튼을 노출하여 사용자가 광고를 닫을 수 있습니다.
+ * @apps-in-toss/web-framework의 GoogleAdMob API를 사용합니다.
  *
  * SPEC: SPEC-AD-001 (REQ-AD-002)
  */
@@ -10,11 +10,13 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { ADMOB_CONFIG } from '@/lib/ad/adConfig';
+import { GoogleAdMob } from '@apps-in-toss/web-framework';
+import { INTERSTITIAL_AD_GROUP_ID, INTERSTITIAL_CONFIG } from '@/lib/ad/adConfig';
+import { recordAdShown } from '@/lib/ad/adFrequencyControl';
 
 interface InterstitialAdProps {
   /**
-   * 광고가 닫힐을 때 호출될 콜백
+   * 광고가 닫힐 때 호출될 콜백
    */
   onClosed: () => void;
 
@@ -30,66 +32,109 @@ interface InterstitialAdProps {
 export function InterstitialAd({ onClosed, onLoadError }: InterstitialAdProps) {
   const [showSkip, setShowSkip] = useState(false);
   const [adLoaded, setAdLoaded] = useState(false);
+  const [adShown, setAdShown] = useState(false);
 
+  // 광고 미리 로드
   useEffect(() => {
-    let skipTimer: NodeJS.Timeout | null = null;
-    let isMounted = true;
+    let loadCleanup: (() => void) | undefined;
 
-    async function loadInterstitial() {
-      try {
-        // @apps-in-toss/web-framework의 AdMob API를 통해 전면형 광고 로드
-        if (typeof window !== 'undefined' && window.AdMob) {
-          await window.AdMob.loadInterstitial();
-        }
-
-        if (!isMounted) return;
-
-        setAdLoaded(true);
-
-        // 5초 후 스킵 버튼 표시
-        skipTimer = setTimeout(() => {
-          if (isMounted) {
-            setShowSkip(true);
-          }
-        }, ADMOB_CONFIG.interstitial.skipDelay);
-      } catch (error) {
-        console.error('[InterstitialAd] Failed to load ad:', error);
-
-        if (!isMounted) return;
-
-        if (onLoadError) {
-          onLoadError();
-        }
+    try {
+      // WebView 환경 지원 여부 확인
+      if (GoogleAdMob.loadAppsInTossAdMob.isSupported?.() !== true) {
+        // WebView 외 환경에서는 광고 없이 바로 닫기
+        onLoadError?.();
+        return;
       }
+
+      // 전면형 광고 미리 로드
+      loadCleanup = GoogleAdMob.loadAppsInTossAdMob({
+        options: { adGroupId: INTERSTITIAL_AD_GROUP_ID },
+        onEvent: (event) => {
+          if (event.type === 'loaded') {
+            setAdLoaded(true);
+          }
+        },
+        onError: (error: unknown) => {
+          console.error('[InterstitialAd] 광고 로드 실패:', error);
+          onLoadError?.();
+        },
+      });
+    } catch (error) {
+      console.error('[InterstitialAd] 광고 초기화 실패:', error);
+      onLoadError?.();
     }
 
-    loadInterstitial();
+    return () => {
+      loadCleanup?.();
+    };
+  }, [onLoadError]);
+
+  // 광고가 로드되면 show API 호출
+  useEffect(() => {
+    if (!adLoaded || adShown) return;
+
+    let showCleanup: (() => void) | undefined;
+    let skipTimer: ReturnType<typeof setTimeout> | null = null;
+
+    try {
+      if (GoogleAdMob.showAppsInTossAdMob.isSupported?.() !== true) {
+        return;
+      }
+
+      showCleanup = GoogleAdMob.showAppsInTossAdMob({
+        options: { adGroupId: INTERSTITIAL_AD_GROUP_ID },
+        onEvent: (event) => {
+          switch (event.type) {
+            case 'requested':
+              // 광고 노출 요청 완료
+              setAdShown(true);
+              // 5초 후 스킵 버튼 표시
+              skipTimer = setTimeout(() => {
+                setShowSkip(true);
+              }, INTERSTITIAL_CONFIG.skipDelay);
+              // 광고 시청 기록
+              recordAdShown();
+              break;
+            case 'dismissed':
+              // 사용자가 광고를 닫음
+              onClosed();
+              break;
+            case 'failedToShow':
+              console.error('[InterstitialAd] 광고 표시 실패');
+              onClosed();
+              break;
+            case 'impression':
+              // 광고 노출 — analytics용
+              break;
+          }
+        },
+        onError: (error: unknown) => {
+          console.error('[InterstitialAd] 광고 표시 에러:', error);
+          onClosed();
+        },
+      });
+    } catch (error) {
+      console.error('[InterstitialAd] 광고 표시 실패:', error);
+      onClosed();
+    }
 
     return () => {
-      isMounted = false;
+      showCleanup?.();
       if (skipTimer) {
         clearTimeout(skipTimer);
       }
     };
-  }, [onLoadError]);
-
-  /**
-   * 광고를 닫고 report 상태로 전환
-   */
-  function handleClose() {
-    // Note: 실제 구현에서는 AdMob API를 통해 광고를 닫습니다
-    onClosed();
-  }
+  }, [adLoaded, adShown, onClosed]);
 
   /**
    * 광고를 건너뜁니다 (스킵 버튼)
    */
   function handleSkip() {
-    handleClose();
+    onClosed();
   }
 
-  // 광고가 로드되지 않았으면 아무것도 렌더링하지 않음
-  if (!adLoaded) {
+  // 광고가 표시되지 않았으면 아무것도 렌더링하지 않음
+  if (!adShown) {
     return null;
   }
 
@@ -97,9 +142,8 @@ export function InterstitialAd({ onClosed, onLoadError }: InterstitialAdProps) {
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
       {/* 전면형 광고 컨테이너 */}
       <div className="relative w-full h-full max-w-md max-h-[80vh] bg-white rounded-lg overflow-hidden">
-        {/* Note: 실제 광고는 AdMob SDK에 의해 렌더링됩니다 */}
+        {/* 실제 광고는 AppIntos GoogleAdMob SDK에 의해 렌더링됩니다 */}
         <div className="aspect-[9/16] bg-gray-100 flex items-center justify-center">
-          {/* Placeholder - 실제 광고가 표시될 영역 */}
           <p className="text-gray-400">광고 영역</p>
         </div>
 
@@ -115,7 +159,7 @@ export function InterstitialAd({ onClosed, onLoadError }: InterstitialAdProps) {
 
         {/* 닫기 버튼 */}
         <button
-          onClick={handleClose}
+          onClick={handleSkip}
           className="absolute bottom-4 right-4 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
         >
           닫기

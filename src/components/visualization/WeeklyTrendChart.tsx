@@ -33,10 +33,10 @@ function CustomTooltip({ active, payload, label }: TooltipProps<number, string>)
 
   return (
     <div
-      className="glass-card rounded-2xl border border-white/20 bg-white/95 dark:bg-gray-800/95 backdrop-blur-md p-3 shadow-lg transition-all duration-300"
+      className="glass-card rounded-2xl border border-white/20 bg-white/95 backdrop-blur-md p-3 shadow-lg transition-all duration-300"
       role="tooltip"
     >
-      <p className="text-gray-800 dark:text-gray-200 text-xs font-jakarta font-semibold mb-2 text-center">
+      <p className="text-gray-800 text-xs font-jakarta font-semibold mb-2 text-center">
         {formattedDate}
       </p>
       <table className="w-full text-xs" aria-label={`${formattedDate} 감정 빈도`}>
@@ -55,9 +55,9 @@ function CustomTooltip({ active, payload, label }: TooltipProps<number, string>)
                     style={{ backgroundColor: color }}
                     aria-hidden="true"
                   />
-                  <span className="text-gray-700 dark:text-gray-300 font-jakarta">{label}</span>
+                  <span className="text-gray-700 font-jakarta">{label}</span>
                 </td>
-                <td className="text-right text-gray-900 dark:text-gray-100 font-medium font-jakarta py-0.5">
+                <td className="text-right text-gray-900 font-medium font-jakarta py-0.5">
                   {value}
                 </td>
               </tr>
@@ -87,7 +87,7 @@ export function WeeklyTrendChart() {
   };
 
   return (
-    <div className="glass-card animate-draw-in rounded-3xl border border-white/20 bg-white/10 backdrop-blur-md dark:bg-gray-900/30 dark:border-white/10 p-2">
+    <div className="glass-card animate-draw-in rounded-3xl border border-white/20 bg-white/10 backdrop-blur-md p-2">
       <ResponsiveContainer width="100%" height={300}>
         <LineChart
           data={weeklyData}

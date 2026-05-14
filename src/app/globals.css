@@ -1,7 +1,5 @@
 @import "tailwindcss";
 
-@custom-variant dark (&:where(.dark, .dark *));
-
 @theme {
   /* Primary */
   --color-primary: #78555e;
@@ -89,7 +87,6 @@
 
   /* Background variations */
   --color-bg-base: #FAF8F5;
-  --color-bg-dark: #191F28;
   --color-text-primary: #4E5968;
 
   /* Fixed text colors */

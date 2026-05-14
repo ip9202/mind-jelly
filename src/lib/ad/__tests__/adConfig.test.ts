@@ -1,54 +1,65 @@
 /**
- * AdMob Configuration Tests
+ * AppIntos AdMob Configuration Tests
  *
  * SPEC: SPEC-AD-001 (REQ-AD-001)
- * TDD Phase: RED - Write failing tests first
+ * AppIntos GoogleAdMob SDK 설정 상수 검증
  */
 
 import { describe, it, expect } from '@jest/globals';
-import { AD_IDS, ADMOB_CONFIG, TEST_AD_IDS } from '../adConfig';
+import {
+  BANNER_AD_GROUP_ID,
+  INTERSTITIAL_AD_GROUP_ID,
+  REWARDED_AD_GROUP_ID,
+  INTERSTITIAL_CONFIG,
+  BANNER_CONFIG,
+} from '../adConfig';
 
 describe('adConfig', () => {
-  describe('AD_IDS', () => {
-    it('개발 환경에서는 테스트 광고 ID를 사용해야 합니다', () => {
-      // getAdIds() 함수가 process.env.NODE_ENV를 확인하지 않고
-      // 항상 TEST_AD_IDS를 반환하므로 테스트 광고 ID가 반환됩니다
-      expect(AD_IDS.interstitial).toBe(TEST_AD_IDS.interstitial);
-      expect(AD_IDS.banner).toBe(TEST_AD_IDS.banner);
+  describe('광고 그룹 ID', () => {
+    it('배너 광고 그룹 ID가 정의되어야 합니다', () => {
+      expect(BANNER_AD_GROUP_ID).toBeDefined();
+      expect(typeof BANNER_AD_GROUP_ID).toBe('string');
     });
 
-    it('테스트 광고 ID는 Google 공식 테스트 ID여야 합니다', () => {
-      expect(AD_IDS.interstitial).toBe('ca-app-pub-3940256099942544/1033173712');
-      expect(AD_IDS.banner).toBe('ca-app-pub-3940256099942544/2934735716');
+    it('전면형 광고 그룹 ID가 정의되어야 합니다', () => {
+      expect(INTERSTITIAL_AD_GROUP_ID).toBeDefined();
+      expect(typeof INTERSTITIAL_AD_GROUP_ID).toBe('string');
+    });
+
+    it('보상형 광고 그룹 ID가 정의되어야 합니다', () => {
+      expect(REWARDED_AD_GROUP_ID).toBeDefined();
+      expect(typeof REWARDED_AD_GROUP_ID).toBe('string');
     });
   });
 
-  describe('ADMOB_CONFIG', () => {
+  describe('INTERSTITIAL_CONFIG', () => {
     it('전면형 광고 설정이 올바른 구조를 가져야 합니다', () => {
-      expect(ADMOB_CONFIG.interstitial).toBeDefined();
-      expect(ADMOB_CONFIG.interstitial.adUnitId).toBeDefined();
-      expect(ADMOB_CONFIG.interstitial.skipDelay).toBeDefined();
+      expect(INTERSTITIAL_CONFIG).toBeDefined();
+      expect(INTERSTITIAL_CONFIG.skipDelay).toBeDefined();
     });
 
     it('전면형 광고 스킵 지연시간은 5000ms여야 합니다', () => {
-      expect(ADMOB_CONFIG.interstitial.skipDelay).toBe(5000);
+      expect(INTERSTITIAL_CONFIG.skipDelay).toBe(5000);
     });
 
+    it('INTERSTITIAL_CONFIG는 불변 객체여야 합니다', () => {
+      expect(Object.isFrozen(INTERSTITIAL_CONFIG)).toBe(true);
+    });
+  });
+
+  describe('BANNER_CONFIG', () => {
     it('배너 광고 설정이 올바른 구조를 가져야 합니다', () => {
-      expect(ADMOB_CONFIG.banner).toBeDefined();
-      expect(ADMOB_CONFIG.banner.adUnitId).toBeDefined();
-      expect(ADMOB_CONFIG.banner.size).toBeDefined();
+      expect(BANNER_CONFIG).toBeDefined();
+      expect(BANNER_CONFIG.size).toBeDefined();
     });
 
     it('배너 광고 사이즈는 320x50이어야 합니다', () => {
-      expect(ADMOB_CONFIG.banner.size.width).toBe(320);
-      expect(ADMOB_CONFIG.banner.size.height).toBe(50);
+      expect(BANNER_CONFIG.size.width).toBe(320);
+      expect(BANNER_CONFIG.size.height).toBe(50);
     });
 
-    it('ADMOB_CONFIG는 불변 객체여야 합니다 (as const)', () => {
-      // TypeScript readonly check - attempting to modify should fail at compile time
-      // At runtime, we just verify the structure exists
-      expect(Object.isFrozen(ADMOB_CONFIG)).toBe(true);
+    it('BANNER_CONFIG는 불변 객체여야 합니다', () => {
+      expect(Object.isFrozen(BANNER_CONFIG)).toBe(true);
     });
   });
 });

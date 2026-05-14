@@ -1,6 +1,6 @@
 /**
- * Toss WebView 상태 관리 Store
- * M4-T2: isWebView, userInfo, isBridgeReady, bridgeError
+ * AppIntos WebView 상태 관리 Store
+ * isWebView, userIdentity, isBridgeReady, bridgeError
  */
 
 import { create } from 'zustand';
@@ -8,18 +8,18 @@ import { devtools } from 'zustand/middleware';
 
 import { linkTossUser } from '@/lib/supabase/auth';
 import { diaryStore } from '@/stores/diaryStore';
-import type { TossUserInfo } from '@/types/toss';
+import type { TossUserIdentity } from '@/types/toss';
 
-// @MX:ANCHOR: Toss WebView 상태의 단일 소스 오브 트루스
+// @MX:ANCHOR: AppIntos WebView 상태의 단일 소스 오브 트루스
 // @MX:REASON: BridgeInitializer, home/page 등 여러 컴포넌트에서 접근
 // @MX:SPEC: SPEC-JELLY-002 M4
 
 export interface TossStoreState {
-  /** Toss WebView 환경인지 여부 */
+  /** AppIntos WebView 환경인지 여부 */
   isWebView: boolean;
 
-  /** Toss 사용자 정보 (null이면 비로그인 또는 WebView 아님) */
-  userInfo: TossUserInfo | null;
+  /** AppIntos 사용자 식별 정보 (null이면 비로그인 또는 WebView 아님) */
+  userIdentity: TossUserIdentity | null;
 
   /** 브릿지 연결 준비 완료 여부 */
   isBridgeReady: boolean;
@@ -31,8 +31,8 @@ export interface TossStoreState {
   /** WebView 여부 설정 */
   setWebView: (value: boolean) => void;
 
-  /** 사용자 정보 설정 */
-  setUserInfo: (info: TossUserInfo | null) => void;
+  /** 사용자 식별 정보 설정 */
+  setUserIdentity: (identity: TossUserIdentity | null) => void;
 
   /** 브릿지 준비 상태 설정 */
   setBridgeReady: (ready: boolean) => void;
@@ -45,15 +45,15 @@ export interface TossStoreState {
 }
 
 /**
- * Toss WebView 환경 상태 관리 Zustand Store
- * 브릿지 연결 상태, 사용자 정보, 에러를 관리한다.
+ * AppIntos WebView 환경 상태 관리 Zustand Store
+ * SDK 연결 상태, 사용자 식별 정보, 에러를 관리한다.
  */
 export const tossStore = create<TossStoreState>()(
   devtools(
     (set) => ({
       // 초기 상태
       isWebView: false,
-      userInfo: null,
+      userIdentity: null,
       isBridgeReady: false,
       bridgeError: null,
 
@@ -62,13 +62,14 @@ export const tossStore = create<TossStoreState>()(
         set({ isWebView: value });
       },
 
-      setUserInfo: (info: TossUserInfo | null) => {
-        set({ userInfo: info });
-        if (info?.userId) {
-          // 현재 Supabase 익명 세션에 토스 ID 연결
+      setUserIdentity: (identity: TossUserIdentity | null) => {
+        set({ userIdentity: identity });
+        if (identity?.anonymousKey) {
+          // 현재 Supabase 익명 세션에 AppIntos 익명 키 연결
           const supabaseUserId = diaryStore.getState().supabaseUserId;
           if (supabaseUserId) {
-            linkTossUser(supabaseUserId, info.userId).catch(() => {});
+            // @MX:NOTE: [AUTO] anonymousKey를 tossUserId로 전달하여 사용자 매핑
+            linkTossUser(supabaseUserId, identity.anonymousKey).catch(() => {});
           }
         }
       },
@@ -84,7 +85,7 @@ export const tossStore = create<TossStoreState>()(
       reset: () => {
         set({
           isWebView: false,
-          userInfo: null,
+          userIdentity: null,
           isBridgeReady: false,
           bridgeError: null,
         });

@@ -106,12 +106,12 @@ export function EmotionDonutChart({ selectedEmotion, onEmotionSelect }: EmotionD
 
   return (
     <div
-      className="glass-card animate-reveal bg-white/10 backdrop-blur-md rounded-3xl border border-white/20 dark:bg-gray-900/30 dark:border-white/10 p-6"
+      className="glass-card animate-reveal bg-white/10 backdrop-blur-md rounded-3xl border border-white/20 p-6"
       role="img"
       aria-label="감정 분포 도넛 차트"
     >
       {/* 기간 표시 */}
-      <p className="text-center text-xs font-gamja text-gray-600 dark:text-gray-300 mb-2">
+      <p className="text-center text-xs font-gamja text-gray-600 mb-2">
         최근 7일
       </p>
 
@@ -154,11 +154,11 @@ export function EmotionDonutChart({ selectedEmotion, onEmotionSelect }: EmotionD
                   : data.name;
 
                 return (
-                  <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-lg px-3 py-2 shadow-lg">
-                    <p className="text-sm font-gamja font-medium text-gray-800 dark:text-gray-100">
+                  <div className="bg-white/90 backdrop-blur-sm rounded-lg px-3 py-2 shadow-lg">
+                    <p className="text-sm font-gamja font-medium text-gray-800">
                       {displayName}: {data.value}%
                     </p>
-                    <p className="text-xs font-jakarta text-gray-600 dark:text-gray-300">
+                    <p className="text-xs font-jakarta text-gray-600">
                       {data.count}회
                     </p>
                   </div>
@@ -189,7 +189,7 @@ export function EmotionDonutChart({ selectedEmotion, onEmotionSelect }: EmotionD
 
       {/* 선택된 감정 상세 정보 */}
       {selectedEmotion && (
-        <div className="mt-4 p-3 bg-white/20 dark:bg-gray-700/30 rounded-xl backdrop-blur-sm" role="status" aria-live="polite">
+        <div className="mt-4 p-3 bg-white/20 rounded-xl backdrop-blur-sm" role="status" aria-live="polite">
           <p className="text-sm font-gamja text-white">
             <span className="font-medium">
               {selectedEmotion}
