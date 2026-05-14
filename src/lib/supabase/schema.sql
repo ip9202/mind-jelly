@@ -57,6 +57,7 @@ ALTER TABLE friendships   ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "users_select" ON users FOR SELECT USING (true);
 CREATE POLICY "users_insert" ON users FOR INSERT WITH CHECK (auth.uid() = id);
 CREATE POLICY "users_update" ON users FOR UPDATE USING (auth.uid() = id);
+CREATE POLICY "users_delete" ON users FOR DELETE USING (auth.uid() = id);
 
 -- diary 정책: 본인 일기 전체 + 타인의 공유 일기
 CREATE POLICY "diary_owner"  ON diary_entries FOR ALL    USING (auth.uid() = user_id);
@@ -68,4 +69,6 @@ CREATE POLICY "friendships_view"   ON friendships FOR SELECT
 CREATE POLICY "friendships_insert" ON friendships FOR INSERT
   WITH CHECK (auth.uid() = requester_id);
 CREATE POLICY "friendships_update" ON friendships FOR UPDATE
+  USING (auth.uid() = requester_id OR auth.uid() = receiver_id);
+CREATE POLICY "friendships_delete" ON friendships FOR DELETE
   USING (auth.uid() = requester_id OR auth.uid() = receiver_id);

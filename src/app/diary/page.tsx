@@ -130,6 +130,7 @@ export default function DiaryPage() {
   const [currentYear, setCurrentYear] = useState(today.getFullYear());
   const [currentMonth, setCurrentMonth] = useState(today.getMonth() + 1);
   const [selectedDate, setSelectedDate] = useState<Date>(today);
+  const [anyModalOpen, setAnyModalOpen] = useState(false);
 
   // 월 이동
   const goToPrevMonth = () => {
@@ -304,15 +305,15 @@ export default function DiaryPage() {
           ) : (
             <div aria-live="polite" className="space-y-[12px]">
               {dayEntries.map((entry) => (
-                <TimelineEntry key={entry.id} entry={entry} />
+                <TimelineEntry key={entry.id} entry={entry} onModalChange={setAnyModalOpen} />
               ))}
             </div>
           )}
         </section>
       </main>
 
-      {/* 전역 BottomNav (햄버거 메뉴 대체) */}
-      <BottomNav activeTab="history" />
+      {/* 전역 BottomNav — 모달 오픈 시 숨김 */}
+      {!anyModalOpen && <BottomNav activeTab="history" />}
     </div>
   );
 }
@@ -329,12 +330,15 @@ function getConfidenceLabel(confidence: number): string {
 /**
  * 타임라인 개별 엔트리 컴포넌트
  */
-function TimelineEntry({ entry }: { entry: DiaryEntry }) {
+const SWIPE_THRESHOLD_PX = 80;
+
+function TimelineEntry({ entry, onModalChange }: { entry: DiaryEntry; onModalChange: (open: boolean) => void }) {
   const ui = EMOTION_UI[entry.emotion];
-  const supabaseUserId = diaryStore((s) => s.supabaseUserId);
-  const [toggling, setToggling] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
+  const [dragOffset, setDragOffset] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
   const touchStartY = useRef<number | null>(null);
+  const touchLastY = useRef<number | null>(null);
 
   // SPEC-DIARY-002: 스와이프 삭제 상태
   const [swipeOffset, setSwipeOffset] = useState(0);
@@ -396,6 +400,7 @@ function TimelineEntry({ entry }: { entry: DiaryEntry }) {
       return;
     }
     setModalOpen(true);
+    onModalChange(true);
   }
 
   function handleDeleteConfirm() {
@@ -421,25 +426,37 @@ function TimelineEntry({ entry }: { entry: DiaryEntry }) {
 
   function handleHandleTouchStart(e: React.TouchEvent) {
     touchStartY.current = e.touches[0].clientY;
+    touchLastY.current = e.touches[0].clientY;
+    setIsDragging(true);
   }
 
-  function handleHandleTouchEnd(e: React.TouchEvent) {
+  function handleHandleTouchMove(e: React.TouchEvent) {
     if (touchStartY.current === null) return;
-    const delta = e.changedTouches[0].clientY - touchStartY.current;
-    if (delta > 80) setModalOpen(false);
-    touchStartY.current = null;
+    const deltaY = e.touches[0].clientY - touchStartY.current;
+    if (deltaY > 0) {
+      setDragOffset(deltaY);
+      touchLastY.current = e.touches[0].clientY;
+    }
   }
 
-  async function handleToggle() {
-    if (toggling || !supabaseUserId) return;
-    setToggling(true);
-    try {
-      await diaryStore.getState().toggleShare(entry.id, !entry.isShared);
-    } catch {
-      // 롤백은 store에서 처리됨
-    } finally {
-      setToggling(false);
+  function handleHandleTouchEnd() {
+    if (touchStartY.current === null || touchLastY.current === null) return;
+    const deltaY = touchLastY.current - touchStartY.current;
+    setIsDragging(false);
+
+    if (deltaY > SWIPE_THRESHOLD_PX) {
+      setDragOffset(window.innerHeight);
+      setTimeout(() => {
+        setModalOpen(false);
+        onModalChange(false);
+        setDragOffset(0);
+      }, 300);
+    } else {
+      setDragOffset(0);
     }
+
+    touchStartY.current = null;
+    touchLastY.current = null;
   }
 
   const showDeleteBtn = swipeOffset <= -60;
@@ -494,29 +511,6 @@ function TimelineEntry({ entry }: { entry: DiaryEntry }) {
             </p>
           </div>
         </div>
-        {supabaseUserId && (
-          <div className="flex justify-end mt-[8px]">
-            <button
-              onClick={(e) => { e.stopPropagation(); handleToggle(); }}
-              disabled={toggling}
-              aria-label={entry.isShared ? '친구에게 공개됨, 클릭하여 비공개 전환' : '비공개 상태, 클릭하여 친구에게 공개'}
-              className={`flex items-center gap-1 px-[10px] py-[4px] rounded-full text-[12px] font-gowun transition-all active:scale-95 ${
-                entry.isShared
-                  ? 'bg-primary-container text-on-primary-container'
-                  : 'bg-surface-container text-on-surface-variant'
-              } disabled:opacity-40`}
-            >
-              <span
-                className="material-symbols-outlined text-[14px]"
-                style={{ fontVariationSettings: '"FILL" 1, "wght" 400, "GRAD" 0, "opsz" 24' }}
-                aria-hidden="true"
-              >
-                {entry.isShared ? 'lock_open' : 'lock'}
-              </span>
-              {toggling ? '...' : entry.isShared ? '친구 공개' : '비공개'}
-            </button>
-          </div>
-        )}
       </article>
       </div>
 
@@ -565,7 +559,7 @@ function TimelineEntry({ entry }: { entry: DiaryEntry }) {
         <div
           data-testid="modal-overlay"
           className="fixed inset-0 z-50 flex items-end justify-center bg-black/30"
-          onClick={() => setModalOpen(false)}
+          onClick={() => { setModalOpen(false); onModalChange(false); }}
         >
           <div
             role="dialog"
@@ -573,36 +567,33 @@ function TimelineEntry({ entry }: { entry: DiaryEntry }) {
             aria-label="감정 기록 상세"
             onClick={(e) => e.stopPropagation()}
             className="w-full max-w-lg bg-surface rounded-t-[24px] p-[20px] pb-[32px] shadow-lg"
+            style={{
+              transform: `translateY(${dragOffset}px)`,
+              transition: isDragging ? 'none' : 'transform 0.3s ease-out',
+              willChange: isDragging ? 'transform' : undefined,
+            }}
           >
             {/* 핸들바 - 드래그로 모달 닫기 */}
             <div
               data-testid="modal-handle"
-              className="flex justify-center mb-[16px] touch-none cursor-grab"
+              className="flex justify-center py-3 mb-[8px] touch-none cursor-grab"
               onTouchStart={handleHandleTouchStart}
+              onTouchMove={handleHandleTouchMove}
               onTouchEnd={handleHandleTouchEnd}
             >
               <div className="w-10 h-1 rounded-full bg-gray-300" />
             </div>
 
-            {/* 헤더: 감정 아이콘 + 라벨 + 닫기 버튼 */}
-            <div className="flex items-center justify-between mb-[16px]">
-              <div className="flex items-center gap-[8px]">
-                <div className={`shrink-0 flex items-center justify-center w-10 h-10 ${ui.bg} rounded-full`}>
-                  <EmotionFace emotion={entry.emotion} size={28} />
-                </div>
-                <span className="font-bold text-on-surface text-[18px]">{ui.label}</span>
-                <div
-                  data-testid="emotion-color-dot"
-                  className={`w-3 h-3 rounded-full ${ui.dot}`}
-                />
+            {/* 헤더: 감정 아이콘 + 라벨 */}
+            <div className="flex items-center gap-[8px] mb-[16px]">
+              <div className={`shrink-0 flex items-center justify-center w-10 h-10 ${ui.bg} rounded-full`}>
+                <EmotionFace emotion={entry.emotion} size={28} />
               </div>
-              <button
-                aria-label="닫기"
-                onClick={() => setModalOpen(false)}
-                className="p-1 rounded-full hover:bg-surface-container-high"
-              >
-                <span className="material-symbols-outlined text-on-surface-variant">close</span>
-              </button>
+              <span className="font-bold text-on-surface text-[18px]">{ui.label}</span>
+              <div
+                data-testid="emotion-color-dot"
+                className={`w-3 h-3 rounded-full ${ui.dot}`}
+              />
             </div>
 
             {/* 전체 텍스트 */}
