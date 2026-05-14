@@ -68,11 +68,15 @@ export async function signInWithToss(supabaseUserId: string): Promise<TossLoginU
     const { authorizationCode } = await appLogin();
 
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+    const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
     const edgeFnUrl = `${supabaseUrl}/functions/v1/toss-login`;
 
     const res = await fetch(edgeFnUrl, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${anonKey}`,
+      },
       body: JSON.stringify({ authorizationCode, supabaseUserId }),
     });
 

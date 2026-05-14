@@ -212,14 +212,24 @@ function TossLoginSection() {
   const isWebView = tossStore((s) => s.isWebView);
   const tossLoginUser = tossStore((s) => s.tossLoginUser);
   const [isLinked, setIsLinked] = useState<boolean | null>(null);
+  const [dbName, setDbName] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    if (!isWebView) return;
-    checkTossLoginLinked().then(setIsLinked);
-    const stored = tossStore.getState().tossLoginUser;
-    if (stored) setIsLinked(true);
-  }, [isWebView]);
+    if (!isWebView || !supabaseUserId) return;
+
+    // DB에서 toss_name 조회 → 이미 연동된 유저 감지
+    getMyProfile(supabaseUserId).then((profile) => {
+      if (profile?.toss_name) {
+        setDbName(profile.toss_name);
+        setIsLinked(true);
+        tossStore.getState().setTossLoginUser({ name: profile.toss_name, email: '' });
+      } else {
+        // DB에 없으면 SDK로 연동 여부 확인
+        checkTossLoginLinked().then(setIsLinked);
+      }
+    });
+  }, [isWebView, supabaseUserId]);
 
   async function handleLogin() {
     if (!supabaseUserId || isLoading) return;
@@ -228,6 +238,7 @@ function TossLoginSection() {
       const user = await signInWithToss(supabaseUserId);
       if (user) {
         tossStore.getState().setTossLoginUser(user);
+        setDbName(user.name);
         setIsLinked(true);
       }
     } finally {
@@ -237,16 +248,20 @@ function TossLoginSection() {
 
   if (!isWebView) return null;
 
+  const displayName = tossLoginUser?.name || dbName;
+
   return (
     <section className="space-y-[8px]">
       <h2 className="font-gowun text-xl font-bold text-primary leading-tight px-2">계정</h2>
       <div className="glass-card rounded-lg shadow-[0_4px_20px_0_rgba(0,0,0,0.05)] border border-white/40 overflow-hidden">
-        {isLinked && tossLoginUser ? (
+        {isLinked ? (
           <div className="p-[16px] flex items-center gap-[12px]">
             <span className="material-symbols-outlined text-primary">verified_user</span>
             <div>
-              <p className="font-gowun text-[15px] text-on-surface font-bold">{tossLoginUser.name}</p>
-              <p className="font-gowun text-[13px] text-on-surface-variant">{tossLoginUser.email}</p>
+              <p className="font-gowun text-[15px] text-on-surface font-bold">
+                {displayName ?? '토스 계정'}
+              </p>
+              <p className="font-gowun text-[13px] text-on-surface-variant">토스 로그인 연동됨</p>
             </div>
           </div>
         ) : (
@@ -261,7 +276,7 @@ function TossLoginSection() {
                 {isLoading ? '로그인 중...' : '토스 로그인 연동'}
               </p>
               <p className="font-gowun text-[12px] text-on-surface-variant">
-                이름·이메일 정보를 연결해요
+                토스 계정으로 연결해요
               </p>
             </div>
           </button>
