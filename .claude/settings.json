@@ -519,7 +519,5 @@
   "showThinkingSummaries": false,
   "teammateMode": "auto",
   "disableBypassPermissionsMode": false,
-  "enabledPlugins": {
-    "playwright@claude-plugins-official": true
-  }
+  "enabledPlugins": {}
 }

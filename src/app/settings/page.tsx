@@ -368,8 +368,8 @@ export default function SettingsPage() {
 
       {/* Data Reset Confirmation Dialog */}
       {showResetDialog && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-[20px]">
-          <div className="glass-card w-full max-w-[340px] rounded-2xl p-[24px] shadow-xl border border-white/40 space-y-[20px]">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-[20px]">
+          <div className="bg-white w-full max-w-[340px] rounded-2xl p-[24px] shadow-xl border border-white/40 space-y-[20px]">
             <h3 className="font-gowun text-xl font-bold text-error text-center">데이터 초기화</h3>
             <div className="space-y-[8px]">
               <p className="font-gowun text-[14px] text-on-surface text-center">

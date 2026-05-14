@@ -45,6 +45,24 @@ export default function BridgeInitializer() {
         if (profile?.nickname && !cancelled) {
           jellyStore.getState().setJellyName(profile.nickname);
         }
+
+        // @MX:NOTE: [AUTO] 닉네임 미설정 시 /welcome으로 리다이렉트
+        // @MX:REASON: 데이터 초기화 후 새 익명 사용자는 닉네임이 없으므로 온보딩 페이지로 유도
+        if (!cancelled) {
+          const currentPath = window.location.pathname;
+
+          // 닉네임 없고 /welcome이 아니면 → 온보딩으로
+          if (!profile?.nickname && currentPath !== '/welcome') {
+            window.location.href = '/welcome';
+            return;
+          }
+
+          // 닉네임 있는데 /welcome에 있으면 → 홈으로
+          if (profile?.nickname && currentPath === '/welcome') {
+            window.location.href = '/home';
+            return;
+          }
+        }
       }
 
       // WebView 감지
