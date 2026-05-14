@@ -1,9 +1,9 @@
 import { defineConfig } from '@apps-in-toss/web-framework/config';
 
 export default defineConfig({
-  appName: 'mind-jelly',
+  appName: 'mindjelly',
   brand: {
-    displayName: '마인드젤리',
+    displayName: '마음젤리',
     primaryColor: '#FFD1DC',
     icon: '', // Empty for now, will be set from console later
   },

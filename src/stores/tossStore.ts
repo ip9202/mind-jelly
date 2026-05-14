@@ -8,7 +8,7 @@ import { devtools } from 'zustand/middleware';
 
 import { linkTossUser } from '@/lib/supabase/auth';
 import { diaryStore } from '@/stores/diaryStore';
-import type { TossUserIdentity } from '@/types/toss';
+import type { TossLoginUser, TossUserIdentity } from '@/types/toss';
 
 // @MX:ANCHOR: AppIntos WebView 상태의 단일 소스 오브 트루스
 // @MX:REASON: BridgeInitializer, home/page 등 여러 컴포넌트에서 접근
@@ -20,6 +20,9 @@ export interface TossStoreState {
 
   /** AppIntos 사용자 식별 정보 (null이면 비로그인 또는 WebView 아님) */
   userIdentity: TossUserIdentity | null;
+
+  /** 토스 로그인 후 수집된 실명 정보 (null이면 미연동) */
+  tossLoginUser: TossLoginUser | null;
 
   /** 브릿지 연결 준비 완료 여부 */
   isBridgeReady: boolean;
@@ -33,6 +36,9 @@ export interface TossStoreState {
 
   /** 사용자 식별 정보 설정 */
   setUserIdentity: (identity: TossUserIdentity | null) => void;
+
+  /** 토스 로그인 사용자 정보 설정 */
+  setTossLoginUser: (user: TossLoginUser | null) => void;
 
   /** 브릿지 준비 상태 설정 */
   setBridgeReady: (ready: boolean) => void;
@@ -54,12 +60,17 @@ export const tossStore = create<TossStoreState>()(
       // 초기 상태
       isWebView: false,
       userIdentity: null,
+      tossLoginUser: null,
       isBridgeReady: false,
       bridgeError: null,
 
       // Actions
       setWebView: (value: boolean) => {
         set({ isWebView: value });
+      },
+
+      setTossLoginUser: (user: TossLoginUser | null) => {
+        set({ tossLoginUser: user });
       },
 
       setUserIdentity: (identity: TossUserIdentity | null) => {
@@ -86,6 +97,7 @@ export const tossStore = create<TossStoreState>()(
         set({
           isWebView: false,
           userIdentity: null,
+          tossLoginUser: null,
           isBridgeReady: false,
           bridgeError: null,
         });

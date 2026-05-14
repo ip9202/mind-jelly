@@ -50,13 +50,13 @@ describe('HomePage WebView 분기', () => {
   });
 
   it('WebView이고 userInfo가 있을 때 인사말이 표시된다', () => {
-    tossStore.setState({ isWebView: true, userInfo: { name: '강력쇠주먹' } as any });
+    tossStore.setState({ isWebView: true, tossLoginUser: { name: '강력쇠주먹' } as any });
     render(<Home />);
     expect(screen.getByText(/강력쇠주먹님,/)).toBeInTheDocument();
   });
 
   it('WebView이지만 userInfo가 null이면 인사말이 표시되지 않는다', () => {
-    tossStore.setState({ isWebView: true, userInfo: null });
+    tossStore.setState({ isWebView: true, tossLoginUser: null });
     const { container } = render(<Home />);
     expect(container.textContent).not.toContain('반가워요!');
   });

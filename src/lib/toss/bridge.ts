@@ -3,9 +3,9 @@
  * @apps-in-toss/web-framework SDK 기반 WebView 감지 및 사용자 식별
  */
 
-import { getAnonymousKey, getDeviceId } from '@apps-in-toss/web-framework';
+import { getAnonymousKey, getDeviceId, appLogin, getIsTossLoginIntegratedService } from '@apps-in-toss/web-framework';
 
-import type { TossUserIdentity } from '@/types/toss';
+import type { TossLoginUser, TossUserIdentity } from '@/types/toss';
 
 // @MX:NOTE: [AUTO] SDK import 방식 변경: 가짜 window.__TOSS_BRIDGE__ → 실제 @apps-in-toss/web-framework
 // @MX:SPEC: SPEC-JELLY-002 M4
@@ -55,3 +55,53 @@ export async function getUserIdentity(): Promise<TossUserIdentity | null> {
     return null;
   }
 }
+
+/**
+ * 토스 로그인 실행 → authorizationCode 획득 → Edge Function으로 전달.
+ * 성공 시 TossLoginUser(name, email)를 반환한다.
+ * WebView가 아니거나 실패 시 null 반환.
+ */
+export async function signInWithToss(supabaseUserId: string): Promise<TossLoginUser | null> {
+  try {
+    if (!detectWebView()) return null;
+
+    const { authorizationCode } = await appLogin();
+
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+    const edgeFnUrl = `${supabaseUrl}/functions/v1/toss-login`;
+
+    const res = await fetch(edgeFnUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ authorizationCode, supabaseUserId }),
+    });
+
+    if (!res.ok) return null;
+
+    const data = await res.json() as { ok: boolean; name?: string; email?: string };
+    if (!data.ok) return null;
+
+    return {
+      name: data.name ?? '',
+      email: data.email ?? '',
+    };
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * 현재 유저가 토스 로그인을 연동했는지 확인한다.
+ * WebView가 아니거나 지원하지 않는 앱 버전이면 false 반환.
+ */
+export async function checkTossLoginLinked(): Promise<boolean> {
+  try {
+    if (!detectWebView()) return false;
+    const result = await getIsTossLoginIntegratedService();
+    return result === true;
+  } catch {
+    return false;
+  }
+}
+
+export type { TossLoginUser };

@@ -1,12 +1,11 @@
 /**
  * tossStore 상태 관리 테스트
- * M4-T2: isWebView, userInfo, isBridgeReady, bridgeError + actions
+ * isWebView, userIdentity, tossLoginUser, isBridgeReady, bridgeError + actions
  */
 
 import { tossStore } from '@/stores/tossStore';
 
 describe('tossStore', () => {
-  // 각 테스트 전 store 초기화
   beforeEach(() => {
     tossStore.getState().reset();
   });
@@ -14,9 +13,9 @@ describe('tossStore', () => {
   describe('초기 상태', () => {
     it('기본값이 올바르게 설정되어 있다', () => {
       const state = tossStore.getState();
-
       expect(state.isWebView).toBe(false);
-      expect(state.userInfo).toBeNull();
+      expect(state.userIdentity).toBeNull();
+      expect(state.tossLoginUser).toBeNull();
       expect(state.isBridgeReady).toBe(false);
       expect(state.bridgeError).toBeNull();
     });
@@ -35,20 +34,31 @@ describe('tossStore', () => {
     });
   });
 
-  describe('setUserInfo', () => {
-    it('사용자 정보를 설정한다', () => {
-      const userInfo = { name: '홍길동', userId: 'user-123' };
-      tossStore.getState().setUserInfo(userInfo);
-
-      expect(tossStore.getState().userInfo).toEqual(userInfo);
+  describe('setUserIdentity', () => {
+    it('사용자 식별 정보를 설정한다', () => {
+      const identity = { anonymousKey: 'hash-abc', deviceId: 'dev-xyz' };
+      tossStore.getState().setUserIdentity(identity);
+      expect(tossStore.getState().userIdentity).toEqual(identity);
     });
 
-    it('사용자 정보를 null로 설정한다', () => {
-      const userInfo = { name: '홍길동', userId: 'user-123' };
-      tossStore.getState().setUserInfo(userInfo);
-      tossStore.getState().setUserInfo(null);
+    it('사용자 식별 정보를 null로 설정한다', () => {
+      tossStore.getState().setUserIdentity({ anonymousKey: 'h', deviceId: 'd' });
+      tossStore.getState().setUserIdentity(null);
+      expect(tossStore.getState().userIdentity).toBeNull();
+    });
+  });
 
-      expect(tossStore.getState().userInfo).toBeNull();
+  describe('setTossLoginUser', () => {
+    it('토스 로그인 사용자 정보를 설정한다', () => {
+      const user = { name: '홍길동', email: 'hong@example.com' };
+      tossStore.getState().setTossLoginUser(user);
+      expect(tossStore.getState().tossLoginUser).toEqual(user);
+    });
+
+    it('토스 로그인 사용자 정보를 null로 설정한다', () => {
+      tossStore.getState().setTossLoginUser({ name: '홍길동', email: 'hong@example.com' });
+      tossStore.getState().setTossLoginUser(null);
+      expect(tossStore.getState().tossLoginUser).toBeNull();
     });
   });
 
@@ -81,7 +91,8 @@ describe('tossStore', () => {
   describe('reset', () => {
     it('모든 상태를 초기값으로 되돌린다', () => {
       tossStore.getState().setWebView(true);
-      tossStore.getState().setUserInfo({ name: '테스트', userId: '1' });
+      tossStore.getState().setUserIdentity({ anonymousKey: 'h', deviceId: 'd' });
+      tossStore.getState().setTossLoginUser({ name: '테스트', email: 'test@test.com' });
       tossStore.getState().setBridgeReady(true);
       tossStore.getState().setBridgeError('에러');
 
@@ -89,7 +100,8 @@ describe('tossStore', () => {
 
       const state = tossStore.getState();
       expect(state.isWebView).toBe(false);
-      expect(state.userInfo).toBeNull();
+      expect(state.userIdentity).toBeNull();
+      expect(state.tossLoginUser).toBeNull();
       expect(state.isBridgeReady).toBe(false);
       expect(state.bridgeError).toBeNull();
     });

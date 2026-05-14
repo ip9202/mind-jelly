@@ -1,232 +1,179 @@
 /**
  * Toss Bridge 유틸리티 테스트
- * M4-T3: detectWebView, connectBridge, getDeviceInfo
- * M4-T6: Bridge Fallback (try/catch + timeout)
+ * SDK(@apps-in-toss/web-framework) 기반: detectWebView, getUserIdentity, signInWithToss, checkTossLoginLinked
  */
 
-// Window 확장 타입을 위한 설정
-declare global {
-  interface Window {
-    __TOSS_BRIDGE__?: {
-      getUserInfo: () => Promise<{ name: string; userId: string }>;
-      getDeviceInfo?: () => Promise<{ darkMode: boolean; screenWidth: number }>;
-    };
-  }
-}
+jest.mock('@apps-in-toss/web-framework', () => ({
+  getDeviceId: jest.fn(),
+  getAnonymousKey: jest.fn(),
+  appLogin: jest.fn(),
+  getIsTossLoginIntegratedService: jest.fn(),
+}));
 
-export {};
+import {
+  getDeviceId,
+  getAnonymousKey,
+  appLogin,
+  getIsTossLoginIntegratedService,
+} from '@apps-in-toss/web-framework';
 
-// navigator.userAgent mock을 위한 유틸
-function mockUserAgent(ua: string) {
-  Object.defineProperty(window.navigator, 'userAgent', {
-    value: ua,
-    configurable: true,
-    writable: true,
+const mockGetDeviceId = getDeviceId as jest.Mock;
+const mockGetAnonymousKey = getAnonymousKey as jest.Mock;
+const mockAppLogin = appLogin as jest.Mock;
+const mockGetIsTossLoginIntegratedService = getIsTossLoginIntegratedService as jest.Mock;
+
+import { detectWebView, getUserIdentity, signInWithToss, checkTossLoginLinked } from '@/lib/toss/bridge';
+
+const OLD_ENV = process.env;
+
+beforeEach(() => {
+  jest.clearAllMocks();
+  process.env = { ...OLD_ENV, NEXT_PUBLIC_SUPABASE_URL: 'https://test.supabase.co' };
+});
+
+afterAll(() => {
+  process.env = OLD_ENV;
+});
+
+// --- detectWebView ---
+
+describe('detectWebView', () => {
+  it('getDeviceId가 유효한 문자열을 반환하면 true', () => {
+    mockGetDeviceId.mockReturnValue('device-abc-123');
+    expect(detectWebView()).toBe(true);
   });
-}
 
-describe('Toss Bridge', () => {
-  let bridge: typeof import('@/lib/toss/bridge');
+  it('getDeviceId가 빈 문자열을 반환하면 false', () => {
+    mockGetDeviceId.mockReturnValue('');
+    expect(detectWebView()).toBe(false);
+  });
 
-  beforeEach(() => {
-    // 모듈 캐시 초기화
-    jest.resetModules();
+  it('getDeviceId가 예외를 던지면 false', () => {
+    mockGetDeviceId.mockImplementation(() => { throw new Error('not in WebView'); });
+    expect(detectWebView()).toBe(false);
+  });
+});
 
-    // window 초기화
-    delete window.__TOSS_BRIDGE__;
-    mockUserAgent(
-      'Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15',
+// --- getUserIdentity ---
+
+describe('getUserIdentity', () => {
+  it('WebView 환경에서 anonymousKey와 deviceId를 반환한다', async () => {
+    mockGetDeviceId.mockReturnValue('device-abc');
+    mockGetAnonymousKey.mockResolvedValue({ type: 'HASH', hash: 'anon-hash-xyz' });
+
+    const result = await getUserIdentity();
+
+    expect(result).toEqual({ anonymousKey: 'anon-hash-xyz', deviceId: 'device-abc' });
+  });
+
+  it('WebView가 아니면 null을 반환한다', async () => {
+    mockGetDeviceId.mockImplementation(() => { throw new Error('not in WebView'); });
+
+    const result = await getUserIdentity();
+    expect(result).toBeNull();
+  });
+
+  it("getAnonymousKey 결과가 'ERROR'이면 null 반환", async () => {
+    mockGetDeviceId.mockReturnValue('device-abc');
+    mockGetAnonymousKey.mockResolvedValue('ERROR');
+
+    const result = await getUserIdentity();
+    expect(result).toBeNull();
+  });
+
+  it('getAnonymousKey 결과 type이 HASH가 아니면 null 반환', async () => {
+    mockGetDeviceId.mockReturnValue('device-abc');
+    mockGetAnonymousKey.mockResolvedValue({ type: 'OTHER', value: 'something' });
+
+    const result = await getUserIdentity();
+    expect(result).toBeNull();
+  });
+
+  it('getAnonymousKey 예외 발생 시 null 반환', async () => {
+    mockGetDeviceId.mockReturnValue('device-abc');
+    mockGetAnonymousKey.mockRejectedValue(new Error('SDK error'));
+
+    const result = await getUserIdentity();
+    expect(result).toBeNull();
+  });
+});
+
+// --- signInWithToss ---
+
+describe('signInWithToss', () => {
+  global.fetch = jest.fn();
+  const mockFetch = global.fetch as jest.Mock;
+
+  it('WebView 환경에서 authorizationCode를 Edge Function으로 전달 후 TossLoginUser 반환', async () => {
+    mockGetDeviceId.mockReturnValue('device-abc');
+    mockAppLogin.mockResolvedValue({ authorizationCode: 'code-123', referrer: 'DEFAULT' });
+    mockFetch.mockResolvedValue({
+      ok: true,
+      json: async () => ({ ok: true, name: '홍길동', email: 'hong@example.com' }),
+    });
+
+    const result = await signInWithToss('supabase-user-id');
+
+    expect(mockAppLogin).toHaveBeenCalled();
+    expect(mockFetch).toHaveBeenCalledWith(
+      'https://test.supabase.co/functions/v1/toss-login',
+      expect.objectContaining({ method: 'POST' })
     );
+    expect(result).toEqual({ name: '홍길동', email: 'hong@example.com' });
   });
 
-  afterEach(() => {
-    // 정리
-    delete window.__TOSS_BRIDGE__;
-    mockUserAgent(
-      'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
-    );
+  it('WebView가 아니면 null 반환', async () => {
+    mockGetDeviceId.mockImplementation(() => { throw new Error('not in WebView'); });
+
+    const result = await signInWithToss('supabase-user-id');
+    expect(result).toBeNull();
   });
 
-  // --- detectWebView ---
+  it('Edge Function이 실패하면 null 반환', async () => {
+    mockGetDeviceId.mockReturnValue('device-abc');
+    mockAppLogin.mockResolvedValue({ authorizationCode: 'code-123', referrer: 'DEFAULT' });
+    mockFetch.mockResolvedValue({ ok: false });
 
-  describe('detectWebView', () => {
-    it('window.__TOSS_BRIDGE__가 있고 User-Agent에 Toss가 있으면 true를 반환한다', async () => {
-      window.__TOSS_BRIDGE__ = {
-        getUserInfo: jest.fn(),
-      };
-      mockUserAgent('Mozilla/5.0 Toss/1.0 AppleWebKit/605.1.15');
-
-      bridge = await import('@/lib/toss/bridge');
-      expect(bridge.detectWebView()).toBe(true);
-    });
-
-    it('window.__TOSS_BRIDGE__가 있어도 User-Agent에 Toss가 없으면 false를 반환한다', async () => {
-      window.__TOSS_BRIDGE__ = {
-        getUserInfo: jest.fn(),
-      };
-      mockUserAgent(
-        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
-      );
-
-      bridge = await import('@/lib/toss/bridge');
-      expect(bridge.detectWebView()).toBe(false);
-    });
-
-    it('User-Agent에 Toss가 있어도 window.__TOSS_BRIDGE__가 없으면 false를 반환한다', async () => {
-      delete window.__TOSS_BRIDGE__;
-      mockUserAgent('Mozilla/5.0 Toss/1.0 AppleWebKit/605.1.15');
-
-      bridge = await import('@/lib/toss/bridge');
-      expect(bridge.detectWebView()).toBe(false);
-    });
-
-    it('둘 다 없으면 false를 반환한다', async () => {
-      delete window.__TOSS_BRIDGE__;
-      mockUserAgent(
-        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
-      );
-
-      bridge = await import('@/lib/toss/bridge');
-      expect(bridge.detectWebView()).toBe(false);
-    });
+    const result = await signInWithToss('supabase-user-id');
+    expect(result).toBeNull();
   });
 
-  // --- connectBridge ---
+  it('appLogin 예외 발생 시 null 반환', async () => {
+    mockGetDeviceId.mockReturnValue('device-abc');
+    mockAppLogin.mockRejectedValue(new Error('login cancelled'));
 
-  describe('connectBridge', () => {
-    it('브릿지에서 사용자 정보를 성공적으로 가져온다', async () => {
-      const mockUserInfo = { name: '홍길동', userId: 'user-123' };
-      window.__TOSS_BRIDGE__ = {
-        getUserInfo: jest.fn().mockResolvedValue(mockUserInfo),
-      };
-      mockUserAgent('Mozilla/5.0 Toss/1.0 AppleWebKit/605.1.15');
+    const result = await signInWithToss('supabase-user-id');
+    expect(result).toBeNull();
+  });
+});
 
-      bridge = await import('@/lib/toss/bridge');
-      const result = await bridge.connectBridge();
+// --- checkTossLoginLinked ---
 
-      expect(result).toEqual(mockUserInfo);
-    });
+describe('checkTossLoginLinked', () => {
+  it('토스 로그인 연동된 유저이면 true 반환', async () => {
+    mockGetDeviceId.mockReturnValue('device-abc');
+    mockGetIsTossLoginIntegratedService.mockResolvedValue(true);
 
-    it('WebView가 아니면 null을 반환한다', async () => {
-      delete window.__TOSS_BRIDGE__;
-      mockUserAgent(
-        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
-      );
-
-      bridge = await import('@/lib/toss/bridge');
-      const result = await bridge.connectBridge();
-
-      expect(result).toBeNull();
-    });
-
-    it('getUserInfo가 에러를 던지면 null을 반환한다 (silent fallback)', async () => {
-      window.__TOSS_BRIDGE__ = {
-        getUserInfo: jest.fn().mockRejectedValue(new Error('Bridge error')),
-      };
-      mockUserAgent('Mozilla/5.0 Toss/1.0 AppleWebKit/605.1.15');
-
-      bridge = await import('@/lib/toss/bridge');
-      const result = await bridge.connectBridge();
-
-      expect(result).toBeNull();
-    });
-
-    it('5초 타임아웃 시 null을 반환한다', async () => {
-      // 영원히 resolve되지 않는 Promise
-      window.__TOSS_BRIDGE__ = {
-        getUserInfo: jest.fn().mockReturnValue(new Promise(() => {})),
-      };
-      mockUserAgent('Mozilla/5.0 Toss/1.0 AppleWebKit/605.1.15');
-
-      bridge = await import('@/lib/toss/bridge');
-
-      // 타임아웃을 100ms로 단축하여 테스트 속도 향상
-      jest.useFakeTimers();
-      const connectPromise = bridge.connectBridge(100);
-
-      // 100ms 타이머 진행
-      jest.advanceTimersByTime(150);
-
-      const result = await connectPromise;
-      expect(result).toBeNull();
-
-      jest.useRealTimers();
-    });
-
-    it('브릿지 객체에 getUserInfo가 없으면 null을 반환한다', async () => {
-      window.__TOSS_BRIDGE__ = {
-        getDeviceInfo: jest.fn(),
-      } as any;
-      mockUserAgent('Mozilla/5.0 Toss/1.0 AppleWebKit/605.1.15');
-
-      bridge = await import('@/lib/toss/bridge');
-      const result = await bridge.connectBridge();
-
-      expect(result).toBeNull();
-    });
+    expect(await checkTossLoginLinked()).toBe(true);
   });
 
-  // --- getDeviceInfo ---
+  it('토스 로그인 미연동 유저이면 false 반환', async () => {
+    mockGetDeviceId.mockReturnValue('device-abc');
+    mockGetIsTossLoginIntegratedService.mockResolvedValue(false);
 
-  describe('getDeviceInfo', () => {
-    it('브릿지에서 디바이스 정보를 성공적으로 가져온다', async () => {
-      const mockDeviceInfo = { darkMode: true, screenWidth: 390 };
-      window.__TOSS_BRIDGE__ = {
-        getUserInfo: jest.fn().mockResolvedValue({
-          name: '테스트',
-          userId: '1',
-        }),
-        getDeviceInfo: jest.fn().mockResolvedValue(mockDeviceInfo),
-      };
-      mockUserAgent('Mozilla/5.0 Toss/1.0 AppleWebKit/605.1.15');
+    expect(await checkTossLoginLinked()).toBe(false);
+  });
 
-      bridge = await import('@/lib/toss/bridge');
-      const result = await bridge.getDeviceInfo();
+  it('WebView가 아니면 false 반환', async () => {
+    mockGetDeviceId.mockImplementation(() => { throw new Error('not in WebView'); });
 
-      expect(result).toEqual(mockDeviceInfo);
-    });
+    expect(await checkTossLoginLinked()).toBe(false);
+  });
 
-    it('getDeviceInfo가 없으면 null을 반환한다', async () => {
-      window.__TOSS_BRIDGE__ = {
-        getUserInfo: jest.fn().mockResolvedValue({
-          name: '테스트',
-          userId: '1',
-        }),
-      };
-      mockUserAgent('Mozilla/5.0 Toss/1.0 AppleWebKit/605.1.15');
+  it('getIsTossLoginIntegratedService 예외 발생 시 false 반환', async () => {
+    mockGetDeviceId.mockReturnValue('device-abc');
+    mockGetIsTossLoginIntegratedService.mockRejectedValue(new Error('SDK error'));
 
-      bridge = await import('@/lib/toss/bridge');
-      const result = await bridge.getDeviceInfo();
-
-      expect(result).toBeNull();
-    });
-
-    it('WebView가 아니면 null을 반환한다', async () => {
-      delete window.__TOSS_BRIDGE__;
-      mockUserAgent(
-        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
-      );
-
-      bridge = await import('@/lib/toss/bridge');
-      const result = await bridge.getDeviceInfo();
-
-      expect(result).toBeNull();
-    });
-
-    it('getDeviceInfo가 에러를 던지면 null을 반환한다', async () => {
-      window.__TOSS_BRIDGE__ = {
-        getUserInfo: jest.fn().mockResolvedValue({
-          name: '테스트',
-          userId: '1',
-        }),
-        getDeviceInfo: jest.fn().mockRejectedValue(new Error('Device error')),
-      };
-      mockUserAgent('Mozilla/5.0 Toss/1.0 AppleWebKit/605.1.15');
-
-      bridge = await import('@/lib/toss/bridge');
-      const result = await bridge.getDeviceInfo();
-
-      expect(result).toBeNull();
-    });
+    expect(await checkTossLoginLinked()).toBe(false);
   });
 });

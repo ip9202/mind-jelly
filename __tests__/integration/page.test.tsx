@@ -89,7 +89,7 @@ describe('Page Integration', () => {
   it('WebView 환경에서 사용자 인사말이 표시된다', () => {
     tossStore.setState({
       isWebView: true,
-      userInfo: { name: '테스트유저' } as any,
+      tossLoginUser: { name: '테스트유저' } as any,
     });
 
     render(<Home />);
