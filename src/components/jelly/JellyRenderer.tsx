@@ -3,6 +3,8 @@
 import { hexToRgba, lightenHex, darkenHex } from '@/lib/utils/color';
 import { JELLY_COLOR, EMOTION_THEME, JELLY_DEFAULT_SHAPE } from '@/lib/constants/emotion';
 import { JELLY_SHAPE_CONFIGS } from '@/lib/constants/jellyShapes';
+import { SKIN_FEATURES } from '@/lib/constants/skinFeatures';
+import { SKIN_THEMES } from '@/lib/rewards/jellySkins';
 import type { EmotionType } from '@/types/emotion';
 import type { JellyShape } from '@/types/physics';
 import type { CSSProperties } from 'react';
@@ -19,11 +21,13 @@ interface JellyRendererProps {
   jellyShape?: JellyShape;
   // SPEC-TOUCH-001: CSS keyframe 바운스 트리거
   bounceKey?: number;
+  // 활성 스킨 ID (동물 특징 SVG 렌더링용)
+  skinId?: string;
 }
 
 // @MX:ANCHOR: 3D 글로시 풍선 젤리 렌더러 (홈/감정플로우/다이어리 3곳 이상에서 사용)
 // @MX:REASON: SVG 네이티브 렌더링 + radialGradient + SMIL 애니메이션으로 풍선형 3D 입체감 구현
-export function JellyRenderer({ bodies, face, emotionColor, emotion, jellyShape, bounceKey }: JellyRendererProps) {
+export function JellyRenderer({ bodies, face, emotionColor, emotion, jellyShape, bounceKey, skinId }: JellyRendererProps) {
   if (bodies.length === 0) return null;
 
   const jelly = bodies[0];
@@ -152,6 +156,64 @@ export function JellyRenderer({ bodies, face, emotionColor, emotion, jellyShape,
           {/* 작은 2차 스페큘러 */}
           <circle cx="0.35" cy="0.18" r="0.020" fill="white" opacity="0.70" />
         </g>
+
+        {/* 스킨 동물 특징 - 바디 외곽에 배치 (마스크 외부) */}
+        {skinId && SKIN_FEATURES[skinId] && (
+          <g className="skin-features" aria-hidden="true">
+            {SKIN_FEATURES[skinId].map((feature, i) => {
+              const theme = SKIN_THEMES[skinId];
+              const colorMap: Record<string, string> = {
+                primary: theme?.primaryColor || currentColor,
+                accent: theme?.accentColor || lightenHex(currentColor, 20),
+                dark: darkenHex(currentColor, 30),
+                white: '#ffffff',
+              };
+              const fillColor = colorMap[feature.colorKey] || currentColor;
+              const strokeAttrs = feature.stroke
+                ? { stroke: feature.stroke.color === 'primary' || feature.stroke.color === 'accent' || feature.stroke.color === 'dark' || feature.stroke.color === 'white' ? colorMap[feature.stroke.color] : feature.stroke.color, strokeWidth: feature.stroke.width }
+                : {};
+
+              if (feature.type === 'circle') {
+                return (
+                  <circle
+                    key={`skin-${i}`}
+                    cx={feature.attrs.cx as number}
+                    cy={feature.attrs.cy as number}
+                    r={feature.attrs.r as number}
+                    fill={fillColor}
+                    opacity={feature.opacity ?? 0.9}
+                    {...strokeAttrs}
+                  />
+                );
+              }
+              if (feature.type === 'ellipse') {
+                return (
+                  <ellipse
+                    key={`skin-${i}`}
+                    cx={feature.attrs.cx as number}
+                    cy={feature.attrs.cy as number}
+                    rx={feature.attrs.rx as number}
+                    ry={feature.attrs.ry as number}
+                    fill={fillColor}
+                    opacity={feature.opacity ?? 0.9}
+                    transform={feature.attrs.transform as string | undefined}
+                    {...strokeAttrs}
+                  />
+                );
+              }
+              // path
+              return (
+                <path
+                  key={`skin-${i}`}
+                  d={feature.attrs.d as string}
+                  fill={fillColor}
+                  opacity={feature.opacity ?? 0.9}
+                  {...strokeAttrs}
+                />
+              );
+            })}
+          </g>
+        )}
 
         {/* 표정 그룹 - 젤리 바디와 함께 움직이도록 mask 적용 */}
         <g mask="url(#jelly-mask)" className="jelly-face">

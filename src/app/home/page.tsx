@@ -4,6 +4,7 @@ import dynamic from 'next/dynamic';
 import { JellySkeleton } from '@/components/jelly/JellySkeleton';
 import { useEffect, useState, useRef, useCallback, useSyncExternalStore } from 'react';
 import { jellyStore } from '@/stores/jellyStore';
+import { rewardStore } from '@/stores/rewardStore';
 import { usePhysicsInit } from './usePhysicsInit';
 import { EMOTION_THEME, EMOTION_COLORS, JELLY_COLOR } from '@/lib/constants/emotion';
 import { isTouchOnJelly, shouldHandleTouch } from '@/lib/utils/touchHandler';
@@ -125,6 +126,7 @@ export default function HomePage() {
   const jellyName = jellyStore((s) => s.jellyName);
   const jellyShape = jellyStore((s) => s.jellyShape);
   const isInitialized = jellyStore((s) => s.isInitialized);
+  const activeSkin = rewardStore((s) => s.activeSkin);
 
   // store의 lastEmotion 변경 시 로컬 시각 상태 동기화
   // (checkDiaryAndReset으로 joy 리셋 시 visual 상태도 함께 갱신)
@@ -411,6 +413,7 @@ export default function HomePage() {
                         emotion={jellyVisualEmotion}
                         jellyShape={jellyShape}
                         bounceKey={bounceKey}
+                        skinId={activeSkin?.id}
                       />
                       {/* 감정 분석 결과가 있을 때만 구슬 렌더링 */}
                       {engineRef.current && uiState === 'beads' && (

@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mind Jelly - 10종 스킨 컬렉션</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #0f0f1a;
+      color: #e2e8f0;
+      line-height: 1.6;
+    }
+    .container { max-width: 1100px; margin: 0 auto; padding: 40px 24px; }
+
+    h1 { font-size: 1.8rem; font-weight: 800; margin-bottom: 4px; }
+    .subtitle { color: #94a3b8; font-size: 0.95rem; margin-bottom: 40px; }
+
+    .tier-section { margin-bottom: 40px; }
+    .tier-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    .tier-badge {
+      padding: 4px 14px;
+      border-radius: 99px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+    }
+    .tier-desc { font-size: 0.85rem; color: #94a3b8; }
+
+    .skin-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 20px;
+    }
+
+    .skin-card {
+      border-radius: 16px;
+      padding: 20px 16px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .skin-card:hover {
+      transform: translateY(-4px);
+    }
+
+    .skin-jelly-wrap {
+      position: relative;
+      width: 120px;
+      height: 120px;
+      margin: 0 auto 12px;
+    }
+
+    .skin-name {
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: 2px;
+    }
+    .skin-id {
+      font-size: 0.7rem;
+      color: rgba(255,255,255,0.4);
+      font-family: monospace;
+    }
+    .skin-emoji {
+      font-size: 1.5rem;
+      margin-top: 4px;
+    }
+
+    .timer-badge {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: rgba(0,0,0,0.5);
+      backdrop-filter: blur(4px);
+      padding: 2px 8px;
+      border-radius: 99px;
+      font-size: 0.65rem;
+      color: #fbbf24;
+    }
+
+    /* Floating animation */
+    @keyframes jelly-float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-6px); }
+    }
+    .jelly-svg {
+      animation: jelly-float 3s ease-in-out infinite;
+    }
+
+    /* Comparison section */
+    .compare-section {
+      margin-top: 48px;
+      padding-top: 32px;
+      border-top: 1px solid rgba(255,255,255,0.1);
+    }
+    .compare-title { font-size: 1.3rem; font-weight: 700; margin-bottom: 8px; }
+    .compare-desc { font-size: 0.9rem; color: #94a3b8; margin-bottom: 24px; }
+
+    .compare-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 48px;
+      flex-wrap: wrap;
+      margin-bottom: 24px;
+    }
+    .compare-item { text-align: center; }
+    .compare-label {
+      font-size: 0.8rem;
+      color: #94a3b8;
+      margin-top: 8px;
+    }
+    .compare-arrow {
+      font-size: 1.5rem;
+      color: #fbbf24;
+    }
+    .tier-label {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      margin-top: 4px;
+    }
+
+    /* Footer */
+    footer {
+      margin-top: 64px;
+      padding-top: 24px;
+      border-top: 1px solid rgba(255,255,255,0.08);
+      color: #4a5568;
+      font-size: 0.8rem;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Mind Jelly - 10종 스킨 컬렉션</h1>
+    <p class="subtitle">보상형 광고 시청 후 해금되는 한정판 젤리 스킨 | 24시간 적용 | lib/rewards/jellySkins.ts 기반</p>
+
+    <!-- Rare -->
+    <div class="tier-section">
+      <div class="tier-header">
+        <span class="tier-badge" style="background:#3B82F6;color:#fff;">RARE</span>
+        <span class="tier-desc">5종 | 해금 확률 높음 | 파란색 테마</span>
+      </div>
+      <div class="skin-grid" id="rare-grid"></div>
+    </div>
+
+    <!-- Epic -->
+    <div class="tier-section">
+      <div class="tier-header">
+        <span class="tier-badge" style="background:#8B5CF6;color:#fff;">EPIC</span>
+        <span class="tier-desc">3종 | 해금 확률 보통 | 보라색 테마</span>
+      </div>
+      <div class="skin-grid" id="epic-grid"></div>
+    </div>
+
+    <!-- Legendary -->
+    <div class="tier-section">
+      <div class="tier-header">
+        <span class="tier-badge" style="background:linear-gradient(135deg,#F59E0B,#EF4444);color:#fff;">LEGENDARY</span>
+        <span class="tier-desc">2종 | 해금 확률 매우 낮 | 금색 테마</span>
+      </div>
+      <div class="skin-grid" id="legendary-grid"></div>
+    </div>
+
+    <!-- Comparison -->
+    <div class="compare-section">
+      <div class="compare-title">스킨 적용 변화</div>
+      <div class="compare-desc">보상형 광고 시청 후 스킨을 선택하면 젤리의 색상 테마가 즉시 변경됩니다. 24시간 후 자동 만료.</div>
+
+      <div class="compare-row">
+        <div class="compare-item">
+          <div class="skin-jelly-wrap"></div>
+          <div id="compare-base" style="width:140px;height:140px;margin:0 auto;"></div>
+          <div class="compare-label">기본 젤리</div>
+        </div>
+        <div class="compare-arrow">→</div>
+        <div class="compare-item">
+          <div id="compare-rare" style="width:140px;height:140px;margin:0 auto;"></div>
+          <div class="compare-label">Rare 스킨</div>
+          <span class="tier-label" style="background:#3B82F6;color:#fff;">RARE</span>
+        </div>
+        <div class="compare-arrow">→</div>
+        <div class="compare-item">
+          <div id="compare-epic" style="width:140px;height:140px;margin:0 auto;"></div>
+          <div class="compare-label">Epic 스킨</div>
+          <span class="tier-label" style="background:#8B5CF6;color:#fff;">EPIC</span>
+        </div>
+        <div class="compare-arrow">→</div>
+        <div class="compare-item">
+          <div id="compare-legend" style="width:140px;height:140px;margin:0 auto;"></div>
+          <div class="compare-label">Legendary 스킨</div>
+          <span class="tier-label" style="background:linear-gradient(135deg,#F59E0B,#EF4444);color:#fff;">LEGENDARY</span>
+        </div>
+      </div>
+    </div>
+
+    <footer>
+      Mind Jelly v1.0.0 | jellySkins.ts + JellyRenderer.tsx 기반 | 생성일: 2026-05-14
+    </footer>
+  </div>
+
+  <script>
+    // Jelly SVG path (ppung shape from jellyShapes.ts)
+    const JELLY_PATH = 'M 0.50 0.15 C 0.30 0.15 0.15 0.30 0.15 0.50 C 0.15 0.70 0.30 0.85 0.50 0.85 C 0.70 0.85 0.85 0.70 0.85 0.50 C 0.85 0.30 0.70 0.15 0.50 0.15 Z';
+    const JELLY_PATH_ALT = 'M 0.50 0.12 C 0.35 0.12 0.20 0.25 0.18 0.40 C 0.16 0.55 0.30 0.78 0.50 0.88 C 0.70 0.98 0.82 0.75 0.86 0.50 C 0.90 0.25 0.70 0.12 0.50 0.12 Z';
+
+    // Color utilities
+    function lightenHex(hex, pct) {
+      const num = parseInt(hex.slice(1), 16);
+      const r = Math.min(255, (num >> 16) + Math.round(255 * pct / 100));
+      const g = Math.min(255, ((num >> 8) & 0xff) + Math.round(255 * pct / 100));
+      const b = Math.min(255, (num & 0xff) + Math.round(255 * pct / 100));
+      return `#${(r << 16 | g << 8 | b).toString(16).padStart(6, '0')}`;
+    }
+    function darkenHex(hex, pct) {
+      const num = parseInt(hex.slice(1), 16);
+      const r = Math.max(0, (num >> 16) - Math.round(255 * pct / 100));
+      const g = Math.max(0, ((num >> 8) & 0xff) - Math.round(255 * pct / 100));
+      const b = Math.max(0, (num & 0xff) - Math.round(255 * pct / 100));
+      return `#${(r << 16 | g << 8 | b).toString(16).padStart(6, '0')}`;
+    }
+    function hexToRgba(hex, alpha) {
+      const num = parseInt(hex.slice(1), 16);
+      return `rgba(${num >> 16}, ${(num >> 8) & 0xff}, ${num & 0xff}, ${alpha})`;
+    }
+
+    // Generate jelly SVG (matching JellyRenderer.tsx exactly)
+    function createJellySVG(color, size = 120, skinId = null) {
+      const glowColor = hexToRgba(color, 0.4);
+      const lightColor = lightenHex(color, 45);
+      const darkColor = darkenHex(color, 25);
+      const accentColor = SKIN_THEMES_JS[skinId]?.accent || color;
+
+      // 스킨 피처 렌더링 (skinFeatures.ts와 동일한 데이터)
+      let featuresSvg = '';
+      if (skinId && SKIN_FEATURES_JS[skinId]) {
+        const colorMap = {
+          primary: color,
+          accent: accentColor,
+          dark: darkenHex(color, 30),
+          white: '#ffffff',
+        };
+        featuresSvg = SKIN_FEATURES_JS[skinId].map((f, i) => {
+          const fill = colorMap[f.colorKey] || color;
+          const op = f.opacity ?? 0.9;
+          const strokeAttr = f.stroke ? ` stroke="${colorMap[f.stroke.color] || f.stroke.color}" stroke-width="${f.stroke.width}"` : '';
+          if (f.type === 'circle') return `<circle key="sf-${i}" cx="${f.attrs.cx}" cy="${f.attrs.cy}" r="${f.attrs.r}" fill="${fill}" opacity="${op}"${strokeAttr}/>`;
+          if (f.type === 'ellipse') {
+            const tx = f.attrs.transform ? ` transform="${f.attrs.transform}"` : '';
+            return `<ellipse key="sf-${i}" cx="${f.attrs.cx}" cy="${f.attrs.cy}" rx="${f.attrs.rx}" ry="${f.attrs.ry}" fill="${fill}" opacity="${op}"${tx}${strokeAttr}/>`;
+          }
+          return `<path key="sf-${i}" d="${f.attrs.d}" fill="${fill}" opacity="${op}"${strokeAttr}/>`;
+        }).join('\n        ');
+      }
+
+      return `
+      <svg viewBox="0 0 1 1" width="${size}" height="${size}" class="jelly-svg" style="overflow:visible;">
+        <defs>
+          <radialGradient id="grad-${color.slice(1)}" cx="0.35" cy="0.28" r="0.72" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="white" stop-opacity="0.85"/>
+            <stop offset="22%" stop-color="${lightColor}"/>
+            <stop offset="62%" stop-color="${color}"/>
+            <stop offset="100%" stop-color="${darkColor}"/>
+          </radialGradient>
+          <filter id="glow-${color.slice(1)}" x="-40%" y="-40%" width="180%" height="180%">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="0.055" result="blur"/>
+          </filter>
+          <filter id="shadow-${color.slice(1)}" x="-20%" y="-10%" width="140%" height="145%">
+            <feDropShadow dx="0" dy="0.040" stdDeviation="0.045" flood-color="${color}" flood-opacity="0.42"/>
+          </filter>
+          <mask id="mask-${color.slice(1)}">
+            <path d="${JELLY_PATH}" fill="white">
+              <animate attributeName="d" dur="2.5s" repeatCount="indefinite" calcMode="spline"
+                keyTimes="0;0.5;1" keySplines="0.4 0 0.6 1;0.4 0 0.6 1"
+                values="${JELLY_PATH};${JELLY_PATH_ALT};${JELLY_PATH}"/>
+            </path>
+          </mask>
+        </defs>
+
+        <!-- Glow -->
+        <path d="${JELLY_PATH}" fill="${glowColor}" filter="url(#glow-${color.slice(1)})" opacity="0.75"
+              transform="translate(0.5 0.5) scale(1.22) translate(-0.5 -0.5)">
+          <animate attributeName="d" dur="2.5s" repeatCount="indefinite" calcMode="spline"
+            keyTimes="0;0.5;1" keySplines="0.4 0 0.6 1;0.4 0 0.6 1"
+            values="${JELLY_PATH};${JELLY_PATH_ALT};${JELLY_PATH}"/>
+        </path>
+
+        <!-- Body -->
+        <path d="${JELLY_PATH}" fill="url(#grad-${color.slice(1)})" filter="url(#shadow-${color.slice(1)})"
+              stroke="rgba(255,255,255,0.4)" stroke-width="0.016" opacity="0.93"
+              style="transition:fill 800ms ease-in-out">
+          <animate attributeName="d" dur="2.5s" repeatCount="indefinite" calcMode="spline"
+            keyTimes="0;0.5;1" keySplines="0.4 0 0.6 1;0.4 0 0.6 1"
+            values="${JELLY_PATH};${JELLY_PATH_ALT};${JELLY_PATH}"/>
+        </path>
+
+        <!-- Highlights -->
+        <g mask="url(#mask-${color.slice(1)})">
+          <ellipse cx="0.33" cy="0.26" rx="0.17" ry="0.10" fill="white" opacity="0.52" style="filter:blur(2px)"/>
+          <ellipse cx="0.26" cy="0.21" rx="0.055" ry="0.036" fill="white" opacity="0.88" transform="rotate(-22 0.26 0.21)"/>
+          <circle cx="0.35" cy="0.18" r="0.020" fill="white" opacity="0.70"/>
+        </g>
+
+        <!-- Skin Features (동물 특징 - 마스크 외부) -->
+        ${featuresSvg ? `<g class="skin-features" aria-hidden="true">
+        ${featuresSvg}
+        </g>` : ''}
+
+        <!-- Face (idle expression) -->
+        <g mask="url(#mask-${color.slice(1)})">
+          <path d="M 0.34 0.36 L 0.42 0.36 M 0.58 0.36 L 0.66 0.36 M 0.42 0.54 Q 0.5 0.46 0.58 0.54"
+                stroke="#7a5761" stroke-width="0.008" fill="none" stroke-linecap="round"/>
+        </g>
+      </svg>`;
+    }
+
+    // Skin data from jellySkins.ts
+    const SKINS = {
+      rare: [
+        { id: 'bear', name: '곰돌이', emoji: '🐻', color: '#3B82F6' },
+        { id: 'cat', name: '고양이', emoji: '🐱', color: '#3B82F6' },
+        { id: 'panda', name: '판다', emoji: '🐼', color: '#3B82F6' },
+        { id: 'rabbit', name: '토끼', emoji: '🐰', color: '#3B82F6' },
+        { id: 'fox', name: '여우', emoji: '🦊', color: '#3B82F6' },
+      ],
+      epic: [
+        { id: 'unicorn', name: '유니콘', emoji: '🦄', color: '#8B5CF6' },
+        { id: 'dolphin', name: '돌고래', emoji: '🐬', color: '#8B5CF6' },
+        { id: 'butterfly', name: '나비', emoji: '🦋', color: '#8B5CF6' },
+      ],
+      legendary: [
+        { id: 'dragon', name: '드래곤', emoji: '🐉', color: '#F59E0B' },
+        { id: 'phoenix', name: '피닉스', emoji: '🔥', color: '#F59E0B' },
+      ]
+    };
+
+    // 스킨 테마 (jellySkins.ts SKIN_THEMES와 동일)
+    const SKIN_THEMES_JS = {
+      bear: { primary: '#3B82F6', accent: '#60A5FA' },
+      cat: { primary: '#3B82F6', accent: '#60A5FA' },
+      panda: { primary: '#3B82F6', accent: '#60A5FA' },
+      rabbit: { primary: '#3B82F6', accent: '#60A5FA' },
+      fox: { primary: '#3B82F6', accent: '#60A5FA' },
+      unicorn: { primary: '#8B5CF6', accent: '#A78BFA' },
+      dolphin: { primary: '#8B5CF6', accent: '#A78BFA' },
+      butterfly: { primary: '#8B5CF6', accent: '#A78BFA' },
+      dragon: { primary: '#F59E0B', accent: '#FBBF24' },
+      phoenix: { primary: '#F59E0B', accent: '#FBBF24' },
+    };
+
+    // 스킨 피처 (skinFeatures.ts와 동일한 데이터)
+    const SKIN_FEATURES_JS = {
+      bear: [
+        { type: 'circle', attrs: { cx: 0.28, cy: 0.12, r: 0.065 }, colorKey: 'primary', opacity: 0.9 },
+        { type: 'circle', attrs: { cx: 0.72, cy: 0.12, r: 0.065 }, colorKey: 'primary', opacity: 0.9 },
+        { type: 'circle', attrs: { cx: 0.28, cy: 0.12, r: 0.035 }, colorKey: 'accent', opacity: 0.7 },
+        { type: 'circle', attrs: { cx: 0.72, cy: 0.12, r: 0.035 }, colorKey: 'accent', opacity: 0.7 },
+      ],
+      cat: [
+        { type: 'path', attrs: { d: 'M 0.25 0.18 L 0.20 0.02 L 0.38 0.13 Z' }, colorKey: 'primary', opacity: 0.9 },
+        { type: 'path', attrs: { d: 'M 0.75 0.18 L 0.80 0.02 L 0.62 0.13 Z' }, colorKey: 'primary', opacity: 0.9 },
+        { type: 'path', attrs: { d: 'M 0.27 0.16 L 0.24 0.06 L 0.35 0.14 Z' }, colorKey: 'accent', opacity: 0.6 },
+        { type: 'path', attrs: { d: 'M 0.73 0.16 L 0.76 0.06 L 0.65 0.14 Z' }, colorKey: 'accent', opacity: 0.6 },
+        { type: 'path', attrs: { d: 'M 0.18 0.48 L 0.08 0.44 M 0.18 0.52 L 0.06 0.52 M 0.18 0.56 L 0.08 0.60' }, colorKey: 'dark', opacity: 0.5 },
+        { type: 'path', attrs: { d: 'M 0.82 0.48 L 0.92 0.44 M 0.82 0.52 L 0.94 0.52 M 0.82 0.56 L 0.92 0.60' }, colorKey: 'dark', opacity: 0.5 },
+      ],
+      panda: [
+        { type: 'circle', attrs: { cx: 0.26, cy: 0.12, r: 0.065 }, colorKey: 'dark', opacity: 0.9 },
+        { type: 'circle', attrs: { cx: 0.74, cy: 0.12, r: 0.065 }, colorKey: 'dark', opacity: 0.9 },
+        { type: 'ellipse', attrs: { cx: 0.38, cy: 0.40, rx: 0.07, ry: 0.055 }, colorKey: 'dark', opacity: 0.35 },
+        { type: 'ellipse', attrs: { cx: 0.62, cy: 0.40, rx: 0.07, ry: 0.055 }, colorKey: 'dark', opacity: 0.35 },
+      ],
+      rabbit: [
+        { type: 'path', attrs: { d: 'M 0.34 0.15 C 0.30 0.08 0.28 -0.02 0.32 -0.08 C 0.36 -0.12 0.40 -0.06 0.40 0.02 C 0.40 0.08 0.38 0.14 0.38 0.15 Z' }, colorKey: 'primary', opacity: 0.9 },
+        { type: 'path', attrs: { d: 'M 0.66 0.15 C 0.70 0.08 0.72 -0.02 0.68 -0.08 C 0.64 -0.12 0.60 -0.06 0.60 0.02 C 0.60 0.08 0.62 0.14 0.62 0.15 Z' }, colorKey: 'primary', opacity: 0.9 },
+        { type: 'path', attrs: { d: 'M 0.35 0.14 C 0.32 0.08 0.31 0.00 0.33 -0.05 C 0.35 -0.08 0.37 -0.04 0.38 0.02 C 0.38 0.08 0.37 0.12 0.37 0.14 Z' }, colorKey: 'accent', opacity: 0.6 },
+        { type: 'path', attrs: { d: 'M 0.65 0.14 C 0.68 0.08 0.69 0.00 0.67 -0.05 C 0.65 -0.08 0.63 -0.04 0.62 0.02 C 0.62 0.08 0.63 0.12 0.63 0.14 Z' }, colorKey: 'accent', opacity: 0.6 },
+      ],
+      fox: [
+        { type: 'path', attrs: { d: 'M 0.22 0.18 L 0.14 0.00 L 0.38 0.12 Z' }, colorKey: 'primary', opacity: 0.9 },
+        { type: 'path', attrs: { d: 'M 0.78 0.18 L 0.86 0.00 L 0.62 0.12 Z' }, colorKey: 'primary', opacity: 0.9 },
+        { type: 'path', attrs: { d: 'M 0.24 0.16 L 0.19 0.04 L 0.34 0.13 Z' }, colorKey: 'accent', opacity: 0.6 },
+        { type: 'path', attrs: { d: 'M 0.76 0.16 L 0.81 0.04 L 0.66 0.13 Z' }, colorKey: 'accent', opacity: 0.6 },
+        { type: 'ellipse', attrs: { cx: 0.50, cy: 0.72, rx: 0.12, ry: 0.08 }, colorKey: 'white', opacity: 0.25 },
+      ],
+      unicorn: [
+        { type: 'path', attrs: { d: 'M 0.50 0.15 L 0.48 0.00 L 0.52 0.04 L 0.48 0.08 L 0.52 0.12 L 0.50 0.15 Z' }, colorKey: 'accent', opacity: 0.95 },
+        { type: 'path', attrs: { d: 'M 0.34 0.16 L 0.30 0.06 L 0.42 0.13 Z' }, colorKey: 'primary', opacity: 0.85 },
+        { type: 'path', attrs: { d: 'M 0.66 0.16 L 0.70 0.06 L 0.58 0.13 Z' }, colorKey: 'primary', opacity: 0.85 },
+        { type: 'circle', attrs: { cx: 0.56, cy: 0.06, r: 0.012 }, colorKey: 'accent', opacity: 0.7 },
+        { type: 'circle', attrs: { cx: 0.44, cy: 0.08, r: 0.008 }, colorKey: 'accent', opacity: 0.5 },
+      ],
+      dolphin: [
+        { type: 'path', attrs: { d: 'M 0.48 0.15 C 0.46 0.08 0.44 0.02 0.50 0.00 C 0.56 0.02 0.54 0.08 0.52 0.15 Z' }, colorKey: 'primary', opacity: 0.9 },
+        { type: 'path', attrs: { d: 'M 0.40 0.68 C 0.36 0.72 0.30 0.74 0.28 0.72' }, colorKey: 'primary', opacity: 0.6, stroke: { color: 'primary', width: 0.006 } },
+        { type: 'ellipse', attrs: { cx: 0.50, cy: 0.72, rx: 0.15, ry: 0.06 }, colorKey: 'accent', opacity: 0.2 },
+        { type: 'circle', attrs: { cx: 0.82, cy: 0.70, r: 0.012 }, colorKey: 'accent', opacity: 0.5 },
+        { type: 'circle', attrs: { cx: 0.88, cy: 0.76, r: 0.008 }, colorKey: 'accent', opacity: 0.3 },
+      ],
+      butterfly: [
+        { type: 'path', attrs: { d: 'M 0.40 0.15 C 0.36 0.06 0.30 0.02 0.28 0.00' }, colorKey: 'dark', opacity: 0.7, stroke: { color: 'dark', width: 0.005 } },
+        { type: 'path', attrs: { d: 'M 0.60 0.15 C 0.64 0.06 0.70 0.02 0.72 0.00' }, colorKey: 'dark', opacity: 0.7, stroke: { color: 'dark', width: 0.005 } },
+        { type: 'circle', attrs: { cx: 0.28, cy: 0.00, r: 0.018 }, colorKey: 'primary', opacity: 0.8 },
+        { type: 'circle', attrs: { cx: 0.72, cy: 0.00, r: 0.018 }, colorKey: 'primary', opacity: 0.8 },
+        { type: 'path', attrs: { d: 'M 0.15 0.42 C 0.06 0.36 0.02 0.28 0.08 0.24 C 0.12 0.22 0.16 0.30 0.15 0.42 Z' }, colorKey: 'primary', opacity: 0.25 },
+        { type: 'path', attrs: { d: 'M 0.85 0.42 C 0.94 0.36 0.98 0.28 0.92 0.24 C 0.88 0.22 0.84 0.30 0.85 0.42 Z' }, colorKey: 'primary', opacity: 0.25 },
+      ],
+      dragon: [
+        { type: 'path', attrs: { d: 'M 0.32 0.15 L 0.26 0.00 L 0.38 0.10 Z' }, colorKey: 'primary', opacity: 0.95 },
+        { type: 'path', attrs: { d: 'M 0.68 0.15 L 0.74 0.00 L 0.62 0.10 Z' }, colorKey: 'primary', opacity: 0.95 },
+        { type: 'path', attrs: { d: 'M 0.15 0.40 C 0.06 0.34 0.00 0.40 0.02 0.50 C 0.04 0.56 0.10 0.58 0.15 0.55 Z' }, colorKey: 'primary', opacity: 0.5 },
+        { type: 'path', attrs: { d: 'M 0.85 0.40 C 0.94 0.34 1.00 0.40 0.98 0.50 C 0.96 0.56 0.90 0.58 0.85 0.55 Z' }, colorKey: 'primary', opacity: 0.5 },
+        { type: 'path', attrs: { d: 'M 0.82 0.82 C 0.88 0.86 0.94 0.88 0.96 0.84 C 0.94 0.82 0.90 0.84 0.86 0.82 Z' }, colorKey: 'accent', opacity: 0.7 },
+        { type: 'ellipse', attrs: { cx: 0.50, cy: 0.70, rx: 0.10, ry: 0.04 }, colorKey: 'accent', opacity: 0.15 },
+      ],
+      phoenix: [
+        { type: 'path', attrs: { d: 'M 0.50 0.15 C 0.46 0.06 0.42 -0.04 0.48 -0.08 C 0.50 -0.02 0.50 0.04 0.52 -0.08 C 0.58 -0.04 0.54 0.06 0.50 0.15 Z' }, colorKey: 'primary', opacity: 0.95 },
+        { type: 'path', attrs: { d: 'M 0.42 0.16 C 0.38 0.08 0.34 0.00 0.38 -0.04 C 0.40 0.02 0.42 0.08 0.44 0.14 Z' }, colorKey: 'accent', opacity: 0.8 },
+        { type: 'path', attrs: { d: 'M 0.58 0.16 C 0.62 0.08 0.66 0.00 0.62 -0.04 C 0.60 0.02 0.58 0.08 0.56 0.14 Z' }, colorKey: 'accent', opacity: 0.8 },
+        { type: 'path', attrs: { d: 'M 0.50 0.85 C 0.48 0.92 0.46 1.00 0.50 1.04 C 0.54 1.00 0.52 0.92 0.50 0.85 Z' }, colorKey: 'primary', opacity: 0.7 },
+        { type: 'path', attrs: { d: 'M 0.42 0.82 C 0.38 0.90 0.34 0.98 0.36 1.02 C 0.40 0.98 0.42 0.90 0.44 0.84 Z' }, colorKey: 'accent', opacity: 0.6 },
+        { type: 'path', attrs: { d: 'M 0.58 0.82 C 0.62 0.90 0.66 0.98 0.64 1.02 C 0.60 0.98 0.58 0.90 0.56 0.84 Z' }, colorKey: 'accent', opacity: 0.6 },
+        { type: 'path', attrs: { d: 'M 0.15 0.44 C 0.06 0.38 0.00 0.44 0.04 0.54 C 0.06 0.58 0.12 0.56 0.15 0.50 Z' }, colorKey: 'primary', opacity: 0.3 },
+        { type: 'path', attrs: { d: 'M 0.85 0.44 C 0.94 0.38 1.00 0.44 0.96 0.54 C 0.94 0.58 0.88 0.56 0.85 0.50 Z' }, colorKey: 'primary', opacity: 0.3 },
+      ],
+    };
+
+    const BG_COLORS = {
+      rare: { card: '#0f172a', border: '#1e3a5f' },
+      epic: { card: '#1a1033', border: '#3b1f6e' },
+      legendary: { card: '#1a1200', border: '#5c3d00' },
+    };
+
+    function renderSkinCard(skin, tier) {
+      const bg = BG_COLORS[tier];
+      const borderColor = skin.color;
+      return `
+        <div class="skin-card" style="background:${bg.card};border:1px solid ${bg.border};">
+          <span class="timer-badge">24h</span>
+          <div class="skin-jelly-wrap">${createJellySVG(skin.color, 120, skin.id)}</div>
+          <div class="skin-name">${skin.name}</div>
+          <div class="skin-id">${skin.id}</div>
+        </div>
+      `;
+    }
+
+    // Render grids
+    document.getElementById('rare-grid').innerHTML = SKINS.rare.map(s => renderSkinCard(s, 'rare')).join('');
+    document.getElementById('epic-grid').innerHTML = SKINS.epic.map(s => renderSkinCard(s, 'epic')).join('');
+    document.getElementById('legendary-grid').innerHTML = SKINS.legendary.map(s => renderSkinCard(s, 'legendary')).join('');
+
+    // Comparison section
+    const baseColor = '#6c5ce7';
+    document.getElementById('compare-base').innerHTML = createJellySVG(baseColor, 140);
+    document.getElementById('compare-rare').innerHTML = createJellySVG('#3B82F6', 140, 'rabbit');
+    document.getElementById('compare-epic').innerHTML = createJellySVG('#8B5CF6', 140, 'unicorn');
+    document.getElementById('compare-legend').innerHTML = createJellySVG('#F59E0B', 140, 'dragon');
+  </script>
+</body>
+</html>

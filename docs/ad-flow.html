@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mind Jelly - 광고 노출 시나리오</title>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f8f9fa;
+      color: #1a1a2e;
+      line-height: 1.7;
+    }
+    .container { max-width: 960px; margin: 0 auto; padding: 40px 24px; }
+
+    h1 { font-size: 2rem; font-weight: 800; margin-bottom: 8px; color: #1a1a2e; }
+    h2 { font-size: 1.4rem; font-weight: 700; margin: 48px 0 16px; color: #2d3a8c; border-left: 4px solid #6c5ce7; padding-left: 12px; }
+    h3 { font-size: 1.1rem; font-weight: 600; margin: 24px 0 8px; color: #4a4a6a; }
+    p { margin-bottom: 12px; }
+    .subtitle { color: #666; font-size: 1rem; margin-bottom: 32px; }
+
+    .mermaid { margin: 24px 0; background: #fff; border-radius: 12px; padding: 24px; border: 1px solid #e2e8f0; }
+
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 24px;
+      margin: 16px 0;
+      border: 1px solid #e2e8f0;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    }
+    .card-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+    .card-icon { font-size: 1.8rem; }
+    .card-title { font-size: 1.15rem; font-weight: 700; }
+    .card-status {
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: 99px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .status-active { background: #d4edda; color: #155724; }
+    .status-ready { background: #fff3cd; color: #856404; }
+    .status-inactive { background: #f8d7da; color: #721c24; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0;
+      background: #fff;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid #e2e8f0;
+    }
+    th { background: #f1f3f5; padding: 12px 16px; text-align: left; font-weight: 600; font-size: 0.9rem; }
+    td { padding: 12px 16px; border-top: 1px solid #eee; font-size: 0.9rem; }
+    tr:hover td { background: #f8f9ff; }
+    code { background: #f1f3f5; padding: 2px 6px; border-radius: 4px; font-size: 0.85em; }
+
+    .tag {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 0.8rem;
+      font-weight: 500;
+    }
+    .tag-interstitial { background: #ffeaa7; color: #6c5ce7; }
+    .tag-banner { background: #dfe6e9; color: #2d3436; }
+    .tag-rewarded { background: #fab1a0; color: #e17055; }
+
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin: 16px 0; }
+    .stat-box {
+      background: linear-gradient(135deg, #6c5ce7 0%, #a29bfe 100%);
+      color: white;
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+    }
+    .stat-number { font-size: 2.5rem; font-weight: 800; }
+    .stat-label { font-size: 0.85rem; opacity: 0.85; margin-top: 4px; }
+
+    .timeline { position: relative; padding-left: 32px; margin: 16px 0; }
+    .timeline::before { content: ''; position: absolute; left: 12px; top: 0; bottom: 0; width: 2px; background: #dfe6e9; }
+    .timeline-item { position: relative; margin-bottom: 20px; }
+    .timeline-item::before {
+      content: '';
+      position: absolute;
+      left: -24px; top: 6px;
+      width: 12px; height: 12px;
+      border-radius: 50%;
+      background: #6c5ce7;
+      border: 2px solid #fff;
+      box-shadow: 0 0 0 2px #6c5ce7;
+    }
+    .timeline-item.ad-step::before { background: #e17055; box-shadow: 0 0 0 2px #e17055; }
+    .timeline-title { font-weight: 600; margin-bottom: 4px; }
+    .timeline-desc { font-size: 0.9rem; color: #555; }
+
+    .note {
+      background: #fff8e1;
+      border-left: 4px solid #ffc107;
+      padding: 12px 16px;
+      border-radius: 0 8px 8px 0;
+      margin: 16px 0;
+      font-size: 0.9rem;
+    }
+    .note strong { color: #f57f17; }
+
+    footer { margin-top: 64px; padding-top: 24px; border-top: 1px solid #e2e8f0; color: #999; font-size: 0.8rem; text-align: center; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Mind Jelly - 광고 노출 시나리오</h1>
+    <p class="subtitle">SPEC-AD-001 기반 | 앱인토스 WebView + GoogleAdMob SDK</p>
+
+    <!-- 요약 통계 -->
+    <div class="grid">
+      <div class="stat-box">
+        <div class="stat-number">3</div>
+        <div class="stat-label">광고 유형 (컴포넌트)</div>
+      </div>
+      <div class="stat-box" style="background: linear-gradient(135deg, #00b894 0%, #55efc4 100%);">
+        <div class="stat-number">2</div>
+        <div class="stat-label">실제 사용 중</div>
+      </div>
+      <div class="stat-box" style="background: linear-gradient(135deg, #e17055 0%, #fab1a0 100%);">
+        <div class="stat-number">3</div>
+        <div class="stat-label">사용자 유형별 빈도</div>
+      </div>
+    </div>
+
+    <!-- 광고 종류 개요 -->
+    <h2>광고 컴포넌트 개요</h2>
+    <div class="grid">
+      <div class="card">
+        <div class="card-header">
+          <span class="card-icon">🎬</span>
+          <div>
+            <div class="card-title">전면형 광고</div>
+            <span class="card-status status-active">사용 중</span> <span class="tag tag-interstitial">InterstitialAd</span>
+          </div>
+        </div>
+        <p>감정 표현 직후 <code>satisfied</code> 상태에서 <code>report</code> 전환 전에 전체 화면 광고 노출. 5초 후 스킵 버튼 활성화.</p>
+        <p><strong>위치:</strong> <code>src/components/ads/InterstitialAd.tsx</code></p>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <span class="card-icon">📏</span>
+          <div>
+            <div class="card-title">배너 광고</div>
+            <span class="card-status status-active">사용 중</span> <span class="tag tag-banner">BannerAd</span>
+          </div>
+        </div>
+        <p>감정 리포트 화면(<code>uiState === 'report'</code>) 하단에 320x50 배너 노출. 리포트 카드와 함께 표시.</p>
+        <p><strong>위치:</strong> <code>src/components/ads/BannerAd.tsx</code></p>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <span class="card-icon">🎁</span>
+          <div>
+            <div class="card-title">보상형 광고</div>
+            <span class="card-status status-ready">미사용</span> <span class="tag tag-rewarded">RewardedAdModal</span>
+          </div>
+        </div>
+        <p>광고 시청 후 보상 선택 (주간 리포트 / 감정 키워드 / 젤리 스킨). 컴포넌트는 구현 완료, 페이지에 미연결.</p>
+        <p><strong>위치:</strong> <code>src/components/ads/RewardedAdModal.tsx</code></p>
+      </div>
+    </div>
+
+    <!-- 메인 플로우 다이어그램 -->
+    <h2>사용자 여정 - 광고 노출 흐름</h2>
+    <p>사용자가 감정을 입력하고 젤리가 이를 반영하는 전체 과정에서 광고가 어디에 끼어드는지 보여줍니다.</p>
+
+    <div class="mermaid">
+flowchart TD
+    A["🏠 홈 화면<br/><b>idle</b>"] --> B["📝 감정 입력<br/><b>input</b>"]
+    B --> C["🔄 젤리 복원<br/><b>restoring</b>"]
+    C --> D["🔮 구슬 생성<br/><b>beads</b>"]
+
+    D --> E{"구슬을 모두 먹었나?<br/><b>currentState === satisfied</b>"}
+    E -->|"No"| D
+    E -->|"Yes"| F{"광고 빈도 검사<br/><b>canShowInterstitial()</b>"}
+
+    F -->|"신규 사용자<br/>(세션 < 3)"| G["🚫 광고 스킵"]
+    F -->|"일반 사용자<br/>(오늘 광고 < 1)"| H["🎬 전면형 광고 노출<br/><b>InterstitialAd</b>"]
+    F -->|"헤비 사용자<br/>(오늘 광고 < 2)"| H
+    F -->|"오늘 광고 한도 초과"| G
+
+    G --> I["📊 감정 리포트<br/><b>report</b>"]
+    H -->|"5초 후 스킵 또는 닫기"| I
+
+    I --> J["📏 배너 광고<br/><b>BannerAd (320x50)</b>"]
+    I --> K["📄 감정 리포트 카드"]
+
+    J --> L["🏠 홈으로 복귀<br/><b>idle</b>"]
+    K --> L
+    L --> A
+
+    style H fill:#ffeaa7,stroke:#6c5ce7,stroke-width:2px,color:#333
+    style J fill:#dfe6e9,stroke:#2d3436,stroke-width:2px,color:#333
+    style F fill:#fab1a0,stroke:#e17055,stroke-width:2px,color:#333
+    style G fill:#d4edda,stroke:#28a745,stroke-width:2px,color:#333
+    style I fill:#a29bfe,stroke:#6c5ce7,stroke-width:2px,color:#fff
+    </div>
+
+    <!-- UI 상태머신 -->
+    <h2>UI 상태머신 (UiState)</h2>
+    <p><code>UiState = 'idle' | 'input' | 'restoring' | 'beads' | 'report'</code> 다이어그램</p>
+
+    <div class="mermaid">
+stateDiagram-v2
+    [*] --> idle
+    idle --> input : 사용자 터치
+    input --> restoring : 감정 선택 완료
+    restoring --> beads : 젤리 복원 완료
+    beads --> report : 모든 구슬 먹음 (satisfied)
+    report --> idle : 다음 사이클 시작
+
+    note left of beads
+        satisfied 상태에서 광고 빈도 검사
+        canShowInterstitial() = true면
+        전면형 광고 노출
+    end note
+
+    note right of report
+        리포트 화면에서
+        배너 광고 노출
+    end note
+    </div>
+
+    <!-- 광고 빈도 제어 -->
+    <h2>광고 빈도 제어 로직</h2>
+    <p><code>adFrequencyControl.ts</code>에서 localStorage 기반으로 사용자 유형별 광고 노출을 제어합니다.</p>
+
+    <div class="mermaid">
+flowchart LR
+    subgraph 사용자_유형
+        N["👤 신규<br/>세션 < 3"]
+        O["👤 일반<br/>세션 >= 3<br/>오늘 < 5회"]
+        H["👤 헤비<br/>오늘 >= 5회"]
+    end
+
+    subgraph 전면광고_한도
+        N -->|"광고 없음"| X1["0회/일"]
+        O -->|"1회/일"| X2["오늘 시청 < 1"]
+        H -->|"2회/일"| X3["오늘 시청 < 2"]
+    end
+
+    subgraph 배너광고
+        X2 --> B["리포트 화면에서<br/>항상 노출"]
+        X3 --> B
+        X1 --> B
+    end
+
+    style N fill:#d4edda,stroke:#28a745
+    style O fill:#fff3cd,stroke:#ffc107
+    style H fill:#f8d7da,stroke:#dc3545
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>사용자 유형</th>
+          <th>판별 조건</th>
+          <th>전면광고 한도</th>
+          <th>배너광고</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>신규 (<code>new</code>)</td>
+          <td><code>sessionCount < 3</code></td>
+          <td>0회/일 (전면광고 없음)</td>
+          <td>리포트 화면에서만 노출</td>
+        </tr>
+        <tr>
+          <td>일반 (<code>normal</code>)</td>
+          <td><code>sessionCount >= 3</code> + <code>todaySession < 5</code></td>
+          <td>최대 1회/일</td>
+          <td>리포트 화면에서만 노출</td>
+        </tr>
+        <tr>
+          <td>헤비 (<code>heavy</code>)</td>
+          <td><code>todaySession >= 5</code></td>
+          <td>최대 2회/일</td>
+          <td>리포트 화면에서만 노출</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- 타임라인 -->
+    <h2>광고 노출 타임라인</h2>
+    <p>감정 표현 1회 사이클에서 광고가 등장하는 시점</p>
+
+    <div class="timeline">
+      <div class="timeline-item">
+        <div class="timeline-title">1. 사용자 감정 선택</div>
+        <div class="timeline-desc">홈 화면(idle) → 감정 입력(input)</div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-title">2. 젤리 애니메이션</div>
+        <div class="timeline-desc">restoring → beads: 구슬이 생성되고 젤리가 감정을 흡수</div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-title">3. 모든 구슬 먹음 (satisfied)</div>
+        <div class="timeline-desc">마지막 구슬 충돌 후 500ms 뒤 satisfied 상태 전이</div>
+      </div>
+      <div class="timeline-item ad-step">
+        <div class="timeline-title">4. 전면형 광고 노출 (조건부)</div>
+        <div class="timeline-desc"><code>canShowInterstitial()</code> 통과 시 전면광고 표시. 5초 뒤 스킵 버튼 활성화. 사용자가 닫으면 다음 단계 진행.</div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-title">5. 감정 리포트 + 배너광고</div>
+        <div class="timeline-desc"><code>satisfied</code> 상태 3초(<code>SATISFIED_DISPLAY_MS</code>) 유지 후 <code>report</code> 전환. 리포트 카드 + 배너광고 동시 노출.</div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-title">6. 홈으로 복귀</div>
+        <div class="timeline-desc">리포트 확인 후 idle 상태로 복귀. 다음 사이클 시작.</div>
+      </div>
+    </div>
+
+    <!-- 전면광고 상세 -->
+    <h2>전면형 광고 (InterstitialAd) 상세</h2>
+
+    <div class="mermaid">
+sequenceDiagram
+    participant U as 사용자
+    participant P as HomePage
+    participant F as adFrequencyControl
+    participant A as InterstitialAd
+    participant SDK as GoogleAdMob SDK
+
+    U->>P: 감정 표현 (beads → satisfied)
+    P->>F: canShowInterstitial()
+    F->>F: getUserType() → new/normal/heavy
+    F-->>P: true / false
+
+    alt 광고 가능 (true)
+        P->>A: 렌더링 시작
+        A->>SDK: loadAppsInTossAdMob()
+        SDK-->>A: loaded 이벤트
+        A->>SDK: showAppsInTossAdMob()
+        SDK-->>A: requested 이벤트
+        A->>F: recordAdShown()
+        Note over U,SDK: 전면광고 표시 중 (5초)
+        SDK-->>A: dismissed 이벤트
+        A->>P: onClosed()
+    else 광고 불가 (false)
+        Note over P: 광고 없이 report로 진행
+    end
+
+    P->>P: setUiState('report')
+    </div>
+
+    <div class="note">
+      <strong>참고:</strong> 전면광고는 <code>satisfied</code> 감지 후 <code>setTimeout(..., 0)</code>으로 즉시 큐에 등록됩니다. 실제 <code>report</code> 전환은 <code>SATISFIED_DISPLAY_MS</code>(3초) 후 발생합니다.
+    </div>
+
+    <!-- 보상형 광고 -->
+    <h2>보상형 광고 (RewardedAd) - 미사용 (인프라 완성)</h2>
+
+    <div class="note" style="background: #e8f5e9; border-left-color: #4caf50;">
+      <strong>보상형 광고란?</strong> 사용자가 <strong>광고를 끝까지 시청하면</strong> 보상을 받는 형태입니다.
+      일반 광고와 달리 <strong>사용자가 직접 선택</strong>해서 보는 것이고, <strong>끝까지 봐야만</strong> 보상이 지급됩니다.
+      중간에 닫으면 보상이 없습니다.
+    </div>
+
+    <!-- 보상형 광고 UX 흐름 -->
+    <h3>사용자 경험 흐름</h3>
+    <div class="mermaid">
+flowchart TD
+    START["리포트 화면에서<br/>'보상 받기' 버튼 클릭"] --> MODAL["보상형 광고 모달 열림"]
+    MODAL --> AD["광고 재생 시작<br/><small>(15~30초 영상 광고)</small>"]
+
+    AD --> CHOICE{"광고를 끝까지 봤나?"}
+    CHOICE -->|"Yes: userEarnedReward"| UNLOCK["보상 선택 활성화"]
+    CHOICE -->|"No: dismissed"| NOTHING["보상 없이 모달 닫힘"]
+
+    UNLOCK --> SELECT["3가지 보상 중 1개 선택"]
+    SELECT --> R1["주간 감정 패턴 리포트"]
+    SELECT --> R2["오늘의 감정 키워드"]
+    SELECT --> R3["한정판 젤리 스킨"]
+
+    R1 --> SAVE1["rewardStore.addReward()"]
+    R2 --> SAVE2["rewardStore.addReward()"]
+    R3 --> SAVE3["rewardStore.addReward() + unlockSkin()"]
+
+    style START fill:#a29bfe,stroke:#6c5ce7,color:#fff
+    style AD fill:#ffeaa7,stroke:#f39c12,stroke-width:2px
+    style CHOICE fill:#fab1a0,stroke:#e17055,stroke-width:2px
+    style UNLOCK fill:#d4edda,stroke:#28a745,stroke-width:2px
+    style NOTHING fill:#f8d7da,stroke:#dc3545
+    style R1 fill:#dfe6e9,stroke:#636e72
+    style R2 fill:#dfe6e9,stroke:#636e72
+    style R3 fill:#dfe6e9,stroke:#636e72
+    style SAVE1 fill:#b2bec3,stroke:#636e72
+    style SAVE2 fill:#b2bec3,stroke:#636e72
+    style SAVE3 fill:#b2bec3,stroke:#636e72
+    </div>
+
+    <!-- 보상 종류 상세 -->
+    <h3>보상 1: 주간 감정 패턴 리포트</h3>
+    <div class="card">
+      <div class="card-header">
+        <span class="card-icon">📊</span>
+        <div>
+          <div class="card-title">weekly_report</div>
+          <p style="margin:4px 0 0;color:#555;">지난 7일간의 감정 변화를 시각화한 리포트</p>
+        </div>
+      </div>
+      <div style="background:#f8f9fa;border-radius:8px;padding:16px;margin-top:12px;">
+        <div style="display:flex;gap:8px;align-items:flex-end;height:100px;">
+          <div style="flex:1;background:#a29bfe;height:60%;border-radius:4px 4px 0 0;display:flex;align-items:flex-end;justify-content:center;padding-bottom:4px;"><small style="color:#fff">월</small></div>
+          <div style="flex:1;background:#6c5ce7;height:80%;border-radius:4px 4px 0 0;display:flex;align-items:flex-end;justify-content:center;padding-bottom:4px;"><small style="color:#fff">화</small></div>
+          <div style="flex:1;background:#fd79a8;height:45%;border-radius:4px 4px 0 0;display:flex;align-items:flex-end;justify-content:center;padding-bottom:4px;"><small style="color:#fff">수</small></div>
+          <div style="flex:1;background:#e17055;height:30%;border-radius:4px 4px 0 0;display:flex;align-items:flex-end;justify-content:center;padding-bottom:4px;"><small style="color:#fff">목</small></div>
+          <div style="flex:1;background:#00b894;height:90%;border-radius:4px 4px 0 0;display:flex;align-items:flex-end;justify-content:center;padding-bottom:4px;"><small style="color:#fff">금</small></div>
+          <div style="flex:1;background:#fdcb6e;height:70%;border-radius:4px 4px 0 0;display:flex;align-items:flex-end;justify-content:center;padding-bottom:4px;"><small style="color:#333">토</small></div>
+          <div style="flex:1;background:#74b9ff;height:55%;border-radius:4px 4px 0 0;display:flex;align-items:flex-end;justify-content:center;padding-bottom:4px;"><small style="color:#fff">일</small></div>
+        </div>
+        <p style="text-align:center;margin-top:8px;font-size:0.85rem;color:#888;">감정 패턴 차트 예시</p>
+      </div>
+      <p style="margin-top:8px;font-size:0.9rem;color:#555;"><strong>실제 구현:</strong> <code>lib/rewards/weeklyReport.ts</code>에서 감정 데이터를 분석하여 리포트 생성</p>
+    </div>
+
+    <h3>보상 2: 오늘의 감정 키워드</h3>
+    <div class="card">
+      <div class="card-header">
+        <span class="card-icon">🔤</span>
+        <div>
+          <div class="card-title">emotion_keywords</div>
+          <p style="margin:4px 0 0;color:#555;">오늘 기록에서 가장 많이 등장한 감정 키워드 5개</p>
+        </div>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;">
+        <span style="background:#6c5ce7;color:#fff;padding:8px 16px;border-radius:99px;font-size:0.9rem;">행복 5회</span>
+        <span style="background:#a29bfe;color:#fff;padding:6px 12px;border-radius:99px;font-size:0.85rem;">즐거움 3회</span>
+        <span style="background:#dfe6e9;color:#2d3436;padding:5px 10px;border-radius:99px;font-size:0.8rem;">기쁨 2회</span>
+        <span style="background:#dfe6e9;color:#2d3436;padding:5px 10px;border-radius:99px;font-size:0.8rem;">웃음 2회</span>
+        <span style="background:#dfe6e9;color:#2d3436;padding:5px 10px;border-radius:99px;font-size:0.8rem;">즐겁다 1회</span>
+      </div>
+      <p style="margin-top:12px;font-size:0.9rem;color:#555;"><strong>실제 구현:</strong> <code>lib/rewards/emotionKeywords.ts</code>에서 감정 키워드 빈도 분석</p>
+    </div>
+
+    <h3>보상 3: 한정판 젤리 스킨 (10종)</h3>
+    <div class="card">
+      <div class="card-header">
+        <span class="card-icon">🎨</span>
+        <div>
+          <div class="card-title">jelly_skin</div>
+          <p style="margin:4px 0 0;color:#555;">24시간 동안 적용되는 젤리 스킨 (랜덤 1종 해금)</p>
+        </div>
+      </div>
+      <!-- 등급별 스킨 목록 -->
+      <div style="margin-top:16px;">
+
+        <!-- Rare 등급 -->
+        <div style="margin-bottom:16px;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+            <span style="background:#3B82F6;color:#fff;padding:2px 10px;border-radius:99px;font-size:0.75rem;font-weight:600;">RARE</span>
+            <span style="font-size:0.85rem;color:#666;">해금 확률 높음</span>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;text-align:center;">
+            <div style="background:#EFF6FF;border:2px solid #3B82F6;border-radius:12px;padding:14px 8px;position:relative;">
+              <span style="font-size:2.2rem;display:block;">🐻</span>
+              <div style="font-size:0.8rem;font-weight:600;margin-top:4px;color:#1e40af;">곰돌이</div>
+              <div style="font-size:0.65rem;color:#3B82F6;margin-top:2px;">bear</div>
+            </div>
+            <div style="background:#EFF6FF;border:2px solid #3B82F6;border-radius:12px;padding:14px 8px;">
+              <span style="font-size:2.2rem;display:block;">🐱</span>
+              <div style="font-size:0.8rem;font-weight:600;margin-top:4px;color:#1e40af;">고양이</div>
+              <div style="font-size:0.65rem;color:#3B82F6;margin-top:2px;">cat</div>
+            </div>
+            <div style="background:#EFF6FF;border:2px solid #3B82F6;border-radius:12px;padding:14px 8px;">
+              <span style="font-size:2.2rem;display:block;">🐼</span>
+              <div style="font-size:0.8rem;font-weight:600;margin-top:4px;color:#1e40af;">판다</div>
+              <div style="font-size:0.65rem;color:#3B82F6;margin-top:2px;">panda</div>
+            </div>
+            <div style="background:#EFF6FF;border:2px solid #3B82F6;border-radius:12px;padding:14px 8px;">
+              <span style="font-size:2.2rem;display:block;">🐰</span>
+              <div style="font-size:0.8rem;font-weight:600;margin-top:4px;color:#1e40af;">토끼</div>
+              <div style="font-size:0.65rem;color:#3B82F6;margin-top:2px;">rabbit</div>
+            </div>
+            <div style="background:#EFF6FF;border:2px solid #3B82F6;border-radius:12px;padding:14px 8px;">
+              <span style="font-size:2.2rem;display:block;">🦊</span>
+              <div style="font-size:0.8rem;font-weight:600;margin-top:4px;color:#1e40af;">여우</div>
+              <div style="font-size:0.65rem;color:#3B82F6;margin-top:2px;">fox</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Epic 등급 -->
+        <div style="margin-bottom:16px;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+            <span style="background:#8B5CF6;color:#fff;padding:2px 10px;border-radius:99px;font-size:0.75rem;font-weight:600;">EPIC</span>
+            <span style="font-size:0.85rem;color:#666;">해금 확률 보통</span>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;text-align:center;">
+            <div style="background:#F5F3FF;border:2px solid #8B5CF6;border-radius:12px;padding:14px 8px;">
+              <span style="font-size:2.2rem;display:block;">🦄</span>
+              <div style="font-size:0.8rem;font-weight:600;margin-top:4px;color:#5b21b6;">유니콘</div>
+              <div style="font-size:0.65rem;color:#8B5CF6;margin-top:2px;">unicorn</div>
+            </div>
+            <div style="background:#F5F3FF;border:2px solid #8B5CF6;border-radius:12px;padding:14px 8px;">
+              <span style="font-size:2.2rem;display:block;">🐬</span>
+              <div style="font-size:0.8rem;font-weight:600;margin-top:4px;color:#5b21b6;">돌고래</div>
+              <div style="font-size:0.65rem;color:#8B5CF6;margin-top:2px;">dolphin</div>
+            </div>
+            <div style="background:#F5F3FF;border:2px solid #8B5CF6;border-radius:12px;padding:14px 8px;">
+              <span style="font-size:2.2rem;display:block;">🦋</span>
+              <div style="font-size:0.8rem;font-weight:600;margin-top:4px;color:#5b21b6;">나비</div>
+              <div style="font-size:0.65rem;color:#8B5CF6;margin-top:2px;">butterfly</div>
+            </div>
+            <div style="background:#f8f9fa;border:2px dashed #ccc;border-radius:12px;padding:14px 8px;opacity:0.5;">
+              <span style="font-size:2.2rem;display:block;">❓</span>
+              <div style="font-size:0.8rem;margin-top:4px;color:#999;">Coming Soon</div>
+            </div>
+            <div style="background:#f8f9fa;border:2px dashed #ccc;border-radius:12px;padding:14px 8px;opacity:0.5;">
+              <span style="font-size:2.2rem;display:block;">❓</span>
+              <div style="font-size:0.8rem;margin-top:4px;color:#999;">Coming Soon</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Legendary 등급 -->
+        <div style="margin-bottom:16px;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+            <span style="background:linear-gradient(135deg,#F59E0B,#EF4444);color:#fff;padding:2px 10px;border-radius:99px;font-size:0.75rem;font-weight:600;">LEGENDARY</span>
+            <span style="font-size:0.85rem;color:#666;">해금 확률 매우 낮</span>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;text-align:center;">
+            <div style="background:linear-gradient(135deg,#FFFBEB,#FEF3C7);border:2px solid #F59E0B;border-radius:12px;padding:14px 8px;position:relative;overflow:hidden;">
+              <div style="position:absolute;top:4px;right:6px;font-size:0.6rem;">✨</div>
+              <span style="font-size:2.2rem;display:block;">🐉</span>
+              <div style="font-size:0.8rem;font-weight:600;margin-top:4px;color:#92400e;">드래곤</div>
+              <div style="font-size:0.65rem;color:#F59E0B;margin-top:2px;">dragon</div>
+            </div>
+            <div style="background:linear-gradient(135deg,#FFFBEB,#FEF3C7);border:2px solid #F59E0B;border-radius:12px;padding:14px 8px;position:relative;overflow:hidden;">
+              <div style="position:absolute;top:4px;right:6px;font-size:0.6rem;">✨</div>
+              <span style="font-size:2.2rem;display:block;">🔥</span>
+              <div style="font-size:0.8rem;font-weight:600;margin-top:4px;color:#92400e;">피닉스</div>
+              <div style="font-size:0.65rem;color:#F59E0B;margin-top:2px;">phoenix</div>
+            </div>
+            <div style="background:#f8f9fa;border:2px dashed #ccc;border-radius:12px;padding:14px 8px;opacity:0.5;">
+              <span style="font-size:2.2rem;display:block;">❓</span>
+              <div style="font-size:0.8rem;margin-top:4px;color:#999;">Coming Soon</div>
+            </div>
+            <div style="background:#f8f9fa;border:2px dashed #ccc;border-radius:12px;padding:14px 8px;opacity:0.5;">
+              <span style="font-size:0.8rem;margin-top:4px;color:#999;">확장 가능</div>
+            </div>
+            <div style="background:#f8f9fa;border:2px dashed #ccc;border-radius:12px;padding:14px 8px;opacity:0.5;">
+              <span style="font-size:0.8rem;margin-top:4px;color:#999;">확장 가능</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 등급 시스템 설명 -->
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:16px;">
+        <div style="text-align:center;padding:12px;background:#EFF6FF;border-radius:8px;">
+          <div style="font-size:1.8rem;">💙</div>
+          <div style="font-weight:700;color:#3B82F6;font-size:0.9rem;">Rare</div>
+          <div style="font-size:0.75rem;color:#666;margin-top:2px;">5종 / 파란색 테마</div>
+          <div style="font-size:0.75rem;color:#3B82F6;margin-top:4px;">드랍 확률: 70%</div>
+        </div>
+        <div style="text-align:center;padding:12px;background:#F5F3FF;border-radius:8px;">
+          <div style="font-size:1.8rem;">💜</div>
+          <div style="font-weight:700;color:#8B5CF6;font-size:0.9rem;">Epic</div>
+          <div style="font-size:0.75rem;color:#666;margin-top:2px;">3종 / 보라색 테마</div>
+          <div style="font-size:0.75rem;color:#8B5CF6;margin-top:4px;">드랍 확률: 25%</div>
+        </div>
+        <div style="text-align:center;padding:12px;background:#FFFBEB;border-radius:8px;">
+          <div style="font-size:1.8rem;">💛</div>
+          <div style="font-weight:700;color:#F59E0B;font-size:0.9rem;">Legendary</div>
+          <div style="font-size:0.75rem;color:#666;margin-top:2px;">2종 / 금색 테마</div>
+          <div style="font-size:0.75rem;color:#F59E0B;margin-top:4px;">드랍 확률: 5%</div>
+        </div>
+      </div>
+
+      <!-- 스킨 적용 시뮬레이션 -->
+      <h3 style="margin-top:24px;">스킨 적용 시뮬레이션</h3>
+      <p style="font-size:0.9rem;color:#555;margin-bottom:12px;">보상형 광고 시청 후 스킨이 적용되면 젤리가 해당 스킨의 색상 테마로 변경됩니다.</p>
+
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;">
+        <!-- 기본 젤리 -->
+        <div style="text-align:center;padding:20px;background:#f8f9fa;border-radius:12px;">
+          <div style="width:80px;height:80px;margin:0 auto 12px;border-radius:50%;background:linear-gradient(135deg,#a29bfe,#6c5ce7);display:flex;align-items:center;justify-content:center;font-size:2rem;box-shadow:0 4px 12px rgba(108,92,231,0.3);">
+            🪼
+          </div>
+          <div style="font-weight:600;">기본 젤리</div>
+          <div style="font-size:0.75rem;color:#888;">스킨 없음</div>
+        </div>
+        <!-- Rare 스킨 적용 -->
+        <div style="text-align:center;padding:20px;background:#EFF6FF;border-radius:12px;border:2px solid #3B82F6;">
+          <div style="width:80px;height:80px;margin:0 auto 12px;border-radius:50%;background:linear-gradient(135deg,#60A5FA,#3B82F6);display:flex;align-items:center;justify-content:center;font-size:2rem;box-shadow:0 4px 12px rgba(59,130,246,0.3);">
+            🐰
+          </div>
+          <div style="font-weight:600;color:#1e40af;">Rare 스킨 적용</div>
+          <div style="font-size:0.75rem;color:#3B82F6;">토끼 스킨 (24h)</div>
+        </div>
+        <!-- Legendary 스킨 적용 -->
+        <div style="text-align:center;padding:20px;background:linear-gradient(135deg,#FFFBEB,#FEF3C7);border-radius:12px;border:2px solid #F59E0B;">
+          <div style="width:80px;height:80px;margin:0 auto 12px;border-radius:50%;background:linear-gradient(135deg,#FBBF24,#F59E0B);display:flex;align-items:center;justify-content:center;font-size:2rem;box-shadow:0 4px 16px rgba(245,158,11,0.4);">
+            🔥
+          </div>
+          <div style="font-weight:600;color:#92400e;">Legendary 스킨 적용</div>
+          <div style="font-size:0.75rem;color:#F59E0B;">피닉스 스킨 (24h)</div>
+        </div>
+      </div>
+
+      <p style="margin-top:16px;font-size:0.9rem;color:#555;"><strong>실제 구현:</strong> <code>lib/rewards/jellySkins.ts</code> → <code>unlockRandomSkin(tier)</code>으로 랜덤 해금, <code>getSkinTheme(skinId)</code>으로 색상 테마 조회</p>
+      <div class="note" style="margin-top:8px;">
+        스킨은 <strong>24시간</strong> 동안만 적용되며, <code>rewardStore.checkSkinExpiration()</code>에서 만료 시 자동 제거됩니다.
+        현재 스킨은 <strong>데이터 모델만 구현</strong>되어 있고, 젤리 캔버스에 스킨 렌더링을 연결하는 UI 작업이 필요합니다.
+      </div>
+    </div>
+
+    <!-- 광고 비교 -->
+    <h3>광고 3종 비교</h3>
+    <table>
+      <thead>
+        <tr>
+          <th></th>
+          <th>전면형 광고</th>
+          <th>배너 광고</th>
+          <th>보상형 광고</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>개념</strong></td>
+          <td>화면 전체를 덮는 광고</td>
+          <td>화면 일부에 고정 배치</td>
+          <td>끝까지 보면 <strong>보상</strong> 지급</td>
+        </tr>
+        <tr>
+          <td><strong>사용자 선택</strong></td>
+          <td>없음 (자동 노출)</td>
+          <td>없음 (항상 노출)</td>
+          <td><strong>직접 선택</strong> (버튼 클릭해야 시작)</td>
+        </tr>
+        <tr>
+          <td><strong>건너뛰기</strong></td>
+          <td>5초 후 가능</td>
+          <td>항상 표시</td>
+          <td>가능하지만 <strong>보상 없음</strong></td>
+        </tr>
+        <tr>
+          <td><strong>노출 시점</strong></td>
+          <td>감정 표현 직후</td>
+          <td>리포트 화면</td>
+          <td>사용자가 원할 때</td>
+        </tr>
+        <tr>
+          <td><strong>보상</strong></td>
+          <td>없음</td>
+          <td>없음</td>
+          <td>리포트 / 키워드 / 스킨</td>
+        </tr>
+        <tr>
+          <td><strong>수익</strong></td>
+          <td>CPM (노출당)</td>
+          <td>CPM (노출당)</td>
+          <td>CPM + 완주 시 <strong>더 높은 단가</strong></td>
+        </tr>
+        <tr>
+          <td><strong>현재 상태</strong></td>
+          <td><span class="card-status status-active">사용 중</span></td>
+          <td><span class="card-status status-active">사용 중</span></td>
+          <td><span class="card-status status-ready">인프라 완성</span></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="note" style="background: #e8f5e9; border-left-color: #4caf50;">
+      <strong>왜 보상형 광고가 수익이 더 높은가?</strong> 광고주 입장에서 사용자가 광고를 <strong>끝까지 시청</strong>하는 것이 보장되므로, 일반 노출 광고보다 <strong>단가가 5~10배 높습니다.</strong>
+      특히 젤리 스킨 같은 <strong>한정판 보상</strong>은 사용자가 광고를 피하지 않고 능동적으로 시청하게 만드는 핵심 수단입니다.
+    </div>
+
+    <div class="note">
+      <strong>연결 필요:</strong> <code>RewardedAdModal</code>을 리포트 화면이나 설정 페이지에 연결하면 즉시 사용 가능합니다. <code>rewardStore</code>에 <code>canShowRewardedAd</code>, <code>incrementRewardedAdCount</code> 로직도 이미 준비되어 있습니다.
+    </div>
+
+    <!-- 파일 구조 -->
+    <h2>관련 파일 구조</h2>
+    <div class="mermaid">
+graph LR
+    subgraph 페이지
+        HP["home/page.tsx"]
+    end
+
+    subgraph 광고_컴포넌트
+        IA["InterstitialAd.tsx"]
+        BA["BannerAd.tsx"]
+        RA["RewardedAdModal.tsx"]
+    end
+
+    subgraph 광고_라이브러리
+        AC["adConfig.ts"]
+        AI["adInitializer.ts"]
+        FC["adFrequencyControl.ts"]
+    end
+
+    HP -->|"satisfied 시점"| IA
+    HP -->|"report 상태"| BA
+    HP -.->|"미연결"| RA
+
+    IA --> AC
+    IA --> FC
+    BA --> AC
+    RA --> AC
+
+    style RA stroke-dasharray: 5 5,stroke:#999
+    style HP fill:#a29bfe,stroke:#6c5ce7,color:#fff
+    </div>
+
+    <table>
+      <thead>
+        <tr><th>파일</th><th>역할</th><th>SPEC</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>components/ads/InterstitialAd.tsx</code></td><td>전면형 광고 컴포넌트</td><td>REQ-AD-002</td></tr>
+        <tr><td><code>components/ads/BannerAd.tsx</code></td><td>배너 광고 컴포넌트</td><td>REQ-AD-003</td></tr>
+        <tr><td><code>components/ads/RewardedAdModal.tsx</code></td><td>보상형 광고 모달 (미사용)</td><td>-</td></tr>
+        <tr><td><code>lib/ad/adConfig.ts</code></td><td>광고 설정 (광고그룹 ID, 크기, 지연)</td><td>REQ-AD-001</td></tr>
+        <tr><td><code>lib/ad/adFrequencyControl.ts</code></td><td>노출 빈도 제어 (사용자 유형별)</td><td>REQ-AD-004</td></tr>
+        <tr><td><code>lib/ad/adInitializer.ts</code></td><td>SDK 초기화</td><td>-</td></tr>
+        <tr><td><code>stores/rewardStore.ts</code></td><td>보상 상태 관리</td><td>-</td></tr>
+      </tbody>
+    </table>
+
+    <footer>
+      Mind Jelly v1.0.0 | 앱인토스 WebView | GoogleAdMob SDK | 생성일: 2026-05-14
+    </footer>
+  </div>
+
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: 'default',
+      flowchart: { curve: 'basis', padding: 20 },
+      sequence: { actorMargin: 60, useMaxWidth: true },
+      stateDiagram: { useMaxWidth: true }
+    });
+  </script>
+</body>
+</html>

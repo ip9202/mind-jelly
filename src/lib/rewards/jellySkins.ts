@@ -46,7 +46,7 @@ const ALL_SKINS: Omit<JellySkin, 'expiresAt'>[] = [
 ];
 
 // 스킨별 색상 테마
-const SKIN_THEMES: Record<string, SkinTheme> = {
+export const SKIN_THEMES: Record<string, SkinTheme> = {
   // Rare 테마 (파란색)
   bear: { primaryColor: '#3B82F6', accentColor: '#60A5FA', backgroundColor: '#EFF6FF' },
   cat: { primaryColor: '#3B82F6', accentColor: '#60A5FA', backgroundColor: '#EFF6FF' },
