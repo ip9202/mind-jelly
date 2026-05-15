@@ -96,6 +96,7 @@ export default function HomePage() {
   const matterRef = useRef<typeof import('matter-js') | null>(null);
   const [uiState, setUiState] = useState<UiState>('idle');
   const [showInterstitial, setShowInterstitial] = useState(false);
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
   const [showStatsSheet, setShowStatsSheet] = useState(false);
   const statsButtonRef = useRef<HTMLButtonElement>(null);
 
@@ -269,6 +270,30 @@ export default function HomePage() {
     }
   }, [uiState, currentState, lastEmotion]);
 
+  // 모바일 키보드 높이 추적 (baece9b 원본 방식)
+  useEffect(() => {
+    if (uiState !== 'input') {
+      setKeyboardHeight(0);
+      return;
+    }
+
+    const vv = window.visualViewport;
+    if (!vv) return;
+
+    const updateKeyboard = () => {
+      const kbHeight = Math.max(0, window.innerHeight - vv.height);
+      setKeyboardHeight(kbHeight);
+      window.scrollTo(0, 0);
+    };
+
+    vv.addEventListener('resize', updateKeyboard);
+    vv.addEventListener('scroll', updateKeyboard);
+    return () => {
+      vv.removeEventListener('resize', updateKeyboard);
+      vv.removeEventListener('scroll', updateKeyboard);
+    };
+  }, [uiState]);
+
   // 리포트 상태 관리
   useEffect(() => {
     if (uiState !== 'report') {
@@ -410,9 +435,9 @@ export default function HomePage() {
         {/* Jelly Container - takes remaining space, jelly centered within */}
         <div
           aria-busy={uiState === 'restoring' || uiState === 'beads'}
-          className={`flex items-center justify-center ${uiState === 'input' ? 'h-[38vh]' : `flex-1 ${uiState === 'idle' ? 'pt-28' : 'pt-16'}`}`}
+          className={`flex-1 flex items-center justify-center ${uiState === 'idle' ? 'pt-28' : 'pt-16'}`}
           style={{
-            minHeight: uiState === 'idle' ? '280px' : uiState === 'input' ? '0' : '160px',
+            minHeight: uiState === 'idle' ? '280px' : '160px',
             transform: uiState === 'input' ? 'scale(0.65)' : 'scale(1)',
             transition: 'transform 500ms cubic-bezier(0.4, 0, 0.2, 1)',
             transformOrigin: 'center top',
@@ -469,16 +494,6 @@ export default function HomePage() {
           )}
         </div>
 
-        {/* EmotionInput - input 모드 전용, 문서 흐름으로 배치 (fixed 사용 안 함) */}
-        {/* iOS WebView에서 overflow-hidden 부모 안의 fixed는 키보드와 충돌 */}
-        {uiState === 'input' && (
-          <div className="w-full px-5 pb-6 animate-slide-up">
-            <EmotionInput
-              onCompleteAction={() => setUiState('restoring')}
-              onCancelAction={() => setUiState('idle')}
-            />
-          </div>
-        )}
 
         {/* Bottom Content Area (idle: message card + CTA, report: fade-in card) */}
         {(uiState === 'idle' || uiState === 'report') && (
@@ -585,6 +600,21 @@ export default function HomePage() {
         triggerRef={statsButtonRef}
       />
 
+
+      {/* EmotionInput - position:fixed + keyboardHeight (baece9b 원본 방식) */}
+      {uiState === 'input' && (
+        <section
+          className="fixed left-1/2 -translate-x-1/2 w-[calc(100%-40px)] max-w-md z-40"
+          style={{ bottom: keyboardHeight + 24 }}
+        >
+          <div className="animate-slide-up">
+            <EmotionInput
+              onCompleteAction={() => setUiState('restoring')}
+              onCancelAction={() => setUiState('idle')}
+            />
+          </div>
+        </section>
+      )}
 
       {/* SPEC-AD-003: 보상형 광고 모달 (REQ-RWD-001~008) */}
       <RewardedAdModal
