@@ -2,66 +2,45 @@
  * Banner Ad Component
  *
  * 배너 광고를 표시합니다. report 상태일 때만 하단에 표시됩니다.
- * @apps-in-toss/web-framework의 GoogleAdMob API를 사용합니다.
+ * TossAds.attachBanner API 사용 (전면/보상형의 loadFullScreenAd와 별개).
+ * TossAds.initialize는 adInitializer.ts에서 앱 시작 시 1회 호출됨.
  *
  * SPEC: SPEC-AD-001 (REQ-AD-003)
  */
 
 'use client';
 
-import { useEffect, useState } from 'react';
-import { loadFullScreenAd } from '@apps-in-toss/web-framework';
-import { BANNER_AD_GROUP_ID, BANNER_CONFIG } from '@/lib/ad/adConfig';
+import { useEffect, useRef } from 'react';
+import { TossAds } from '@apps-in-toss/web-framework';
+import { BANNER_AD_GROUP_ID, BANNER_HEIGHT_PX } from '@/lib/ad/adConfig';
 
 interface BannerAdProps {
-  /**
-   * 배너 표시 여부
-   */
   show: boolean;
 }
 
-/**
- * 배너 광고 컴포넌트
- */
 export function BannerAd({ show }: BannerAdProps) {
-  const [adLoaded, setAdLoaded] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!show) {
-      return;
-    }
+    if (!show || !containerRef.current) return;
+    if (!TossAds.attachBanner.isSupported?.()) return;
 
-    if (!loadFullScreenAd.isSupported?.()) return;
-
-    const cleanup = loadFullScreenAd({
-      options: { adGroupId: BANNER_AD_GROUP_ID },
-      onEvent: (event) => {
-        if (event.type === 'loaded') setAdLoaded(true);
+    const attached = TossAds.attachBanner(BANNER_AD_GROUP_ID, containerRef.current, {
+      theme: 'auto',
+      tone: 'blackAndWhite',
+      variant: 'expanded',
+      callbacks: {
+        onAdFailedToRender: (payload) => console.error('[BannerAd] 렌더링 실패:', payload.error.message),
+        onNoFill: () => console.warn('[BannerAd] 표시할 광고 없음'),
       },
-      onError: () => { setAdLoaded(false); },
     });
 
     return () => {
-      cleanup?.();
+      attached?.destroy();
     };
   }, [show]);
 
-  // show가 false면 렌더링하지 않음 (adLoaded 여부와 무관하게 항상 표시)
-  // SDK가 실제 광고 콘텐츠를 주입. SDK 실패 시에도 플레이스홀더 표시로 위치 확인 가능
-  if (!show) {
-    return null;
-  }
+  if (!show) return null;
 
-  return (
-    <div className="w-full h-[50px] bg-gray-100 flex items-center justify-center">
-      <div
-        className="bg-white border border-gray-200 flex items-center justify-center"
-        style={{ width: BANNER_CONFIG.size.width, height: BANNER_CONFIG.size.height }}
-      >
-        <p className="text-gray-400 text-xs">
-          {adLoaded ? '배너 광고' : '광고 로딩 중...'}
-        </p>
-      </div>
-    </div>
-  );
+  return <div ref={containerRef} style={{ width: '100%', height: `${BANNER_HEIGHT_PX}px` }} />;
 }

@@ -34,6 +34,7 @@ Deno.serve(async (req: Request) => {
     }
 
     // mTLS 지원 여부 확인
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const hasMtlsSupport = typeof (Deno as any).createHttpClient === 'function';
     console.log('[toss-login] Deno.createHttpClient available:', hasMtlsSupport);
 
@@ -63,6 +64,7 @@ Deno.serve(async (req: Request) => {
     const MTLS_CERT = Deno.env.get('MTLS_CERT')!;
     const MTLS_KEY = Deno.env.get('MTLS_KEY')!;
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const tlsClient = (Deno as any).createHttpClient({
       certChain: MTLS_CERT,
       privateKey: MTLS_KEY,

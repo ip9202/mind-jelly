@@ -7,12 +7,16 @@ import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 
 import { linkTossUser } from '@/lib/supabase/auth';
+import { getMyProfile } from '@/lib/supabase/db';
 import { diaryStore } from '@/stores/diaryStore';
 import type { TossLoginUser, TossUserIdentity } from '@/types/toss';
 
 // @MX:ANCHOR: AppIntos WebView 상태의 단일 소스 오브 트루스
 // @MX:REASON: BridgeInitializer, home/page 등 여러 컴포넌트에서 접근
 // @MX:SPEC: SPEC-JELLY-002 M4
+
+// @MX:NOTE: SPEC-SESSION-RECOVER-001 — setUserIdentity 동시 호출 시 linkTossUser 중복 방지
+let isLinking = false;
 
 export interface TossStoreState {
   /** AppIntos WebView 환경인지 여부 */
@@ -75,12 +79,25 @@ export const tossStore = create<TossStoreState>()(
 
       setUserIdentity: (identity: TossUserIdentity | null) => {
         set({ userIdentity: identity });
-        if (identity?.anonymousKey) {
-          // 현재 Supabase 익명 세션에 AppIntos 익명 키 연결
+        if (identity?.anonymousKey && !isLinking) {
           const supabaseUserId = diaryStore.getState().supabaseUserId;
           if (supabaseUserId) {
-            // @MX:NOTE: [AUTO] anonymousKey를 tossUserId로 전달하여 사용자 매핑
-            linkTossUser(supabaseUserId, identity.anonymousKey).catch(() => {});
+            // @MX:NOTE: SPEC-SESSION-RECOVER-001 REQ-SESSION-013 — 멱등 가드
+            // isLinking 플래그로 동시 호출 시 중복 linkTossUser 방지
+            isLinking = true;
+            (async () => {
+              try {
+                const profile = await getMyProfile(supabaseUserId);
+                if (profile?.toss_user_id === identity.anonymousKey) {
+                  return;
+                }
+                await linkTossUser(supabaseUserId, identity.anonymousKey);
+              } catch (e) {
+                console.error('[tossStore] idempotency guard 실패:', e);
+              } finally {
+                isLinking = false;
+              }
+            })();
           }
         }
       },

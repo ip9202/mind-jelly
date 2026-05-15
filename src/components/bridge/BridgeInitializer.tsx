@@ -6,6 +6,12 @@
  * 서버 컴포넌트인 layout.tsx에서 사용하기 위한
  * 클라이언트 측 브릿지 초기화 래퍼.
  * Non-blocking: 앱 렌더를 지연시키지 않는다.
+ *
+ * @MX:SPEC: SPEC-SESSION-RECOVER-001 M2 — 부팅 순서 재정렬
+ * 새 순서:
+ *   1. getUserIdentity() (WebView에서만 유효)  ← 먼저 호출
+ *   2. initSupabaseSession({ tossHash }) — 해시 있으면 recover 우선
+ *   3. tossStore.setUserIdentity(identity) — 멱등 가드 적용 (M3)
  */
 
 import { useEffect } from 'react';
@@ -29,8 +35,28 @@ export default function BridgeInitializer() {
       recordSession();
       initializeAdMob();
 
-      // Supabase 익명 세션 초기화 (WebView 여부와 무관하게 항상 실행)
-      const supabaseUserId = await initSupabaseSession();
+      // @MX:NOTE: [AUTO] SPEC-SESSION-RECOVER-001 — getUserIdentity()를 가장 먼저 호출하여
+      // 토스 해시를 확보한 뒤 initSupabaseSession에 전달한다. WebView가 아니면 null이 반환되어
+      // 기존 익명 인증 fallback 으로 자연스럽게 흐른다 (REQ-SESSION-020).
+      const isWebView = detectWebView();
+      tossStore.getState().setWebView(isWebView);
+
+      let identity: Awaited<ReturnType<typeof getUserIdentity>> = null;
+      let identityErrored = false;
+      if (isWebView) {
+        try {
+          identity = await getUserIdentity();
+        } catch {
+          identity = null;
+          identityErrored = true;
+        }
+      }
+
+      // Supabase 세션 초기화 (해시 있으면 recover-session 우선)
+      const supabaseUserId = await initSupabaseSession(
+        identity?.anonymousKey ? { tossHash: identity.anonymousKey } : undefined,
+      );
+
       if (supabaseUserId && !cancelled) {
         // 일기 데이터 로드
         await diaryStore.getState().setUserId(supabaseUserId);
@@ -47,8 +73,6 @@ export default function BridgeInitializer() {
         }
 
         // @MX:NOTE: [AUTO] SPEC-SYNC-001 M7: 병렬 하이드레이션 (REQ-SYNC-002)
-        // Supabase에서 프로필/스킨/광고데이터를 병렬로 로드
-        // @MX:SPEC: SPEC-SYNC-001 REQ-SYNC-002
         const today = new Date().toISOString().split('T')[0];
         await Promise.all([
           jellyStore.getState().hydrateFromSupabase(supabaseUserId).catch(() => {}),
@@ -63,17 +87,14 @@ export default function BridgeInitializer() {
         }
 
         // @MX:NOTE: [AUTO] 닉네임 미설정 시 /welcome으로 리다이렉트
-        // 데이터 초기화 후 새 익명 사용자는 닉네임이 없으므로 온보딩 페이지로 유도
         if (!cancelled) {
           const currentPath = window.location.pathname;
 
-          // 닉네임 없고 /welcome이 아니면 → 온보딩으로
           if (!profile?.nickname && currentPath !== '/welcome') {
             window.location.href = '/welcome';
             return;
           }
 
-          // 닉네임 있는데 /welcome에 있으면 → 홈으로
           if (profile?.nickname && currentPath === '/welcome') {
             window.location.href = '/home';
             return;
@@ -81,28 +102,23 @@ export default function BridgeInitializer() {
         }
       }
 
-      // WebView 감지
-      const isWebView = detectWebView();
-      tossStore.getState().setWebView(isWebView);
-
       if (!isWebView) {
         return;
       }
 
-      // SDK 사용자 식별 정보 조회 (non-blocking)
-      try {
-        const identity = await getUserIdentity();
-        if (cancelled) return;
-
-        if (identity) {
-          tossStore.getState().setUserIdentity(identity);
-        }
-        tossStore.getState().setBridgeReady(true);
-      } catch {
-        // silent fallback
+      // getUserIdentity가 예외를 던졌을 때는 WebView 비활성 상태로 되돌린다
+      if (identityErrored) {
         tossStore.getState().setWebView(false);
         tossStore.getState().setUserIdentity(null);
+        return;
       }
+
+      // WebView일 때 identity를 tossStore에 반영 (멱등 가드는 setUserIdentity 내부에서)
+      if (cancelled) return;
+      if (identity) {
+        tossStore.getState().setUserIdentity(identity);
+      }
+      tossStore.getState().setBridgeReady(true);
     }
 
     init();

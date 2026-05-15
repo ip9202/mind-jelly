@@ -35,3 +35,6 @@ export const BANNER_CONFIG = Object.freeze({
     height: 50,
   },
 });
+
+// 고정형 배너 권장 높이 (TossAds 공식 문서: https://developers-apps-in-toss.toss.im/bedrock/reference/framework/광고/BannerAd.md)
+export const BANNER_HEIGHT_PX = 96;

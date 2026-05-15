@@ -276,6 +276,7 @@ export default function HomePage() {
   // 리포트 상태 관리
   useEffect(() => {
     if (uiState !== 'report') {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setShowInterstitial(false);
     }
   }, [uiState]);
@@ -298,6 +299,7 @@ export default function HomePage() {
   const emotionHistory: EmotionHistoryItem[] = emotionHistoryRaw.map((item, i) => ({
     emotion: item.emotion,
     confidence: item.confidence,
+    // eslint-disable-next-line react-hooks/purity
     timestamp: new Date(Date.now() - (emotionHistoryRaw.length - 1 - i) * 86400000).toISOString(),
   }));
 
@@ -325,6 +327,7 @@ export default function HomePage() {
   // 모바일 키보드 높이 추적 (입력 모드)
   useEffect(() => {
     if (uiState !== 'input') {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setKeyboardHeight(0);
       lastKeyboardHeight.current = 0;
       return;

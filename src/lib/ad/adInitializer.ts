@@ -7,7 +7,7 @@
  * SPEC: SPEC-AD-001 (REQ-AD-001)
  */
 
-import { loadFullScreenAd } from '@apps-in-toss/web-framework';
+import { loadFullScreenAd, TossAds } from '@apps-in-toss/web-framework';
 import { INTERSTITIAL_AD_GROUP_ID, REWARDED_AD_GROUP_ID } from './adConfig';
 
 /**
@@ -55,6 +55,16 @@ export async function initializeAdMob(): Promise<void> {
       // WebView 외 환경에서는 초기화 성공으로 처리 (광고 없이 동작)
       isInitialized = true;
       return;
+    }
+
+    // TossAds 배너 SDK 초기화 (앱 전역 1회)
+    if (typeof TossAds?.initialize === 'function' && TossAds.initialize.isSupported?.()) {
+      TossAds.initialize({
+        callbacks: {
+          onInitialized: () => console.log('[TossAds] 배너 SDK 초기화 완료'),
+          onInitializationFailed: (error) => console.error('[TossAds] 배너 SDK 초기화 실패:', error),
+        },
+      });
     }
 
     // 전면형 + 보상형 미리 로드 (앱 시작 시 캐시 → show 즉시 호출 가능)
