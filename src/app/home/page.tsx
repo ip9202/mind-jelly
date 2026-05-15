@@ -96,11 +96,6 @@ export default function HomePage() {
   const matterRef = useRef<typeof import('matter-js') | null>(null);
   const [uiState, setUiState] = useState<UiState>('idle');
   const [showInterstitial, setShowInterstitial] = useState(false);
-  const [keyboardHeight, setKeyboardHeight] = useState(0);
-  // input 모드 진입 시 키보드 오픈 전 기준 높이 (window.innerHeight가 WebView에 따라 변동되는 문제 대응)
-  const viewportBaseHeight = useRef(0);
-  // 불필요한 setState 방지용 이전 값 추적
-  const lastKeyboardHeight = useRef(0);
   const [showStatsSheet, setShowStatsSheet] = useState(false);
   const statsButtonRef = useRef<HTMLButtonElement>(null);
 
@@ -324,56 +319,6 @@ export default function HomePage() {
     recordRewardedAdShown();
   }, []);
 
-  // 모바일 키보드 높이 추적 (입력 모드)
-  useEffect(() => {
-    if (uiState !== 'input') {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setKeyboardHeight(0);
-      lastKeyboardHeight.current = 0;
-      return;
-    }
-
-    const vv = window.visualViewport;
-    if (!vv) return;
-
-    // input 모드 진입 시 vv.height 기준값 저장 (키보드 열리기 전)
-    viewportBaseHeight.current = vv.height;
-
-    let debounceTimer: ReturnType<typeof setTimeout>;
-
-    const applyKeyboardHeight = () => {
-      // vv.height가 안정된 후 계산 → 애니메이션 중간값 차단
-      const kbHeight = Math.max(0, viewportBaseHeight.current - vv.height);
-      if (kbHeight !== lastKeyboardHeight.current) {
-        lastKeyboardHeight.current = kbHeight;
-        setKeyboardHeight(kbHeight);
-      }
-    };
-
-    const scheduleUpdate = () => {
-      // 100ms 디바운스: vv.resize가 연속 발화하는 동안 마지막 안정값만 사용
-      clearTimeout(debounceTimer);
-      debounceTimer = setTimeout(applyKeyboardHeight, 100);
-    };
-
-    // primary: vv.resize (키보드 열림/닫힘 시 발화)
-    // vv.scroll 제거 → Safari 자동스크롤 중 발화하는 중간값으로 인한 폼 튀어오름 방지
-    vv.addEventListener('resize', scheduleUpdate);
-
-    // fallback: vv.resize가 발화하지 않는 WebView 환경 대응
-    // 400ms 대기 = 키보드 애니메이션(~300ms) 완료 후 확인
-    const handleFocusIn = (e: FocusEvent) => {
-      if (!(e.target instanceof HTMLTextAreaElement || e.target instanceof HTMLInputElement)) return;
-      setTimeout(scheduleUpdate, 400);
-    };
-    document.addEventListener('focusin', handleFocusIn);
-
-    return () => {
-      vv.removeEventListener('resize', scheduleUpdate);
-      document.removeEventListener('focusin', handleFocusIn);
-      clearTimeout(debounceTimer);
-    };
-  }, [uiState]);
 
   // 감정 분포 계산 (최근 분석 기록 기준)
 
@@ -514,9 +459,6 @@ export default function HomePage() {
           )}
         </div>
 
-        {/* 배너 광고 - report 상태일 때만 표시 (REQ-AD-003) */}
-        {uiState === 'report' && <BannerAd show={true} />}
-
         {/* Bottom Content Area (idle: message card + CTA, report: fade-in card) */}
         {(uiState === 'idle' || uiState === 'report') && (
           <div className="w-full flex flex-col items-center px-[20px] pb-6">
@@ -564,23 +506,23 @@ export default function HomePage() {
               />
             </div>
 
-            {/* SPEC-AD-003 (REQ-RWD-001): 보상형 광고 CTA 버튼 */}
-            {uiState === 'report' && (
+            {/* 배너 광고 - report 상태, 보상형 버튼 위에 표시 */}
+            {uiState === 'report' && <BannerAd show={true} />}
+
+            {/* SPEC-AD-003 (REQ-RWD-001): 보상형 광고 CTA 버튼 - 한도 있을 때만 표시 */}
+            {uiState === 'report' && canShowRewardedAd() && (
               <button
                 onClick={handleCTAClick}
-                disabled={!canShowRewardedAd()}
                 aria-label="광고 보고 보상 받기"
-                className="w-full max-w-md mt-3 h-11 rounded-xl text-white font-gowun text-sm font-bold flex items-center justify-center gap-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-default active:scale-[0.97] hover:shadow-md"
+                className="w-full max-w-md mt-3 h-11 rounded-xl text-white font-gowun text-sm font-bold flex items-center justify-center gap-2 transition-all duration-200 active:scale-[0.97] hover:shadow-md"
                 style={{
-                  background: canShowRewardedAd()
-                    ? 'linear-gradient(135deg, #8B5CF6 0%, #A78BFA 100%)'
-                    : '#9CA3AF',
-                  boxShadow: canShowRewardedAd() ? '0 2px 8px rgba(139, 92, 246, 0.35)' : 'none',
+                  background: 'linear-gradient(135deg, #8B5CF6 0%, #A78BFA 100%)',
+                  boxShadow: '0 2px 8px rgba(139, 92, 246, 0.35)',
                 }}
                 data-testid="rewarded-ad-cta"
               >
                 <span className="material-symbols-outlined text-lg" style={{ fontVariationSettings: "'FILL' 1" }} aria-hidden="true">redeem</span>
-                {canShowRewardedAd() ? '광고 보고 보상 받기' : '오늘은 더 이상 시청할 수 없어요'}
+                광고 보고 보상 받기
               </button>
             )}
 
@@ -626,10 +568,7 @@ export default function HomePage() {
       {uiState === 'input' && (
         <section
           className="fixed left-1/2 -translate-x-1/2 w-[calc(100%-40px)] max-w-md z-40"
-          style={{
-            bottom: keyboardHeight + 24,
-            transition: 'bottom 0.25s ease-out',
-          }}
+          style={{ bottom: 24 }}
         >
           <div className="animate-slide-up">
             <EmotionInput
