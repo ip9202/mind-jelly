@@ -359,7 +359,7 @@ export default function HomePage() {
 
   return (
     <div
-      className={`w-full flex flex-col font-gowun text-on-surface ${uiState === 'input' ? 'min-h-screen overflow-auto' : 'h-screen overflow-hidden'}`}
+      className="h-screen w-full flex flex-col overflow-hidden font-gowun text-on-surface"
       style={{
         background: `linear-gradient(135deg, ${currentTheme.bgGradientStart} 0%, #fbf9f6 40%, ${currentTheme.bgGradientEnd} 100%)`,
         transition: 'background 800ms linear',
@@ -410,9 +410,9 @@ export default function HomePage() {
         {/* Jelly Container - takes remaining space, jelly centered within */}
         <div
           aria-busy={uiState === 'restoring' || uiState === 'beads'}
-          className={`flex-1 flex items-center justify-center ${uiState === 'idle' ? 'pt-28' : 'pt-16'}`}
+          className={`flex items-center justify-center ${uiState === 'input' ? 'h-[38vh]' : `flex-1 ${uiState === 'idle' ? 'pt-28' : 'pt-16'}`}`}
           style={{
-            minHeight: uiState === 'idle' ? '280px' : '160px',
+            minHeight: uiState === 'idle' ? '280px' : uiState === 'input' ? '0' : '160px',
             transform: uiState === 'input' ? 'scale(0.65)' : 'scale(1)',
             transition: 'transform 500ms cubic-bezier(0.4, 0, 0.2, 1)',
             transformOrigin: 'center top',
