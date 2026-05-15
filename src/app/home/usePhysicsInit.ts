@@ -42,12 +42,14 @@ export function usePhysicsInit(options: UsePhysicsInitOptions): UsePhysicsInitRe
   const collisionSetupRef = useRef(false);
   const animRef = useRef<number>(0);
   const satisfiedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const stuckTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // 언마운트 시 정리
   useEffect(() => {
     return () => {
       if (animRef.current) cancelAnimationFrame(animRef.current);
       if (satisfiedTimerRef.current) clearTimeout(satisfiedTimerRef.current);
+      if (stuckTimerRef.current) clearTimeout(stuckTimerRef.current);
       engineRef.current = null;
     };
   }, []);
@@ -202,6 +204,33 @@ export function usePhysicsInit(options: UsePhysicsInitOptions): UsePhysicsInitRe
                 });
                 if (nearJelly) {
                   st.transitionState('anticipation');
+                }
+              }
+
+              // stuck 감지: 구슬이 1개 남고 eating/anticipation 상태인데 3초 이상 지속되면 강제 진행
+              const currentSt = jellyStore.getState();
+              if (
+                beadBodies.length === 1 &&
+                (currentSt.currentState === 'eating' || currentSt.currentState === 'anticipation')
+              ) {
+                if (!stuckTimerRef.current) {
+                  stuckTimerRef.current = setTimeout(() => {
+                    const s = jellyStore.getState();
+                    if (s.currentState !== 'satisfied') {
+                      // 마지막 구슬 강제 제거 후 satisfied 전이
+                      const lastBead = Matter.Composite.allBodies(eng.world)
+                        .find((b) => b.label === 'bead');
+                      if (lastBead) Matter.Composite.remove(eng.world, lastBead);
+                      s.transitionState('satisfied');
+                    }
+                    stuckTimerRef.current = null;
+                  }, 3000);
+                }
+              } else {
+                // 구슬이 2개 이상이거나 다른 상태면 stuck 타이머 리셋
+                if (stuckTimerRef.current) {
+                  clearTimeout(stuckTimerRef.current);
+                  stuckTimerRef.current = null;
                 }
               }
             }
