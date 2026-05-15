@@ -221,7 +221,7 @@ export default function WelcomePage() {
 
       await setNickname(supabaseUserId, trimmed);
       jellyStore.getState().setJellyName(trimmed);
-      jellyStore.getState().setJellyShape(selectedShape);
+      jellyStore.getState().setJellyShape(supabaseUserId, selectedShape);
 
       window.location.href = '/home';
     } catch {

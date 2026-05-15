@@ -15,13 +15,20 @@ import { getMyProfile } from '@/lib/supabase/db';
 import { tossStore } from '@/stores/tossStore';
 import { diaryStore } from '@/stores/diaryStore';
 import { jellyStore } from '@/stores/jellyStore';
+import { rewardStore } from '@/stores/rewardStore';
 import { detectWebView, getUserIdentity } from '@/lib/toss/bridge';
+import { initializeAdMob } from '@/lib/ad/adInitializer';
+import { recordSession, initAdImpressionCache } from '@/lib/ad/adFrequencyControl';
 
 export default function BridgeInitializer() {
   useEffect(() => {
     let cancelled = false;
 
     async function init() {
+      // 세션 기록 + 광고 SDK 초기화 (항상 실행)
+      recordSession();
+      initializeAdMob();
+
       // Supabase 익명 세션 초기화 (WebView 여부와 무관하게 항상 실행)
       const supabaseUserId = await initSupabaseSession();
       if (supabaseUserId && !cancelled) {
@@ -38,6 +45,16 @@ export default function BridgeInitializer() {
         if (!cancelled) {
           jellyStore.getState().setInitialized(true);
         }
+
+        // @MX:NOTE: [AUTO] SPEC-SYNC-001 M7: 병렬 하이드레이션 (REQ-SYNC-002)
+        // Supabase에서 프로필/스킨/광고데이터를 병렬로 로드
+        // @MX:SPEC: SPEC-SYNC-001 REQ-SYNC-002
+        const today = new Date().toISOString().split('T')[0];
+        await Promise.all([
+          jellyStore.getState().hydrateFromSupabase(supabaseUserId).catch(() => {}),
+          rewardStore.getState().hydrateFromSupabase().catch(() => {}),
+          initAdImpressionCache(supabaseUserId, today).catch(() => {}),
+        ]);
 
         // Supabase nickname → jellyStore 동기화 (서버가 단일 소스)
         const profile = await getMyProfile(supabaseUserId);

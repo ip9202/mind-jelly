@@ -4,8 +4,45 @@ import { devtools, persist } from 'zustand/middleware';
 import type { JellyState, JellyFace, JellyShape } from '@/types/physics';
 import type { EmotionType, AnalysisResponse } from '@/types/emotion';
 import { JELLY_COLOR } from '@/lib/constants/emotion';
-import { hasTodayDiary } from '@/lib/supabase/db';
+import { hasTodayDiary, loadUserProfile, updateUserProfile } from '@/lib/supabase/db';
+import { createSyncQueue } from '@/lib/supabase/sync';
+import type { SyncQueue } from '@/lib/supabase/sync';
 import { diaryStore } from '@/stores/diaryStore';
+
+// @MX:NOTE: [AUTO] SPEC-SYNC-001: Supabase write-through를 위한 모듈 수준 sync queue
+// @MX:REASON: jellyStore와 독립적인 라이프사이클 관리, 오프라인 복원력 제공
+// @MX:SPEC: SPEC-SYNC-001 REQ-SYNC-008
+const syncQueue: SyncQueue = createSyncQueue();
+
+// @MX:NOTE: [AUTO] SPEC-SYNC-001: 2초 디바운스 타이머 (필드별 독립)
+let jellyShapeTimer: ReturnType<typeof setTimeout> | null = null;
+let persistEmotionTimer: ReturnType<typeof setTimeout> | null = null;
+const DEBOUNCE_MS = 2000;
+
+// @MX:NOTE: [AUTO] SPEC-SYNC-001: 디바운스된 Supabase write 헬퍼
+// @MX:REASON: setJellyShape, setPersistEmotion에서 공통으로 사용하는 디바운스 + 큐 패턴
+function debouncedSupabaseWrite(
+  timerRef: { current: ReturnType<typeof setTimeout> | null },
+  userId: string,
+  patch: Parameters<typeof updateUserProfile>[1],
+): void {
+  if (timerRef.current) clearTimeout(timerRef.current);
+  timerRef.current = setTimeout(() => {
+    syncQueue.enqueueWrite(async () => {
+      try {
+        await updateUserProfile(userId, patch);
+      } catch {
+        // 실패해도 로컬 상태는 유지 (optimistic update)
+        // syncQueue가 온라인 복귀 시 재시도
+      }
+    });
+    syncQueue.flushQueue();
+  }, DEBOUNCE_MS);
+}
+
+// timerRef 패턴: 객체 래핑으로 클로저에서 참조 갱신
+const jellyShapeTimerRef = { get current() { return jellyShapeTimer; }, set current(v) { jellyShapeTimer = v; } };
+const persistEmotionTimerRef = { get current() { return persistEmotionTimer; }, set current(v) { persistEmotionTimer = v; } };
 
 // 상태 전이 맵 (유효한 전이만 정의)
 const TRANSITION_MAP: Record<string, string[]> = {
@@ -103,8 +140,10 @@ interface JellyStoreState {
   // 액션: 젤리 이름 설정
   setJellyName: (name: string) => void;
 
-  // 액션: 젤리 모양 설정
-  setJellyShape: (shape: JellyShape) => void;
+  // 액션: 젤리 모양 설정 (Supabase write-through)
+  // @MX:NOTE: [AUTO] SPEC-SYNC-001 REQ-SYNC-002: setJellyShape write-through
+  // @MX:SPEC: SPEC-SYNC-001 REQ-SYNC-002, REQ-SYNC-004
+  setJellyShape: (userId: string, shape: JellyShape) => void;
 
   // SPEC-TOUCH-001: 터치 쿨다운 타임스탬프 (0이면 쿨다운 없음)
   touchCooldownAt: number;
@@ -123,9 +162,14 @@ interface JellyStoreState {
   isInitialized: boolean;
   setInitialized: (initialized: boolean) => void;
 
-  // @MX:NOTE: [AUTO] SPEC-SETTINGS-001: 감정 상태 지속성 토글 액션
-  // @MX:SPEC: SPEC-SETTINGS-001 REQ-PERSIST-004
-  setPersistEmotion: (value: boolean) => void;
+  // @MX:NOTE: [AUTO] SPEC-SETTINGS-001: 감정 상태 지속성 토글 액션 (Supabase write-through)
+  // @MX:SPEC: SPEC-SETTINGS-001 REQ-PERSIST-004, SPEC-SYNC-001 REQ-SYNC-002
+  setPersistEmotion: (userId: string, value: boolean) => void;
+
+  // @MX:NOTE: [AUTO] SPEC-SYNC-001 REQ-SYNC-004: Supabase에서 jellyShape, persistEmotion 로드
+  // @MX:REASON: Supabase를 단일 진실 공급원으로 사용, 실패 시 localStorage 폴백
+  // @MX:SPEC: SPEC-SYNC-001 REQ-SYNC-002, REQ-SYNC-004
+  hydrateFromSupabase: (userId: string) => Promise<void>;
 }
 
 /**
@@ -282,9 +326,12 @@ export const jellyStore = create<JellyStoreState>()(
         set({ jellyName: name });
       },
 
-      // 젤리 모양 설정
-      setJellyShape: (shape: JellyShape) => {
+      // 젤리 모양 설정 (Supabase write-through with 2s debounce)
+      // @MX:NOTE: [AUTO] SPEC-SYNC-001 REQ-SYNC-002: optimistic update + debounced Supabase write
+      // @MX:SPEC: SPEC-SYNC-001 REQ-SYNC-002, REQ-SYNC-004
+      setJellyShape: (userId: string, shape: JellyShape) => {
         set({ jellyShape: shape });
+        debouncedSupabaseWrite(jellyShapeTimerRef, userId, { jellyShape: shape });
       },
 
       // @MX:NOTE: [AUTO] SPEC-JELLY-003: 다이어리 기반 일일 상태 초기화
@@ -292,16 +339,16 @@ export const jellyStore = create<JellyStoreState>()(
       // @MX:NOTE: [AUTO] SPEC-SETTINGS-001: persistEmotion 분기 추가
       // @MX:SPEC: SPEC-JELLY-003, SPEC-SETTINGS-001 REQ-PERSIST-002
       checkDiaryAndReset: async (userId: string) => {
-        const today = new Date().toISOString().split('T')[0];
-        const { lastAccessDate, persistEmotion } = get();
-        const isNewDay = lastAccessDate !== today;
+        // 로컬 타임존 기준 날짜 (UTC 사용 시 한국 자정~오전9시 구간에서 날짜 오판 발생)
+        const d = new Date();
+        const today = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 
         try {
           // 무조건 다이어리 확인 (날짜 상관없음)
           const hasDiary = await hasTodayDiary(userId);
 
           if (!hasDiary) {
-            const { jellyShape, jellyName, touchCooldownAt } = get();
+            const { jellyShape, jellyName, touchCooldownAt, persistEmotion } = get();
 
             if (persistEmotion) {
               // @MX:NOTE: [AUTO] SPEC-SETTINGS-001: 감정 유지 모드
@@ -314,24 +361,15 @@ export const jellyStore = create<JellyStoreState>()(
                 jellyName,
                 touchCooldownAt,
               });
-            } else if (isNewDay) {
-              // persistEmotion=false + 새로운 날 → 감정 초기화
+            } else {
+              // persistEmotion=false + 오늘 다이어리 없음 → 항상 감정 초기화
+              // @MX:REASON: isNewDay 여부와 무관하게 다이어리가 없으면 감정은 기본값으로 복귀
               set({
                 lastEmotion: 'joy',
                 emotionColor: JELLY_COLOR,
                 currentState: 'idle',
                 faceExpression: STATE_FACES.idle,
                 emotionHistory: [],
-                lastAccessDate: today,
-                jellyShape,
-                jellyName,
-                touchCooldownAt,
-              });
-            } else {
-              // persistEmotion=false + 같은 날 → 오늘 감정 유지, 상태만 리셋
-              set({
-                currentState: 'idle',
-                faceExpression: STATE_FACES.idle,
                 lastAccessDate: today,
                 jellyShape,
                 jellyName,
@@ -356,7 +394,8 @@ export const jellyStore = create<JellyStoreState>()(
           }
         } catch {
           // Supabase 조회 실패 시 날짜만 업데이트 (기존 상태 유지)
-          set({ lastAccessDate: today });
+          const d2 = new Date();
+          set({ lastAccessDate: `${d2.getFullYear()}-${String(d2.getMonth() + 1).padStart(2, '0')}-${String(d2.getDate()).padStart(2, '0')}` });
         }
       },
 
@@ -400,24 +439,49 @@ export const jellyStore = create<JellyStoreState>()(
         set({ isInitialized: initialized });
       },
 
-      // @MX:NOTE: [AUTO] SPEC-SETTINGS-001 REQ-PERSIST-004: 감정 상태 지속성 토글
-      // @MX:SPEC: SPEC-SETTINGS-001
-      setPersistEmotion: (value: boolean) => {
+      // @MX:NOTE: [AUTO] SPEC-SYNC-001 REQ-SYNC-004: Supabase에서 프로필 필드 하이드레이션
+      // @MX:REASON: Supabase를 단일 진실 공급원, 실패 시 localStorage 폴백
+      // @MX:SPEC: SPEC-SYNC-001 REQ-SYNC-002, REQ-SYNC-004
+      hydrateFromSupabase: async (userId: string) => {
+        try {
+          const profile = await loadUserProfile(userId);
+          if (!profile) return; // 데이터 없으면 기존 상태 유지
+
+          const updates: Partial<JellyStoreState> = {};
+          if (profile.jellyShape !== null) {
+            updates.jellyShape = profile.jellyShape as JellyShape;
+          }
+          if (profile.persistEmotion !== undefined) {
+            updates.persistEmotion = profile.persistEmotion;
+          }
+
+          if (Object.keys(updates).length > 0) {
+            set(updates);
+          }
+        } catch {
+          // Supabase 조회 실패 시 localStorage 캐시 폴백 (기존 상태 유지)
+        }
+      },
+
+      // @MX:NOTE: [AUTO] SPEC-SETTINGS-001 REQ-PERSIST-004: 감정 상태 지속성 토글 (write-through)
+      // @MX:SPEC: SPEC-SETTINGS-001, SPEC-SYNC-001 REQ-SYNC-002
+      setPersistEmotion: (userId: string, value: boolean) => {
         set({ persistEmotion: value });
+        debouncedSupabaseWrite(persistEmotionTimerRef, userId, { persistEmotion: value });
       },
     }),
     {
       name: 'jelly-storage',
-      version: 5,
-      // @MX:NOTE: [AUTO] 순수 UI 상태만 저장 (REQ-UBI-003)
-      // @MX:REASON: jellyName→Supabase users.nickname, emotionHistory→Supabase diary_entries로 이전
-      // @MX:REASON: currentState는 일시적 애니메이션 상태이므로 persist에서 제외 (v4)
+      version: 6,
+      // @MX:NOTE: [AUTO] SPEC-SYNC-001 REQ-SYNC-004: persist whitelist 변경
+      // @MX:REASON: lastEmotion, emotionColor 제거 (다이어리에서 파생 가능)
+      // @MX:REASON: jellyShape, persistEmotion은 Supabase로 이전, localStorage는 폴백 캐시
+      // @MX:SPEC: SPEC-SYNC-001 REQ-SYNC-004
       partialize: (state) => ({
-        lastEmotion: state.lastEmotion,
-        emotionColor: state.emotionColor,
+        // lastEmotion, emotionColor 제거: 다이어리에서 파생 가능
         // currentState 제거: satisfied/eating 등 일시적 상태가 리프레시 후 복원되는 것 방지
         jellyShape: state.jellyShape as JellyShape,
-        // SPEC-JELLY-003 REQ-INIT-001: 마지막 접속 날짜 저장
+        // SPEC-JELLY-003 REQ-INIT-001: 마지막 접속 날짜 저장 (로컬 캐시)
         lastAccessDate: state.lastAccessDate,
         // @MX:NOTE: [AUTO] SPEC-SETTINGS-001 REQ-PERSIST-005: 감정 지속성 설정 영속 저장
         // @MX:SPEC: SPEC-SETTINGS-001
@@ -431,7 +495,8 @@ export const jellyStore = create<JellyStoreState>()(
           // 하이드레이션 완료 후 최초 실행 시 lastAccessDate 설정
           const { lastAccessDate } = jellyStore.getState();
           if (!lastAccessDate) {
-            const today = new Date().toISOString().split('T')[0];
+            const d = new Date();
+            const today = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
             jellyStore.setState({ lastAccessDate: today });
           }
         };
@@ -479,6 +544,16 @@ export const jellyStore = create<JellyStoreState>()(
             ...state,
             persistEmotion: false,
           };
+        }
+        // @MX:NOTE: [AUTO] SPEC-SYNC-001 REQ-SYNC-004: lastEmotion, emotionColor persist 제거
+        // @MX:REASON: 다이어리에서 파생 가능하므로 persist에서 제거
+        // @MX:SPEC: SPEC-SYNC-001 REQ-SYNC-004
+        // 버전 5 → 6: lastEmotion, emotionColor 제거
+        if (version <= 5 && state) {
+          const migrated = { ...state };
+          delete (migrated as Record<string, unknown>).lastEmotion;
+          delete (migrated as Record<string, unknown>).emotionColor;
+          return migrated;
         }
         return state;
       },

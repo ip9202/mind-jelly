@@ -97,6 +97,10 @@ export default function HomePage() {
   const [uiState, setUiState] = useState<UiState>('idle');
   const [showInterstitial, setShowInterstitial] = useState(false);
   const [keyboardHeight, setKeyboardHeight] = useState(0);
+  // input 모드 진입 시 키보드 오픈 전 기준 높이 (window.innerHeight가 WebView에 따라 변동되는 문제 대응)
+  const viewportBaseHeight = useRef(0);
+  // 불필요한 setState 방지용 이전 값 추적
+  const lastKeyboardHeight = useRef(0);
   const [showStatsSheet, setShowStatsSheet] = useState(false);
   const statsButtonRef = useRef<HTMLButtonElement>(null);
 
@@ -252,7 +256,6 @@ export default function HomePage() {
       }, 0);
 
       // 전면형 광고 타이머 설정
-      // uiState가 'beads'일 때만 실행되므로 별도 조건 체크 불필요
       const adTimer = setTimeout(() => {
         if (canShowInterstitial()) {
           setShowInterstitial(true);
@@ -270,14 +273,10 @@ export default function HomePage() {
     }
   }, [uiState, currentState, lastEmotion]);
 
-  // 리포트 표시 후 idle로 복귀
-  // @MX:ANCHOR: SPEC-TOUCH-001 — jellyStore.currentState도 idle로 함께 리셋
-  // @MX:REASON: satisfied → idle 전이가 없으면 다음 사이클 터치 핸들러가 currentState !== 'idle' 가드에 막혀 무반응
+  // 리포트 상태 관리
   useEffect(() => {
-    if (uiState === 'report') {
-      // report 상태 유지 - 사용자가 직접 화면을 탭하거나 CTA를 클릭할 때까지 유지
-      // 빈도 제한으로 인한 report 종료는 제거 (광고 클릭 빈도 저하 방지)
-      return;
+    if (uiState !== 'report') {
+      setShowInterstitial(false);
     }
   }, [uiState]);
 
@@ -325,24 +324,51 @@ export default function HomePage() {
 
   // 모바일 키보드 높이 추적 (입력 모드)
   useEffect(() => {
-    if (uiState !== 'input') return;
+    if (uiState !== 'input') {
+      setKeyboardHeight(0);
+      lastKeyboardHeight.current = 0;
+      return;
+    }
 
     const vv = window.visualViewport;
     if (!vv) return;
 
-    const updateKeyboard = () => {
-      const kbHeight = Math.max(0, window.innerHeight - vv.height);
-      setKeyboardHeight(kbHeight);
-      window.scrollTo(0, 0);
-      document.documentElement.scrollTop = 0;
-      document.body.scrollTop = 0;
+    // input 모드 진입 시 vv.height 기준값 저장 (키보드 열리기 전)
+    viewportBaseHeight.current = vv.height;
+
+    let debounceTimer: ReturnType<typeof setTimeout>;
+
+    const applyKeyboardHeight = () => {
+      // vv.height가 안정된 후 계산 → 애니메이션 중간값 차단
+      const kbHeight = Math.max(0, viewportBaseHeight.current - vv.height);
+      if (kbHeight !== lastKeyboardHeight.current) {
+        lastKeyboardHeight.current = kbHeight;
+        setKeyboardHeight(kbHeight);
+      }
     };
 
-    vv.addEventListener('resize', updateKeyboard);
-    vv.addEventListener('scroll', updateKeyboard);
+    const scheduleUpdate = () => {
+      // 100ms 디바운스: vv.resize가 연속 발화하는 동안 마지막 안정값만 사용
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(applyKeyboardHeight, 100);
+    };
+
+    // primary: vv.resize (키보드 열림/닫힘 시 발화)
+    // vv.scroll 제거 → Safari 자동스크롤 중 발화하는 중간값으로 인한 폼 튀어오름 방지
+    vv.addEventListener('resize', scheduleUpdate);
+
+    // fallback: vv.resize가 발화하지 않는 WebView 환경 대응
+    // 400ms 대기 = 키보드 애니메이션(~300ms) 완료 후 확인
+    const handleFocusIn = (e: FocusEvent) => {
+      if (!(e.target instanceof HTMLTextAreaElement || e.target instanceof HTMLInputElement)) return;
+      setTimeout(scheduleUpdate, 400);
+    };
+    document.addEventListener('focusin', handleFocusIn);
+
     return () => {
-      vv.removeEventListener('resize', updateKeyboard);
-      vv.removeEventListener('scroll', updateKeyboard);
+      vv.removeEventListener('resize', scheduleUpdate);
+      document.removeEventListener('focusin', handleFocusIn);
+      clearTimeout(debounceTimer);
     };
   }, [uiState]);
 
@@ -382,7 +408,7 @@ export default function HomePage() {
       }}
     >
       {/* Main Canvas Area */}
-      <main id="main-content" role="main" className="relative w-full flex-1 flex flex-col items-center overflow-hidden pb-24 transition-all duration-500">
+      <main id="main-content" role="main" className="relative w-full flex-1 flex flex-col items-center overflow-hidden pb-bottom-nav transition-all duration-500">
 
         {/* Decorative Atmosphere */}
         <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
@@ -485,15 +511,6 @@ export default function HomePage() {
           )}
         </div>
 
-        {/* 전면형 광고 - satisfied→report 전환 시점에 표시 */}
-        {showInterstitial && (
-          <InterstitialAd
-            onClosed={() => {
-              setShowInterstitial(false);
-            }}
-          />
-        )}
-
         {/* 배너 광고 - report 상태일 때만 표시 (REQ-AD-003) */}
         {uiState === 'report' && <BannerAd show={true} />}
 
@@ -563,9 +580,19 @@ export default function HomePage() {
                 {canShowRewardedAd() ? '광고 보고 보상 받기' : '오늘은 더 이상 시청할 수 없어요'}
               </button>
             )}
+
           </div>
         )}
       </main>
+
+      {/* 전면형 광고 — main 바깥에 위치 (overflow-hidden 부모에 갇히지 않도록) */}
+      {showInterstitial && (
+        <InterstitialAd
+          onClosed={() => {
+            setShowInterstitial(false);
+          }}
+        />
+      )}
 
       {/* 전역 BottomNav (햄버거 메뉴 대체) — input 모드에서는 입력폼과 충돌하므로 숨김 */}
       {uiState !== 'input' && <BottomNav activeTab="jelly" />}
@@ -596,7 +623,10 @@ export default function HomePage() {
       {uiState === 'input' && (
         <section
           className="fixed left-1/2 -translate-x-1/2 w-[calc(100%-40px)] max-w-md z-40"
-          style={{ bottom: (uiState === 'input' ? keyboardHeight : 0) + 24 }}
+          style={{
+            bottom: keyboardHeight + 24,
+            transition: 'bottom 0.25s ease-out',
+          }}
         >
           <div className="animate-slide-up">
             <EmotionInput

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { getMyProfile, setNickname } from '@/lib/supabase/db';
+import { getMyProfile, setNickname, resetUserData } from '@/lib/supabase/db';
 import { diaryStore } from '@/stores/diaryStore';
 import { jellyStore } from '@/stores/jellyStore';
 import { rewardStore } from '@/stores/rewardStore';
@@ -106,6 +106,7 @@ function ProfileSection() {
 function JellyShapeSection() {
   const jellyShape = jellyStore((s) => s.jellyShape);
   const setJellyShape = jellyStore((s) => s.setJellyShape);
+  const supabaseUserId = diaryStore((s) => s.supabaseUserId);
   const shapes = Object.keys(JELLY_SHAPE_CONFIGS) as JellyShape[];
 
   return (
@@ -126,7 +127,7 @@ function JellyShapeSection() {
             return (
               <button
                 key={shape}
-                onClick={() => setJellyShape(shape)}
+                onClick={() => setJellyShape(supabaseUserId ?? '', shape)}
                 aria-label={`젤리 모양: ${config.label}`}
                 aria-pressed={isSelected}
                 className={`flex flex-col items-center gap-[10px] p-[16px] rounded-2xl transition-all active:scale-95 ${
@@ -208,6 +209,7 @@ function JellyShapeSection() {
 function EmotionPersistenceSection() {
   const persistEmotion = jellyStore((s) => s.persistEmotion);
   const setPersistEmotion = jellyStore((s) => s.setPersistEmotion);
+  const supabaseUserId = diaryStore((s) => s.supabaseUserId);
 
   return (
     <section className="space-y-[8px]">
@@ -221,7 +223,7 @@ function EmotionPersistenceSection() {
             </p>
           </div>
           <button
-            onClick={() => setPersistEmotion(!persistEmotion)}
+            onClick={() => setPersistEmotion(supabaseUserId ?? '', !persistEmotion)}
             role="switch"
             aria-checked={persistEmotion}
             aria-label="감정 상태 유지 토글"
@@ -473,18 +475,11 @@ export default function SettingsPage() {
   async function handleDataReset() {
     setIsResetting(true);
     try {
-      // 1. Supabase 전체 개인정보 삭제 (정보통신망법 제16조 준수)
+      // @MX:NOTE: [AUTO] SPEC-SYNC-001 REQ-SYNC-007: resetUserData RPC로 서버 데이터 삭제
+      // RPC 실패 시 localStorage를 초기화하지 않아 복구 상태 보존
       const userId = diaryStore.getState().supabaseUserId;
       if (userId) {
-        try {
-          await Promise.allSettled([
-            supabase.from('diary_entries').delete().eq('user_id', userId),
-            supabase.from('friendships').delete().or(`requester_id.eq.${userId},receiver_id.eq.${userId}`),
-            supabase.from('users').delete().eq('id', userId),
-          ]);
-        } catch {
-          // Supabase 실패해도 로컬 초기화는 진행
-        }
+        await resetUserData(userId);
       }
 
       // 2. Reset Zustand stores
@@ -509,10 +504,11 @@ export default function SettingsPage() {
         isInitialized: false,
       });
 
-      // 3. Clear localStorage
+      // 3. Clear localStorage (광고 빈도 키 포함)
       localStorage.removeItem('jelly-storage');
       localStorage.removeItem('reward-storage');
       localStorage.removeItem('ad_frequency_history');
+      localStorage.removeItem('rewarded_ad_frequency');
       localStorage.removeItem('mind-jelly-theme');
 
       // 4. Supabase 인증 세션 폐기 → 재시작 시 새 익명 ID 발급

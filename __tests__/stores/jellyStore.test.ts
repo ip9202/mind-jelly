@@ -1,14 +1,44 @@
 import { jellyStore } from '@/stores/jellyStore';
 import { JELLY_COLOR } from '@/lib/constants/emotion';
 
-// @MX:NOTE: hasTodayDiary 모킹 (Supabase 직접 호출 방지)
+// 로컬 타임존 기준 날짜 문자열 헬퍼 (YYYY-MM-DD)
+function getLocalDate(date: Date = new Date()): string {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+}
+
+// @MX:NOTE: hasTodayDiary, loadUserProfile, updateUserProfile 모킹 (Supabase 직접 호출 방지)
 jest.mock('@/lib/supabase/db', () => ({
   hasTodayDiary: jest.fn(),
+  loadUserProfile: jest.fn(),
+  updateUserProfile: jest.fn(),
 }));
 
-import { hasTodayDiary } from '@/lib/supabase/db';
+import { hasTodayDiary, loadUserProfile, updateUserProfile } from '@/lib/supabase/db';
 
 const mockedHasTodayDiary = hasTodayDiary as jest.Mock;
+const mockedLoadUserProfile = loadUserProfile as jest.Mock;
+const mockedUpdateUserProfile = updateUserProfile as jest.Mock;
+
+// @MX:NOTE: createSyncQueue 모킹 (테스트용 더블)
+jest.mock('@/lib/supabase/sync', () => {
+  let queuedOps: Array<() => Promise<void>> = [];
+  return {
+    createSyncQueue: jest.fn(() => ({
+      enqueueWrite: jest.fn((op: () => Promise<void>) => { queuedOps.push(op); }),
+      flushQueue: jest.fn(async () => {
+        while (queuedOps.length > 0) {
+          const op = queuedOps.shift()!;
+          await op();
+        }
+      }),
+      isOnline: jest.fn(() => true),
+      getQueueLength: jest.fn(() => queuedOps.length),
+      destroy: jest.fn(),
+    })),
+    // 테스트에서 큐 상태 초기화용
+    __resetQueue: () => { queuedOps = []; },
+  };
+});
 
 describe('jellyStore', () => {
   beforeEach(() => {
@@ -207,7 +237,7 @@ describe('jellyStore', () => {
       it('다이어리가 없으면 감정 상태가 기본값으로 초기화되어야 한다', async () => {
         const yesterday = new Date();
         yesterday.setDate(yesterday.getDate() - 1);
-        const yesterdayStr = yesterday.toISOString().split('T')[0];
+        const yesterdayStr = getLocalDate(yesterday);
 
         jellyStore.setState({
           lastAccessDate: yesterdayStr,
@@ -226,7 +256,7 @@ describe('jellyStore', () => {
         expect(jellyStore.getState().emotionColor).toBe(JELLY_COLOR);
         expect(jellyStore.getState().currentState).toBe('idle');
         expect(jellyStore.getState().emotionHistory).toEqual([]);
-        expect(jellyStore.getState().lastAccessDate).toBe(new Date().toISOString().split('T')[0]);
+        expect(jellyStore.getState().lastAccessDate).toBe(getLocalDate());
       });
     });
 
@@ -235,7 +265,7 @@ describe('jellyStore', () => {
         // 다이어리 없음으로 모킹
         mockedHasTodayDiary.mockResolvedValue(false);
 
-        const today = new Date().toISOString().split('T')[0];
+        const today = getLocalDate();
 
         jellyStore.setState({
           lastAccessDate: today,
@@ -262,7 +292,7 @@ describe('jellyStore', () => {
       it('오늘 다이어리가 있으면 감정/색상은 보존되고 currentState는 idle로 리셋되어야 한다', async () => {
         const yesterday = new Date();
         yesterday.setDate(yesterday.getDate() - 1);
-        const yesterdayStr = yesterday.toISOString().split('T')[0];
+        const yesterdayStr = getLocalDate(yesterday);
 
         jellyStore.setState({
           lastAccessDate: yesterdayStr,
@@ -283,7 +313,7 @@ describe('jellyStore', () => {
         // currentState는 항상 idle로 리셋 (일시적 애니메이션 상태는 persist하지 않음)
         expect(jellyStore.getState().currentState).toBe('idle');
         // 날짜 업데이트
-        expect(jellyStore.getState().lastAccessDate).toBe(new Date().toISOString().split('T')[0]);
+        expect(jellyStore.getState().lastAccessDate).toBe(getLocalDate());
       });
     });
 
@@ -291,7 +321,7 @@ describe('jellyStore', () => {
       it('초기화 시 jellyShape은 보존되어야 한다', async () => {
         const yesterday = new Date();
         yesterday.setDate(yesterday.getDate() - 1);
-        const yesterdayStr = yesterday.toISOString().split('T')[0];
+        const yesterdayStr = getLocalDate(yesterday);
 
         jellyStore.setState({
           lastAccessDate: yesterdayStr,
@@ -307,7 +337,7 @@ describe('jellyStore', () => {
       it('초기화 시 jellyName은 보존되어야 한다', async () => {
         const yesterday = new Date();
         yesterday.setDate(yesterday.getDate() - 1);
-        const yesterdayStr = yesterday.toISOString().split('T')[0];
+        const yesterdayStr = getLocalDate(yesterday);
 
         jellyStore.setState({
           lastAccessDate: yesterdayStr,
@@ -323,7 +353,7 @@ describe('jellyStore', () => {
       it('초기화 시 touchCooldownAt은 보존되어야 한다', async () => {
         const yesterday = new Date();
         yesterday.setDate(yesterday.getDate() - 1);
-        const yesterdayStr = yesterday.toISOString().split('T')[0];
+        const yesterdayStr = getLocalDate(yesterday);
 
         jellyStore.setState({
           lastAccessDate: yesterdayStr,
@@ -341,7 +371,7 @@ describe('jellyStore', () => {
       it('Supabase 조회 실패 시 기존 상태를 유지하고 날짜만 업데이트해야 한다', async () => {
         const yesterday = new Date();
         yesterday.setDate(yesterday.getDate() - 1);
-        const yesterdayStr = yesterday.toISOString().split('T')[0];
+        const yesterdayStr = getLocalDate(yesterday);
 
         jellyStore.setState({
           lastAccessDate: yesterdayStr,
@@ -358,7 +388,7 @@ describe('jellyStore', () => {
         expect(jellyStore.getState().emotionColor).toBe('#0000FF');
         expect(jellyStore.getState().currentState).toBe('eating');
         // 날짜만 업데이트
-        expect(jellyStore.getState().lastAccessDate).toBe(new Date().toISOString().split('T')[0]);
+        expect(jellyStore.getState().lastAccessDate).toBe(getLocalDate());
       });
     });
 
@@ -425,7 +455,7 @@ describe('jellyStore', () => {
     describe('REQ-PERSIST-002: setPersistEmotion 액션', () => {
       it('setPersistEmotion으로 persistEmotion을 true로 변경할 수 있어야 한다', () => {
         const { setPersistEmotion } = jellyStore.getState();
-        setPersistEmotion(true);
+        setPersistEmotion('test-user-id', true);
 
         expect(jellyStore.getState().persistEmotion).toBe(true);
       });
@@ -434,17 +464,17 @@ describe('jellyStore', () => {
         jellyStore.setState({ persistEmotion: true });
 
         const { setPersistEmotion } = jellyStore.getState();
-        setPersistEmotion(false);
+        setPersistEmotion('test-user-id', false);
 
         expect(jellyStore.getState().persistEmotion).toBe(false);
       });
 
       it('빠른 토글 전환 후 최종 상태가 반영되어야 한다 (EC-001)', () => {
         const { setPersistEmotion } = jellyStore.getState();
-        setPersistEmotion(true);
-        setPersistEmotion(false);
-        setPersistEmotion(true);
-        setPersistEmotion(false);
+        setPersistEmotion('test-user-id', true);
+        setPersistEmotion('test-user-id', false);
+        setPersistEmotion('test-user-id', true);
+        setPersistEmotion('test-user-id', false);
 
         expect(jellyStore.getState().persistEmotion).toBe(false);
       });
@@ -541,9 +571,7 @@ describe('jellyStore', () => {
         expect(jellyStore.getState().lastEmotion).toBe('fear');
         expect(jellyStore.getState().emotionColor).toBe('#B39DDB');
         expect(jellyStore.getState().currentState).toBe('eating');
-        expect(jellyStore.getState().lastAccessDate).toBe(
-          new Date().toISOString().split('T')[0],
-        );
+        expect(jellyStore.getState().lastAccessDate).toBe(getLocalDate());
       });
     });
 
@@ -565,6 +593,193 @@ describe('jellyStore', () => {
           eyes: '• •',
           mouth: 'o',
         });
+      });
+    });
+  });
+
+  // @MX:TODO: [AUTO] SPEC-SYNC-001 T-007: jellyStore Supabase write-through
+  // @MX:SPEC: SPEC-SYNC-001 REQ-SYNC-002, REQ-SYNC-004
+  describe('SPEC-SYNC-001 T-007: jellyStore Supabase write-through', () => {
+    beforeEach(() => {
+      jest.useFakeTimers();
+      mockedLoadUserProfile.mockReset();
+      mockedUpdateUserProfile.mockReset();
+    });
+
+    afterEach(() => {
+      jest.useRealTimers();
+    });
+
+    describe('REQ-SYNC-002: setJellyShape write-through', () => {
+      it('setJellyShape 호출 시 로컬 상태 즉시 업데이트 + 2초 후 Supabase write', () => {
+        const { setJellyShape } = jellyStore.getState();
+
+        setJellyShape('test-user-id', 'mallang');
+
+        // 로컬 상태는 즉시 업데이트 (optimistic update)
+        expect(jellyStore.getState().jellyShape).toBe('mallang');
+        // 아직 Supabase write는 호출되지 않음 (2초 디바운스)
+        expect(mockedUpdateUserProfile).not.toHaveBeenCalled();
+
+        // 2초 경과 후 Supabase write 실행
+        jest.advanceTimersByTime(2000);
+        expect(mockedUpdateUserProfile).toHaveBeenCalledWith('test-user-id', { jellyShape: 'mallang' });
+      });
+
+      it('2초 내 여러 setJellyShape 호출 시 마지막 값만 Supabase에 write (디바운스)', () => {
+        const { setJellyShape } = jellyStore.getState();
+
+        setJellyShape('test-user-id', 'mallang');
+        jest.advanceTimersByTime(500);
+        setJellyShape('test-user-id', 'jjit');
+        jest.advanceTimersByTime(500);
+        setJellyShape('test-user-id', 'banggeul');
+        jest.advanceTimersByTime(500);
+
+        // 아직 디바운스 대기 중
+        expect(mockedUpdateUserProfile).not.toHaveBeenCalled();
+
+        // 마지막 호출 후 2초 경과
+        jest.advanceTimersByTime(2000);
+
+        // 마지막 값만 write
+        expect(mockedUpdateUserProfile).toHaveBeenCalledTimes(1);
+        expect(mockedUpdateUserProfile).toHaveBeenCalledWith('test-user-id', { jellyShape: 'banggeul' });
+      });
+
+      it('Supabase write 실패해도 로컬 상태는 유지 (optimistic update)', async () => {
+        mockedUpdateUserProfile.mockRejectedValue(new Error('Network error'));
+
+        const { setJellyShape } = jellyStore.getState();
+        setJellyShape('test-user-id', 'mallang');
+
+        jest.advanceTimersByTime(2000);
+
+        // 비동기 에러 처리 대기
+        await jest.advanceTimersByTimeAsync(0);
+
+        // 로컬 상태는 유지
+        expect(jellyStore.getState().jellyShape).toBe('mallang');
+      });
+    });
+
+    describe('REQ-SYNC-002: setPersistEmotion write-through', () => {
+      it('setPersistEmotion 호출 시 로컬 상태 즉시 업데이트 + 2초 후 Supabase write', () => {
+        const { setPersistEmotion } = jellyStore.getState();
+
+        setPersistEmotion('test-user-id', true);
+
+        expect(jellyStore.getState().persistEmotion).toBe(true);
+        expect(mockedUpdateUserProfile).not.toHaveBeenCalled();
+
+        jest.advanceTimersByTime(2000);
+        expect(mockedUpdateUserProfile).toHaveBeenCalledWith('test-user-id', { persistEmotion: true });
+      });
+
+      it('2초 내 여러 setPersistEmotion 호출 시 마지막 값만 Supabase에 write', () => {
+        const { setPersistEmotion } = jellyStore.getState();
+
+        setPersistEmotion('test-user-id', true);
+        jest.advanceTimersByTime(500);
+        setPersistEmotion('test-user-id', false);
+        jest.advanceTimersByTime(500);
+        setPersistEmotion('test-user-id', true);
+
+        expect(mockedUpdateUserProfile).not.toHaveBeenCalled();
+
+        jest.advanceTimersByTime(2000);
+
+        expect(mockedUpdateUserProfile).toHaveBeenCalledTimes(1);
+        expect(mockedUpdateUserProfile).toHaveBeenCalledWith('test-user-id', { persistEmotion: true });
+      });
+
+      it('Supabase write 실패해도 로컬 상태는 유지', async () => {
+        mockedUpdateUserProfile.mockRejectedValue(new Error('Network error'));
+
+        const { setPersistEmotion } = jellyStore.getState();
+        setPersistEmotion('test-user-id', true);
+
+        jest.advanceTimersByTime(2000);
+        await jest.advanceTimersByTimeAsync(0);
+
+        expect(jellyStore.getState().persistEmotion).toBe(true);
+      });
+    });
+
+    describe('REQ-SYNC-004: hydrateFromSupabase', () => {
+      it('Supabase에서 jellyShape, persistEmotion 로드하여 store 하이드레이션', async () => {
+        mockedLoadUserProfile.mockResolvedValue({
+          jellyShape: 'mallang',
+          persistEmotion: true,
+          skinExpiresAt: null,
+        });
+
+        await jellyStore.getState().hydrateFromSupabase('test-user-id');
+
+        expect(jellyStore.getState().jellyShape).toBe('mallang');
+        expect(jellyStore.getState().persistEmotion).toBe(true);
+        expect(mockedLoadUserProfile).toHaveBeenCalledWith('test-user-id');
+      });
+
+      it('Supabase 조회 실패 시 localStorage 캐시 폴백 (기존 상태 유지)', async () => {
+        // localStorage에 'ppung'이 있다고 가정 (beforeEach에서 설정)
+        jellyStore.setState({ jellyShape: 'ppung', persistEmotion: false });
+
+        mockedLoadUserProfile.mockRejectedValue(new Error('Network error'));
+
+        await jellyStore.getState().hydrateFromSupabase('test-user-id');
+
+        // 기존 localStorage 캐시값 유지
+        expect(jellyStore.getState().jellyShape).toBe('ppung');
+        expect(jellyStore.getState().persistEmotion).toBe(false);
+      });
+
+      it('Supabase에서 null 값이 오면 기본값 사용', async () => {
+        mockedLoadUserProfile.mockResolvedValue({
+          jellyShape: null,
+          persistEmotion: false,
+          skinExpiresAt: null,
+        });
+
+        await jellyStore.getState().hydrateFromSupabase('test-user-id');
+
+        // jellyShape이 null이면 기본값 'ppung' 유지
+        expect(jellyStore.getState().jellyShape).toBe('ppung');
+        expect(jellyStore.getState().persistEmotion).toBe(false);
+      });
+
+      it('Supabase에서 데이터가 없으면 기존 상태 유지', async () => {
+        jellyStore.setState({ jellyShape: 'jjit' });
+        mockedLoadUserProfile.mockResolvedValue(null);
+
+        await jellyStore.getState().hydrateFromSupabase('test-user-id');
+
+        expect(jellyStore.getState().jellyShape).toBe('jjit');
+      });
+    });
+
+    describe('REQ-SYNC-004: persist whitelist 변경', () => {
+      it('persist partialize 결과에 lastEmotion, emotionColor가 포함되지 않아야 한다', () => {
+        // 상태에는 lastEmotion, emotionColor가 존재해야 함
+        const state = jellyStore.getState();
+        expect(state).toHaveProperty('lastEmotion');
+        expect(state).toHaveProperty('emotionColor');
+
+        // persist된 내용을 직접 읽어서 검증
+        const storageData = localStorage.getItem('jelly-storage');
+        expect(storageData).not.toBeNull();
+
+        const parsed = JSON.parse(storageData!);
+        const persistedState = parsed.state as Record<string, unknown>;
+
+        // persist 결과에 lastEmotion, emotionColor가 없어야 함
+        expect(persistedState).not.toHaveProperty('lastEmotion');
+        expect(persistedState).not.toHaveProperty('emotionColor');
+
+        // jellyShape, lastAccessDate, persistEmotion은 포함되어야 함
+        expect(persistedState).toHaveProperty('jellyShape');
+        expect(persistedState).toHaveProperty('lastAccessDate');
+        expect(persistedState).toHaveProperty('persistEmotion');
       });
     });
   });
