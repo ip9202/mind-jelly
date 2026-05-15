@@ -207,31 +207,40 @@ export function usePhysicsInit(options: UsePhysicsInitOptions): UsePhysicsInitRe
                 }
               }
 
-              // stuck 감지: 구슬이 1개 남고 eating/anticipation 상태인데 3초 이상 지속되면 강제 진행
+              // stuck 감지: 구슬 1개 + eating/anticipation + 실제 정지 상태 → 3초 후 강제 진행
               const currentSt = jellyStore.getState();
-              if (
+              const isStuckState =
                 beadBodies.length === 1 &&
-                (currentSt.currentState === 'eating' || currentSt.currentState === 'anticipation')
-              ) {
-                if (!stuckTimerRef.current) {
+                (currentSt.currentState === 'eating' || currentSt.currentState === 'anticipation');
+
+              if (isStuckState) {
+                // 구슬 속도 확인: 실제로 거의 정지한 경우만 stuck으로 판정
+                const lastBead = beadBodies[0];
+                const speed = Math.sqrt(
+                  lastBead.velocity.x ** 2 + lastBead.velocity.y ** 2,
+                );
+                const isActuallyStuck = speed < 2.0;
+
+                if (isActuallyStuck && !stuckTimerRef.current) {
                   stuckTimerRef.current = setTimeout(() => {
                     const s = jellyStore.getState();
                     if (s.currentState !== 'satisfied') {
-                      // 마지막 구슬 강제 제거 후 satisfied 전이
-                      const lastBead = Matter.Composite.allBodies(eng.world)
+                      const stuckBead = Matter.Composite.allBodies(eng.world)
                         .find((b) => b.label === 'bead');
-                      if (lastBead) Matter.Composite.remove(eng.world, lastBead);
+                      if (stuckBead) Matter.Composite.remove(eng.world, stuckBead);
                       s.transitionState('satisfied');
                     }
                     stuckTimerRef.current = null;
                   }, 3000);
-                }
-              } else {
-                // 구슬이 2개 이상이거나 다른 상태면 stuck 타이머 리셋
-                if (stuckTimerRef.current) {
+                } else if (!isActuallyStuck && stuckTimerRef.current) {
+                  // 구슬이 다시 움직이기 시작하면 타이머 취소
                   clearTimeout(stuckTimerRef.current);
                   stuckTimerRef.current = null;
                 }
+              } else if (stuckTimerRef.current) {
+                // stuck 조건 해제(구슬 2개 이상 or 다른 상태)
+                clearTimeout(stuckTimerRef.current);
+                stuckTimerRef.current = null;
               }
             }
           }

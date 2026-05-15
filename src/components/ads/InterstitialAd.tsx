@@ -32,13 +32,14 @@ interface InterstitialAdProps {
  */
 export function InterstitialAd({ onClosed, onLoadError }: InterstitialAdProps) {
   useEffect(() => {
-    recordAdShown();
-
-    // SDK 미지원 환경 (브라우저 등)은 즉시 닫기
+    // SDK 미지원 환경 (브라우저 등)은 카운트 없이 즉시 닫기
     if (!loadFullScreenAd.isSupported?.()) {
       onClosed();
       return;
     }
+
+    // SDK 지원 환경에서만 노출 카운트 기록
+    recordAdShown();
 
     let loadUnregister: (() => void) | undefined;
     let showUnregister: (() => void) | undefined;
@@ -50,9 +51,17 @@ export function InterstitialAd({ onClosed, onLoadError }: InterstitialAdProps) {
           showUnregister = showFullScreenAd({
             options: { adGroupId: INTERSTITIAL_AD_GROUP_ID },
             onEvent: (e) => {
-              if (e.type === 'dismissed' || e.type === 'failedToShow') onClosed();
+              if (e.type === 'failedToShow') {
+                onLoadError?.();
+                onClosed();
+              } else if (e.type === 'dismissed') {
+                onClosed();
+              }
             },
-            onError: () => onClosed(),
+            onError: () => {
+              onLoadError?.();
+              onClosed();
+            },
           });
         }
       },
