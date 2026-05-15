@@ -101,6 +101,7 @@ export default function HomePage() {
 
   // SPEC-AD-003: 보상형 광고 모달 상태 (REQ-RWD-001)
   const [showRewardedModal, setShowRewardedModal] = useState(false);
+  const [showRewardedCTA, setShowRewardedCTA] = useState(false);
   const [selectedReward, setSelectedReward] = useState<RewardType | null>(null);
 
   // SPEC-TOUCH-001: 하트 파티클 상태
@@ -273,6 +274,15 @@ export default function HomePage() {
     if (uiState !== 'report') {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setShowInterstitial(false);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setShowRewardedCTA(false);
+      return;
+    }
+    // report 진입 시 보상형 CTA 표시 → 4초 후 자동 숨김
+    if (canShowRewardedAd()) {
+      setShowRewardedCTA(true);
+      const timer = setTimeout(() => setShowRewardedCTA(false), 4000);
+      return () => clearTimeout(timer);
     }
   }, [uiState]);
 
@@ -509,8 +519,8 @@ export default function HomePage() {
             {/* 배너 광고 - report 상태, 보상형 버튼 위에 표시 */}
             {uiState === 'report' && <BannerAd show={true} />}
 
-            {/* SPEC-AD-003 (REQ-RWD-001): 보상형 광고 CTA 버튼 - 한도 있을 때만 표시 */}
-            {uiState === 'report' && canShowRewardedAd() && (
+            {/* SPEC-AD-003 (REQ-RWD-001): 보상형 광고 CTA 버튼 - report 진입 후 4초간 표시 */}
+            {showRewardedCTA && (
               <button
                 onClick={handleCTAClick}
                 aria-label="광고 보고 보상 받기"
