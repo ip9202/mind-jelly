@@ -54,9 +54,9 @@ describe('보상형 광고 CTA 버튼 테스트 (REQ-RWD-001)', () => {
     // 보상형 광고 이력 초기화
     global.localStorage.removeItem('rewarded_ad_frequency');
 
-    const module = await import('@/lib/ad/adFrequencyControl');
-    canShowRewardedAd = module.canShowRewardedAd;
-    recordRewardedAdShown = module.recordRewardedAdShown;
+    const adModule = await import('@/lib/ad/adFrequencyControl');
+    canShowRewardedAd = adModule.canShowRewardedAd;
+    recordRewardedAdShown = adModule.recordRewardedAdShown;
     resetRewardedSessionCount = module.resetRewardedSessionCount;
 
     resetRewardedSessionCount();

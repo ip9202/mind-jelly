@@ -7,16 +7,19 @@
  * SPEC: SPEC-AD-001 (REQ-AD-001)
  */
 
-// 광고 그룹 ID (앱인토스 콘솔에서 발급)
-// @MX:NOTE: [AUTO] PLACEHOLDER_AD_GROUP_ID — 앱인토스 심사 후 실제 ID로 교체 필요
-// 배너 광고용 광고 그룹 ID
-export const BANNER_AD_GROUP_ID = 'PLACEHOLDER_AD_GROUP_ID' as const;
+// 광고 그룹 ID (앱인토스 테스트 ID — QR 코드 테스트 환경에서 확인 가능)
+// @MX:NOTE: [AUTO] 테스트 ID 사용 중 — 출시 전 앱인토스 콘솔 실 ID로 교체 필요
+// 배너 광고용 광고 그룹 ID (리스트형)
+export const BANNER_AD_GROUP_ID = 'ait-ad-test-banner-id' as const;
+
+// 피드형 배너 광고용 광고 그룹 ID
+export const NATIVE_AD_GROUP_ID = 'ait-ad-test-native-image-id' as const;
 
 // 전면형 광고용 광고 그룹 ID
-export const INTERSTITIAL_AD_GROUP_ID = 'PLACEHOLDER_AD_GROUP_ID' as const;
+export const INTERSTITIAL_AD_GROUP_ID = 'ait-ad-test-interstitial-id' as const;
 
 // 보상형 광고용 광고 그룹 ID
-export const REWARDED_AD_GROUP_ID = 'PLACEHOLDER_AD_GROUP_ID' as const;
+export const REWARDED_AD_GROUP_ID = 'ait-ad-test-rewarded-id' as const;
 
 // 전면형 광고 설정
 // @MX:ANCHOR: [AUTO] 외부 시스템(AppIntos AdMob SDK) 연결 지점, fan_in >= 3

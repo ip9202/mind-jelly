@@ -11,7 +11,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { GoogleAdMob } from '@apps-in-toss/web-framework';
+import { loadFullScreenAd, showFullScreenAd } from '@apps-in-toss/web-framework';
 import { REWARDED_AD_GROUP_ID } from '@/lib/ad/adConfig';
 import { jellySkins, SKIN_THEMES, type SkinTier, type JellySkin } from '@/lib/rewards/jellySkins';
 import { weeklyReport, type EmotionHistoryItem } from '@/lib/rewards/weeklyReport';
@@ -69,77 +69,41 @@ export const RewardedAdModal: React.FC<RewardedAdModalProps> = ({
     let showCleanup: (() => void) | undefined;
 
     try {
-      // WebView 환경 지원 여부 확인 (isSupported 접근 자체가 에러 발생 가능)
-      let isSupported = false;
-      try {
-        isSupported = GoogleAdMob.loadAppsInTossAdMob.isSupported?.() === true;
-      } catch {
-        isSupported = false;
-      }
-      if (!isSupported) {
-        // WebView 외 환경에서는 테스트용으로 보상 활성화
+      // 문서 기준 API: loadFullScreenAd / showFullScreenAd
+      if (!loadFullScreenAd.isSupported?.()) {
+        // WebView 외 환경 폴백
         queueMicrotask(() => setRewardReady(true));
         return;
       }
 
-      // 보상형 광고 미리 로드
-      loadCleanup = GoogleAdMob.loadAppsInTossAdMob({
+      // load → 'loaded' → show (문서 권장 순서)
+      loadCleanup = loadFullScreenAd({
         options: { adGroupId: REWARDED_AD_GROUP_ID },
         onEvent: (event) => {
           if (event.type === 'loaded') {
-            // 로드 완료 후 광고 표시
-            try {
-              let showSupported = false;
-              try {
-                showSupported = GoogleAdMob.showAppsInTossAdMob.isSupported?.() === true;
-              } catch {
-                showSupported = false;
-              }
-              if (!showSupported) {
-                setRewardReady(true);
-                return;
-              }
-
-              showCleanup = GoogleAdMob.showAppsInTossAdMob({
-                options: { adGroupId: REWARDED_AD_GROUP_ID },
-                onEvent: (showEvent) => {
-                  switch (showEvent.type) {
-                    case 'userEarnedReward':
-                      // 사용자가 광고를 끝까지 시청하여 보상 획득
-                      console.log('[RewardedAd] 보상 획득:', showEvent.data);
-                      setRewardReady(true);
-                      break;
-                    case 'dismissed':
-                      // 사용자가 광고를 닫음
-                      break;
-                    case 'failedToShow':
-                      console.error('[RewardedAd] 광고 표시 실패');
-                      // 폴백: 테스트용 보상 활성화
-                      setRewardReady(true);
-                      break;
-                  }
-                },
-                onError: (error: unknown) => {
-                  console.error('[RewardedAd] 광고 표시 에러:', error);
-                  // 폴백: 테스트용 보상 활성화
-                  setRewardReady(true);
-                },
-              });
-            } catch (error) {
-              console.error('[RewardedAd] 광고 표시 실패:', error);
+            if (!showFullScreenAd.isSupported?.()) {
               setRewardReady(true);
+              return;
             }
+            showCleanup = showFullScreenAd({
+              options: { adGroupId: REWARDED_AD_GROUP_ID },
+              onEvent: (showEvent) => {
+                switch (showEvent.type) {
+                  case 'userEarnedReward':
+                    setRewardReady(true);
+                    break;
+                  case 'failedToShow':
+                    setRewardReady(true);
+                    break;
+                }
+              },
+              onError: () => { setRewardReady(true); },
+            });
           }
         },
-        onError: (error: unknown) => {
-          console.error('[RewardedAd] 광고 로드 실패:', error);
-          // 폴백: 테스트용 보상 활성화
-          setRewardReady(true);
-        },
+        onError: () => { setRewardReady(true); },
       });
-    } catch (error) {
-      console.error('[RewardedAd] 광고 초기화 실패:', error);
-      // 폴백: 테스트용 보상 활성화
+    } catch {
       queueMicrotask(() => setRewardReady(true));
     }
 

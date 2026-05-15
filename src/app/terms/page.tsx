@@ -14,7 +14,7 @@ export default function TermsPage() {
         <div>
           <h2 className="text-lg font-bold text-on-surface mb-[8px]">제1조 (목적)</h2>
           <p>
-            본 약관은 마음젤리(이하 "서비스")가 제공하는 감정 기록 및 마음 챙김 서비스의 이용에 관한
+            본 약관은 마음젤리(이하 &quot;서비스&quot;)가 제공하는 감정 기록 및 마음 챙김 서비스의 이용에 관한
             조건 및 절차, 이용자와 서비스 간의 권리·의무 및 책임사항을 규정함을 목적으로 합니다.
           </p>
         </div>
@@ -22,9 +22,9 @@ export default function TermsPage() {
         <div>
           <h2 className="text-lg font-bold text-on-surface mb-[8px]">제2조 (용어의 정의)</h2>
           <ul className="space-y-[8px] pl-[16px] list-disc text-[14px]">
-            <li>"서비스"란 마음젤리가 제공하는 감정 기록, 젤리 성장, 친구와의 감정 공유 등 모든 기능을 말합니다.</li>
-            <li>"이용자"란 본 약관에 따라 서비스를 이용하는 모든 자를 말합니다.</li>
-            <li>"콘텐츠"란 이용자가 서비스 내에 작성·등록한 일기, 감정 기록 등 모든 데이터를 말합니다.</li>
+            <li>&quot;서비스&quot;란 마음젤리가 제공하는 감정 기록, 젤리 성장, 친구와의 감정 공유 등 모든 기능을 말합니다.</li>
+            <li>&quot;이용자&quot;란 본 약관에 따라 서비스를 이용하는 모든 자를 말합니다.</li>
+            <li>&quot;콘텐츠&quot;란 이용자가 서비스 내에 작성·등록한 일기, 감정 기록 등 모든 데이터를 말합니다.</li>
           </ul>
         </div>
 

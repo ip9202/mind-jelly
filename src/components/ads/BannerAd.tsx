@@ -10,7 +10,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { GoogleAdMob } from '@apps-in-toss/web-framework';
+import { loadFullScreenAd } from '@apps-in-toss/web-framework';
 import { BANNER_AD_GROUP_ID, BANNER_CONFIG } from '@/lib/ad/adConfig';
 
 interface BannerAdProps {
@@ -27,61 +27,40 @@ export function BannerAd({ show }: BannerAdProps) {
   const [adLoaded, setAdLoaded] = useState(false);
 
   useEffect(() => {
-    let cleanup: (() => void) | undefined;
-
     if (!show) {
       return;
     }
 
-    try {
-      // WebView 환경 지원 여부 확인 (isSupported 접근 자체가 에러 발생 가능)
-      let isSupported = false;
-      try {
-        isSupported = GoogleAdMob.loadAppsInTossAdMob.isSupported?.() === true;
-      } catch {
-        isSupported = false;
-      }
-      if (!isSupported) {
-        return;
-      }
+    if (!loadFullScreenAd.isSupported?.()) return;
 
-      // 배너 광고 로드
-      cleanup = GoogleAdMob.loadAppsInTossAdMob({
-        options: { adGroupId: BANNER_AD_GROUP_ID },
-        onEvent: (event) => {
-          if (event.type === 'loaded') {
-            setAdLoaded(true);
-          }
-        },
-        onError: (error: unknown) => {
-          console.error('[BannerAd] 광고 로드 실패:', error);
-          setAdLoaded(false);
-        },
-      });
-    } catch (error) {
-      console.error('[BannerAd] 광고 초기화 실패:', error);
-    }
+    const cleanup = loadFullScreenAd({
+      options: { adGroupId: BANNER_AD_GROUP_ID },
+      onEvent: (event) => {
+        if (event.type === 'loaded') setAdLoaded(true);
+      },
+      onError: () => { setAdLoaded(false); },
+    });
 
     return () => {
       cleanup?.();
     };
   }, [show]);
 
-  // show prop이 false면 즉시 숨김, 로드 전까지도 숨김
-  const visible = show && adLoaded;
-  if (!visible) {
+  // show가 false면 렌더링하지 않음 (adLoaded 여부와 무관하게 항상 표시)
+  // SDK가 실제 광고 콘텐츠를 주입. SDK 실패 시에도 플레이스홀더 표시로 위치 확인 가능
+  if (!show) {
     return null;
   }
 
   return (
     <div className="w-full h-[50px] bg-gray-100 flex items-center justify-center">
-      {/* 배너 광고 컨테이너 */}
       <div
         className="bg-white border border-gray-200 flex items-center justify-center"
         style={{ width: BANNER_CONFIG.size.width, height: BANNER_CONFIG.size.height }}
       >
-        {/* 실제 광고는 AppIntos GoogleAdMob SDK에 의해 렌더링됩니다 */}
-        <p className="text-gray-400 text-xs">배너 광고 ({BANNER_CONFIG.size.width}x{BANNER_CONFIG.size.height})</p>
+        <p className="text-gray-400 text-xs">
+          {adLoaded ? '배너 광고' : '광고 로딩 중...'}
+        </p>
       </div>
     </div>
   );

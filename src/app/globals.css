@@ -517,3 +517,10 @@ body {
 .nav-safe-bottom {
   padding-bottom: calc(env(safe-area-inset-bottom, 20px) + 16px);
 }
+
+/* 콘텐츠 하단 여백 — fixed BottomNav에 가려지지 않도록
+   BottomNav 높이 계산: pt-2(8) + card(82) + pb(env+16) ≈ env + 106px
+   버퍼 14px 추가 → env + 120px */
+.pb-bottom-nav {
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 120px);
+}

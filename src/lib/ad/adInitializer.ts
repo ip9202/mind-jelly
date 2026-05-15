@@ -7,12 +7,8 @@
  * SPEC: SPEC-AD-001 (REQ-AD-001)
  */
 
-import { GoogleAdMob } from '@apps-in-toss/web-framework';
-import {
-  BANNER_AD_GROUP_ID,
-  INTERSTITIAL_AD_GROUP_ID,
-  REWARDED_AD_GROUP_ID,
-} from './adConfig';
+import { loadFullScreenAd } from '@apps-in-toss/web-framework';
+import { INTERSTITIAL_AD_GROUP_ID, REWARDED_AD_GROUP_ID } from './adConfig';
 
 /**
  * AdMob 초기화 상태
@@ -33,12 +29,10 @@ function checkSupport(): boolean {
   if (supportChecked) return isSupported;
 
   try {
-    isSupported =
-      GoogleAdMob.loadAppsInTossAdMob.isSupported?.() === true;
+    isSupported = loadFullScreenAd.isSupported?.() === true;
     supportChecked = true;
     return isSupported;
   } catch {
-    // WebView 외 환경에서는 지원하지 않음
     supportChecked = true;
     isSupported = false;
     return false;
@@ -63,21 +57,8 @@ export async function initializeAdMob(): Promise<void> {
       return;
     }
 
-    // 배너 광고 미리 로드
-    GoogleAdMob.loadAppsInTossAdMob({
-      options: { adGroupId: BANNER_AD_GROUP_ID },
-      onEvent: (event) => {
-        if (event.type === 'loaded') {
-          console.log('[AdMob] 배너 광고 로드 완료');
-        }
-      },
-      onError: (error: unknown) => {
-        console.error('[AdMob] 배너 광고 로드 실패:', error);
-      },
-    });
-
-    // 전면형 광고 미리 로드
-    GoogleAdMob.loadAppsInTossAdMob({
+    // 전면형 + 보상형 미리 로드 (앱 시작 시 캐시 → show 즉시 호출 가능)
+    loadFullScreenAd({
       options: { adGroupId: INTERSTITIAL_AD_GROUP_ID },
       onEvent: (event) => {
         if (event.type === 'loaded') {
@@ -89,8 +70,7 @@ export async function initializeAdMob(): Promise<void> {
       },
     });
 
-    // 보상형 광고 미리 로드
-    GoogleAdMob.loadAppsInTossAdMob({
+    loadFullScreenAd({
       options: { adGroupId: REWARDED_AD_GROUP_ID },
       onEvent: (event) => {
         if (event.type === 'loaded') {
@@ -124,4 +104,4 @@ export function isAdMobReady(): boolean {
  * GoogleAdMob 객체를 직접 반환 (컴포넌트에서 사용)
  * @MX:NOTE: [AUTO] 컴포넌트에서 GoogleAdMob API 직접 접근용
  */
-export { GoogleAdMob, checkSupport as isAdMobSupported };
+export { loadFullScreenAd, checkSupport as isAdMobSupported };
