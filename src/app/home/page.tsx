@@ -479,7 +479,7 @@ export default function HomePage() {
             <div
               role={uiState === 'report' ? 'status' : undefined}
               aria-live={uiState === 'report' ? 'polite' : undefined}
-              className={`w-full max-w-md ${uiState === 'report' ? 'animate-fade-in' : ''}`}
+              className={`relative z-10 w-full max-w-md ${uiState === 'report' ? 'animate-fade-in' : ''}`}
             >
               <EmotionReportCard
                 userName={userName}
@@ -519,12 +519,19 @@ export default function HomePage() {
               />
             </div>
 
+            {/* 배너 광고 - z-0으로 버튼들 아래에 위치, overflow:hidden으로 상위 요소 침범 방지 */}
+            {uiState === 'report' && (
+              <div className="relative z-0 w-full mt-3 overflow-hidden">
+                <BannerAd show={true} />
+              </div>
+            )}
+
             {/* SPEC-AD-003 (REQ-RWD-001): 보상형 광고 CTA 버튼 - report 진입 후 4초간 표시 */}
             {showRewardedCTA && (
               <button
                 onClick={handleCTAClick}
                 aria-label="광고 보고 보상 받기"
-                className="w-full max-w-md mt-3 h-11 rounded-xl text-white font-gowun text-sm font-bold flex items-center justify-center gap-2 transition-all duration-200 active:scale-[0.97] hover:shadow-md"
+                className="relative z-10 w-full max-w-md mt-3 h-11 rounded-xl text-white font-gowun text-sm font-bold flex items-center justify-center gap-2 transition-all duration-200 active:scale-[0.97] hover:shadow-md"
                 style={{
                   background: 'linear-gradient(135deg, #8B5CF6 0%, #A78BFA 100%)',
                   boxShadow: '0 2px 8px rgba(139, 92, 246, 0.35)',
@@ -548,9 +555,6 @@ export default function HomePage() {
           }}
         />
       )}
-
-      {/* 배너 광고 - 바텀 네비 바로 위, 콘텐츠 버튼과 완전 분리 */}
-      {uiState === 'report' && <BannerAd show={true} />}
 
       {/* 전역 BottomNav (햄버거 메뉴 대체) — input 모드에서는 입력폼과 충돌하므로 숨김 */}
       {uiState !== 'input' && <BottomNav activeTab="jelly" />}
