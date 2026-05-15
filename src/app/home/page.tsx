@@ -469,6 +469,17 @@ export default function HomePage() {
           )}
         </div>
 
+        {/* EmotionInput - input 모드 전용, 문서 흐름으로 배치 (fixed 사용 안 함) */}
+        {/* iOS WebView에서 overflow-hidden 부모 안의 fixed는 키보드와 충돌 */}
+        {uiState === 'input' && (
+          <div className="w-full px-5 pb-6 animate-slide-up">
+            <EmotionInput
+              onCompleteAction={() => setUiState('restoring')}
+              onCancelAction={() => setUiState('idle')}
+            />
+          </div>
+        )}
+
         {/* Bottom Content Area (idle: message card + CTA, report: fade-in card) */}
         {(uiState === 'idle' || uiState === 'report') && (
           <div className="w-full flex flex-col items-center px-[20px] pb-6">
@@ -574,20 +585,6 @@ export default function HomePage() {
         triggerRef={statsButtonRef}
       />
 
-      {/* EmotionInput Bottom Sheet (input mode only) */}
-      {uiState === 'input' && (
-        <section
-          className="fixed left-1/2 -translate-x-1/2 w-[calc(100%-40px)] max-w-md z-40"
-          style={{ bottom: 24 }}
-        >
-          <div className="animate-slide-up">
-            <EmotionInput
-              onCompleteAction={() => setUiState('restoring')}
-              onCancelAction={() => setUiState('idle')}
-            />
-          </div>
-        </section>
-      )}
 
       {/* SPEC-AD-003: 보상형 광고 모달 (REQ-RWD-001~008) */}
       <RewardedAdModal
