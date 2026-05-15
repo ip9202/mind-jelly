@@ -7,8 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.5.0] - 2026-05-15
+
+### Fixed
+- 전면 광고 회색 플레이스홀더 제거 (SDK 전체화면 UI에 위임, `return null`)
+- 비WebView 환경 광고 카운트 오기록 수정 (`recordAdShown()` SDK 지원 여부 확인 후 호출)
+- `failedToShow` 이벤트 시 `onLoadError()` 콜백 호출 누락 수정
+- 배너 광고 z-index 충돌 수정 (`isolation: 'isolate'`로 TossAds stacking context 격리)
+- 마지막 구슬 stuck 상태 탈출 로직 개선 (1개 남고 speed < 2.0 → 3초 후 강제 satisfied)
+- 입력 모드 키보드 올라올 때 입력폼 밀림 문제 수정 (`position: fixed; bottom: 0` + `interactiveWidget: resizes-visual`)
+
 ### Changed
-- 전면형 광고 빈도 제한 추가: 일일 2회 + 마지막 노출 후 2시간 쿨다운 (기존: 무제한)
+- 전면 광고 빈도 제한 추가: 일일 2회 + 마지막 노출 후 2시간 쿨다운 (기존: 무제한)
+- report 상태에서 통계 버튼 활성화 (기존: 비활성)
+- 보상형 광고 CTA 버튼 4초 후 자동 숨김
 
 ### Added (SPEC-UI-003)
 - 인사이트 탭 3-tier 대시보드 레이아웃
