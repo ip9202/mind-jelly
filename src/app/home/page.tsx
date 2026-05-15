@@ -519,9 +519,6 @@ export default function HomePage() {
               />
             </div>
 
-            {/* 배너 광고 - report 상태, 보상형 버튼 위에 표시 */}
-            {uiState === 'report' && <BannerAd show={true} />}
-
             {/* SPEC-AD-003 (REQ-RWD-001): 보상형 광고 CTA 버튼 - report 진입 후 4초간 표시 */}
             {showRewardedCTA && (
               <button
@@ -551,6 +548,9 @@ export default function HomePage() {
           }}
         />
       )}
+
+      {/* 배너 광고 - 바텀 네비 바로 위, 콘텐츠 버튼과 완전 분리 */}
+      {uiState === 'report' && <BannerAd show={true} />}
 
       {/* 전역 BottomNav (햄버거 메뉴 대체) — input 모드에서는 입력폼과 충돌하므로 숨김 */}
       {uiState !== 'input' && <BottomNav activeTab="jelly" />}
