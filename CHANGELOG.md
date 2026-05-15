@@ -235,6 +235,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - SPEC-AD-001의 빈도 제어기와 독립적인 보상형 광고 카운터
 - mecab-ko 형용소 분석 대신 간소화 버전 사용 (GREEN phase)
 
+## [1.4.0] - 2026-05-15
+
+### Added (SPEC-SYNC-001)
+- Supabase를 Primary Data Store로 도입
+  - `jelly-storage` (jellyShape, persistEmotion) → Supabase `users` 테이블 마이그레이션
+  - `reward-storage` (unlockedSkins, activeSkin, skinEnabled, rewardedAdCount) → `user_skins` 테이블 마이그레이션
+  - 광고 노출 데이터 → `ad_impressions` 테이블 마이그레이션
+- 새 DB 테이블: `user_skins`, `ad_impressions` (RLS 정책 포함)
+- 2개 신규 Supabase RPC 함수 추가
+- Offline 복원력: 인메모리 큐 + 재연결 시 자동 재시도
+- 아키텍처 패턴: Supabase = Single Source of Truth, localStorage = read-through 캐시
+
+### Added (SPEC-SESSION-RECOVER-001)
+- Toss 해시 기반 기기 자동 세션 복구
+  - 신규 Edge Function: `supabase/functions/recover-session/`
+  - `getAnonymousKey()` 해시 → `users.toss_user_id` 매핑으로 기기 변경 시 세션 복구
+  - `BridgeInitializer` 부트 순서 재배치: `getUserIdentity()` 먼저 → `initSupabaseSession({ tossHash })`
+  - `isLinking` 플래그로 경쟁 조건(race condition) 방지
+  - `TossAds.attachBanner`로 배너 광고 API 교체 (`loadFullScreenAd` 대체)
+  - `BANNER_HEIGHT_PX = 96` 상수 추출
+
+### Fixed
+- 배너 광고 API: `loadFullScreenAd` → `TossAds.attachBanner` 교체로 배너 광고 렌더링 오류 수정
+
 ## [1.3.0] - 2026-05-12
 
 ### Added (BRAND-UI-001)

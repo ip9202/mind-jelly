@@ -53,6 +53,8 @@ mind-jelly/
 │   │   ├── settingsStore.ts    # 설정 저장소
 │   │   └── analyticsStore.ts   # 분석 데이터 저장소
 │   ├── lib/                    # 유틸리티 및 헬퍼
+│   │   ├── edge/               # Edge Function 유틸리티
+│   │   │   └── rateLimiter.ts  # Edge Function용 인메모리 rate limiter
 │   │   ├── physics/            # Matter.js 엔진 설정
 │   │   │   ├── engine.ts           # 물리 엔진 초기화
 │   │   │   ├── constraints.ts      # 물리 제약 조건
@@ -134,6 +136,17 @@ mind-jelly/
 │   ├── architecture/         # 아키텍처 문서
 │   ├── deployment/           # 배포 문서
 │   └── troubleshooting/      # 문제 해결 가이드
+├── supabase/                  # Supabase 관련 파일
+│   └── functions/            # Edge Functions
+│       ├── toss-login/       # 토스 로그인 Edge Function
+│       ├── toss-disconnect/  # 토스 계정 연결 해제 Edge Function
+│       └── recover-session/  # 기기 변경 시 세션 자동 복구 Edge Function
+├── __tests__/                 # 테스트 파일 (Jest)
+│   ├── lib/
+│   │   └── supabase/
+│   │       └── auth-recover.test.ts  # initSupabaseSession 복구 경로 테스트
+│   └── stores/
+│       └── tossStore-idempotent.test.ts  # tossStore 멱등성 테스트
 ├── tests/                     # 테스트 파일
 │   ├── components/           # 컴포넌트 테스트
 │   ├── hooks/                # 훅 테스트

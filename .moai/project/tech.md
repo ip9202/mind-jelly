@@ -22,12 +22,40 @@
 ## 백엔드 서비스
 | 서비스 | 기술 | 버전 | 목적 |
 |--------|------|------|------|
+| Primary Data Store | Supabase (PostgreSQL) | - | 사용자 데이터, 스킨, 광고 노출 기록 중앙 저장소 (Single Source of Truth) |
 | Emotion Analysis | OpenAI GPT-4o-mini | - | 텍스트 기반 감정 분석 AI 서비스 |
 | Toss Bridge Integration | Toss Bridge API | - | 토스 생태계 연동을 위한 인증 및 공유 기능 |
 | Analytics Tracking | Google Analytics 4 | - | 사용자 행동 추적 및 분석 데이터 수집 |
 | Crash Reporting | Sentry | 7.92+ | 실시간 오류 추적 및 모니터링 |
 | Performance Monitoring | Vercel Analytics | - | 애플리케이션 성능 모니터링 |
 | A/B Testing | Vercel Flags | - | 기능별 A/B 테스트 지원 |
+
+## Supabase 데이터 아키텍처
+
+### 데이터 저장 패턴
+- **Supabase = Single Source of Truth**: 모든 영속 데이터의 원본은 Supabase에 저장
+- **localStorage = Read-through 캐시**: 오프라인 복원력 및 빠른 읽기를 위한 캐시 레이어
+- **Offline 복원력**: 네트워크 단절 시 인메모리 큐에 변경사항 보관, 재연결 시 자동 재시도
+
+### DB 테이블
+| 테이블 | 마이그레이션 이전 | 용도 |
+|--------|----------------|------|
+| `users` | `jelly-storage` (jellyShape, persistEmotion) | 사용자 기본 정보 및 젤리 상태 |
+| `user_skins` | `reward-storage` (unlockedSkins, activeSkin, skinEnabled, rewardedAdCount) | 스킨 보유/활성화 상태 |
+| `ad_impressions` | 신규 | 광고 노출 기록 |
+
+### Edge Functions
+| 함수명 | 용도 |
+|--------|------|
+| `toss-login` | 토스 계정 로그인 처리 |
+| `toss-disconnect` | 토스 계정 연결 해제 |
+| `recover-session` | Toss 해시 기반 기기 변경 시 세션 자동 복구 |
+
+## TossAds SDK 통합
+| API | 용도 |
+|-----|------|
+| `TossAds.attachBanner` | 배너 광고 렌더링 (BANNER_HEIGHT_PX = 96px) |
+| `loadFullScreenAd` / `showFullScreenAd` | 전면형(인터스티셜) 및 보상형 광고 |
 
 ## 개발 환경 요구사항
 ### 시스템 요구사항
