@@ -359,7 +359,7 @@ export default function HomePage() {
 
   return (
     <div
-      className="h-screen w-full flex flex-col overflow-hidden font-gowun text-on-surface"
+      className={`w-full flex flex-col font-gowun text-on-surface ${uiState === 'input' ? 'min-h-screen overflow-auto' : 'h-screen overflow-hidden'}`}
       style={{
         background: `linear-gradient(135deg, ${currentTheme.bgGradientStart} 0%, #fbf9f6 40%, ${currentTheme.bgGradientEnd} 100%)`,
         transition: 'background 800ms linear',
