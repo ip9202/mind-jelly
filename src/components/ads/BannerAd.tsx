@@ -42,5 +42,9 @@ export function BannerAd({ show }: BannerAdProps) {
 
   if (!show) return null;
 
-  return <div ref={containerRef} style={{ width: '100%', height: `${BANNER_HEIGHT_PX}px` }} />;
+  return (
+    <div style={{ isolation: 'isolate', width: '100%' }}>
+      <div ref={containerRef} style={{ width: '100%', height: `${BANNER_HEIGHT_PX}px` }} />
+    </div>
+  );
 }

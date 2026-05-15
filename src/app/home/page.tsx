@@ -508,7 +508,7 @@ export default function HomePage() {
                     <button
                       ref={statsButtonRef}
                       onClick={() => setShowStatsSheet(true)}
-                      disabled={uiState !== 'idle'}
+                      disabled={uiState !== 'idle' && uiState !== 'report'}
                       aria-label="감정 통계 보기"
                       className="w-11 h-11 rounded-xl bg-white/40 border border-accent/40 text-accent flex items-center justify-center transition-all duration-200 disabled:opacity-50 disabled:cursor-default active:scale-[0.97] hover:bg-white/60 hover:shadow-md"
                     >
