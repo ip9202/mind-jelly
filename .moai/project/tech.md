@@ -57,6 +57,13 @@
 | `TossAds.attachBanner` | 배너 광고 렌더링 (BANNER_HEIGHT_PX = 96px) |
 | `loadFullScreenAd` / `showFullScreenAd` | 전면형(인터스티셜) 및 보상형 광고 |
 
+## 광고 빈도 제한 (`adFrequencyControl.ts`)
+| 항목 | 값 |
+|------|----|
+| 일일 전면형 광고 최대 횟수 | 2회 (`DAILY_INTERSTITIAL_LIMIT`) |
+| 전면형 광고 쿨다운 | 마지막 노출 후 2시간 (`INTERSTITIAL_COOLDOWN_MS`) |
+| 보상형 광고 | 별도 제한 없음 |
+
 ## 개발 환경 요구사항
 ### 시스템 요구사항
 - **운영체제**: macOS 12+, Windows 10+, Ubuntu 20.04+

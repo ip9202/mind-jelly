@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- 전면형 광고 빈도 제한 추가: 일일 2회 + 마지막 노출 후 2시간 쿨다운 (기존: 무제한)
+
 ### Added (SPEC-UI-003)
 - 인사이트 탭 3-tier 대시보드 레이아웃
   - Hero 섹션: 주간 TOP 3 감정 인라인 카드 (스트릭 헤더 통합)
