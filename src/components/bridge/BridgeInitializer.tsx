@@ -67,11 +67,6 @@ export default function BridgeInitializer() {
           await jellyStore.getState().checkDiaryAndReset(supabaseUserId);
         }
 
-        // 초기화 완료: 깜빡임 방지를 위해 스켈레톤 해제
-        if (!cancelled) {
-          jellyStore.getState().setInitialized(true);
-        }
-
         // @MX:NOTE: [AUTO] SPEC-SYNC-001 M7: 병렬 하이드레이션 (REQ-SYNC-002)
         const today = new Date().toISOString().split('T')[0];
         await Promise.all([
@@ -86,11 +81,18 @@ export default function BridgeInitializer() {
           jellyStore.getState().setJellyName(profile.nickname);
         }
 
+        // 초기화 완료: 닉네임 포함 모든 프로필 로드 후 스켈레톤 해제
+        // @MX:WARN: setInitialized는 반드시 setJellyName 이후에 호출해야 함
+        // @MX:REASON: 온보딩 버튼 클릭 시 jellyName race condition 방지
+        if (!cancelled) {
+          jellyStore.getState().setInitialized(true);
+        }
+
         // @MX:NOTE: [AUTO] 닉네임 미설정 시 /welcome으로 리다이렉트
         if (!cancelled) {
           const currentPath = window.location.pathname;
 
-          if (!profile?.nickname && currentPath !== '/welcome') {
+          if (!profile?.nickname && currentPath !== '/welcome' && currentPath !== '/onboarding') {
             window.location.href = '/welcome';
             return;
           }
@@ -99,6 +101,8 @@ export default function BridgeInitializer() {
             window.location.href = '/home';
             return;
           }
+
+          // 기존 유저가 /onboarding 진입 시 자동 이동 안 함 — 버튼 클릭에서 분기
         }
       }
 

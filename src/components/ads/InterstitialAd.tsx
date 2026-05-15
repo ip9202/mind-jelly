@@ -41,10 +41,9 @@ export function InterstitialAd({ onClosed, onLoadError }: InterstitialAdProps) {
     // SDK 지원 환경에서만 노출 카운트 기록
     recordAdShown();
 
-    let loadUnregister: (() => void) | undefined;
     let showUnregister: (() => void) | undefined;
 
-    loadUnregister = loadFullScreenAd({
+    const loadUnregister = loadFullScreenAd({
       options: { adGroupId: INTERSTITIAL_AD_GROUP_ID },
       onEvent: (event) => {
         if (event.type === 'loaded' && showFullScreenAd.isSupported?.()) {

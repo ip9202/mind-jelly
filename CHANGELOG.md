@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.6.0] - 2026-05-16
+
+### Added
+- 온보딩 페이지 신규 추가 (`src/app/onboarding/`)
+  - 서비스 소개 3개 기능 카드 (힘든 말을 털어놔 / 젤리가 냠냠 먹어 / 조금 가벼워져)
+  - 마음 젤리 브랜드 아이덴티티 적용 (핑크 그라디언트, 글래스모피즘 카드, 젤리 SVG)
+  - `isInitialized` 구독으로 로딩 UI 표시 (Bridge 초기화 완료 전 대기)
+  - 버튼 중복 클릭 방지 (`isNavigating` 상태)
+  - 신규 유저 → `/welcome`, 기존 유저 → `/home` 자동 분기
+
+### Changed
+- 앱 진입점 변경: `/` → `/onboarding` (온보딩을 모든 사용자의 첫 화면으로 설정)
+- `BridgeInitializer` 초기화 순서 수정:
+  - `setInitialized(true)` 호출을 `setJellyName` 이후로 이동 (Race Condition 수정)
+  - `/onboarding` 경로를 `/welcome` 자동 리다이렉트 예외 목록에 추가
+
+### Fixed
+- 기존 유저가 온보딩 버튼을 빠르게 클릭 시 `/welcome`으로 잘못 이동하는 Race Condition 수정
+
 ## [1.5.0] - 2026-05-15
 
 ### Fixed
