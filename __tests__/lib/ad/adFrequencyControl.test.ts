@@ -36,9 +36,19 @@ describe('adFrequencyControl', () => {
   const userId = 'test-user-001';
   const date = getLocalDate();
 
+  beforeAll(() => {
+    jest.useFakeTimers({ doNotFake: ['nextTick', 'setImmediate', 'queueMicrotask'] });
+    jest.setSystemTime(new Date('2026-05-15T09:00:00Z'));
+  });
+
+  afterAll(() => {
+    jest.useRealTimers();
+  });
+
   beforeEach(() => {
     jest.clearAllMocks();
     resetAdCache();
+    jest.setSystemTime(new Date('2026-05-15T09:00:00Z'));
 
     // 기본 모킹: 빈 데이터 반환
     mockedLoadToday.mockResolvedValue({
@@ -86,7 +96,7 @@ describe('adFrequencyControl', () => {
   // ─── canShowInterstitial ───
 
   describe('canShowInterstitial', () => {
-    it('캐시가 초기화되면 항상 true를 반환한다', async () => {
+    it('캐시가 초기화되면 true를 반환한다', async () => {
       await initAdImpressionCache(userId, date);
 
       expect(canShowInterstitial()).toBe(true);
@@ -94,6 +104,39 @@ describe('adFrequencyControl', () => {
 
     it('캐시가 초기화되지 않으면 false를 반환한다', () => {
       expect(canShowInterstitial()).toBe(false);
+    });
+
+    it('일일 2회 한도 초과 시 false를 반환한다', async () => {
+      mockedLoadToday.mockResolvedValueOnce({ interstitialCount: 2, rewardedCount: 0 });
+      await initAdImpressionCache(userId, date);
+
+      expect(canShowInterstitial()).toBe(false);
+    });
+
+    it('1회 노출 후 2시간 미경과 시 false를 반환한다', async () => {
+      await initAdImpressionCache(userId, date);
+      jest.setSystemTime(new Date('2026-05-15T10:00:00Z'));
+
+      recordAdShown(); // 1회 기록
+      jest.setSystemTime(new Date('2026-05-15T11:59:00Z')); // 1시간 59분 경과
+
+      expect(canShowInterstitial()).toBe(false);
+    });
+
+    it('1회 노출 후 2시간 경과 시 true를 반환한다', async () => {
+      await initAdImpressionCache(userId, date);
+      jest.setSystemTime(new Date('2026-05-15T10:00:00Z'));
+
+      recordAdShown(); // 1회 기록
+      jest.setSystemTime(new Date('2026-05-15T12:01:00Z')); // 2시간 1분 경과
+
+      expect(canShowInterstitial()).toBe(true);
+    });
+
+    it('첫 노출(lastInterstitialAt=0)은 쿨다운 없이 통과한다', async () => {
+      await initAdImpressionCache(userId, date);
+
+      expect(canShowInterstitial()).toBe(true);
     });
   });
 
@@ -283,8 +326,7 @@ describe('adFrequencyControl', () => {
       await initAdImpressionCache(userId, date);
       recordAdShown();
 
-      // Promise가 resolve될 때까지 대기
-      await new Promise((resolve) => setTimeout(resolve, 10));
+      await jest.runAllTimersAsync();
 
       expect(consoleSpy).toHaveBeenCalledWith(
         '[AdFrequency] 전면형 광고 기록 실패:',
@@ -301,8 +343,7 @@ describe('adFrequencyControl', () => {
       await initAdImpressionCache(userId, date);
       recordRewardedAdShown();
 
-      // Promise가 resolve될 때까지 대기
-      await new Promise((resolve) => setTimeout(resolve, 10));
+      await jest.runAllTimersAsync();
 
       expect(consoleSpy).toHaveBeenCalledWith(
         '[AdFrequency] 보상형 광고 기록 실패:',

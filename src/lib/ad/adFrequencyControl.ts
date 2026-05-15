@@ -12,6 +12,11 @@ import type { AdImpressions } from '@/lib/supabase/db';
 
 // ─── 상수 ───
 
+// @MX:NOTE: [AUTO] 일일 최대 전면형 광고 노출 횟수
+const DAILY_INTERSTITIAL_LIMIT = 2;
+// @MX:NOTE: [AUTO] 전면형 광고 노출 후 최소 쿨다운 (2시간)
+const INTERSTITIAL_COOLDOWN_MS = 2 * 60 * 60 * 1000;
+
 // @MX:NOTE: [AUTO] 일일 최대 보상형 광고 시청 횟수
 // @MX:SPEC: SPEC-AD-001 (REQ-AD-004)
 const DAILY_REWARDED_LIMIT = 3;
@@ -29,6 +34,8 @@ interface CacheEntry {
   rewardedCount: number;
   // @MX:NOTE: [AUTO] 세션 내 보상형 광고 시청 횟수 (Supabase 미저장, 메모리 전용)
   sessionRewardedCount: number;
+  // @MX:NOTE: [AUTO] 마지막 전면형 광고 노출 시각 (ms, 쿨다운 계산용, 메모리 전용)
+  lastInterstitialAt: number;
 }
 
 // ─── 모듈 상태 ───
@@ -99,19 +106,24 @@ export async function initAdImpressionCache(userId: string, date: string): Promi
     interstitialCount: data.interstitialCount,
     rewardedCount: data.rewardedCount,
     sessionRewardedCount: 0,
+    lastInterstitialAt: 0,
   });
 }
 
 /**
  * 전면형 광고 표시가 가능한지 확인합니다.
- * 캐시 기반 동기 판단 - 한도 없이 항상 true를 반환합니다.
+ * 일일 2회 한도 + 마지막 노출 후 2시간 쿨다운 적용.
  */
 export function canShowInterstitial(): boolean {
   const entry = getCurrentEntry();
-  // 캐시가 초기화되지 않았으면 false
   if (!entry) return false;
 
-  // 전면형 광고는 빈도 제한 없음
+  // 일일 한도 확인
+  if (entry.interstitialCount >= DAILY_INTERSTITIAL_LIMIT) return false;
+
+  // 쿨다운 확인 (첫 노출은 lastInterstitialAt = 0이므로 항상 통과)
+  if (entry.lastInterstitialAt > 0 && Date.now() - entry.lastInterstitialAt < INTERSTITIAL_COOLDOWN_MS) return false;
+
   return true;
 }
 
@@ -145,6 +157,7 @@ export function recordAdShown(): void {
 
   // 캐시 즉시 업데이트
   entry.interstitialCount += 1;
+  entry.lastInterstitialAt = Date.now();
 
   // Supabase RPC 비동기 호출 (fire-and-forget)
   incrementAdImpression(currentUserId, currentDate, 'interstitial').catch((err) => {
