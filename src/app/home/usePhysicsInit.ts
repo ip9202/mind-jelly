@@ -95,6 +95,44 @@ export function usePhysicsInit(options: UsePhysicsInitOptions): UsePhysicsInitRe
       ];
       Matter.Composite.add(engine.world, walls);
 
+      // 중력 상쇄 + 스프링 힘을 매 물리 스텝마다 적용 (idle 저빈도 루프와 무관)
+      Matter.Events.on(engine, 'beforeUpdate', () => {
+        const eng = engineRef.current;
+        if (!eng?.world) return;
+        const jelly = Matter.Composite.allBodies(eng.world).find((b) => b.label === 'jelly');
+        if (!jelly) return;
+
+        // 중력 상쇄
+        const gScale = eng.gravity.scale ?? 0.001;
+        Matter.Body.applyForce(jelly, jelly.position, {
+          x: 0,
+          y: -(jelly.mass * eng.gravity.y * gScale),
+        });
+
+        // 중앙 복귀 스프링 힘
+        const springKX = 0.00006;
+        const springKY = 0.00015;
+        Matter.Body.applyForce(jelly, jelly.position, {
+          x: (cx - jelly.position.x) * springKX,
+          y: (cy - jelly.position.y) * springKY,
+        });
+
+        // 속도 제한
+        const maxSpeed = 15;
+        const speed = Math.sqrt(jelly.velocity.x ** 2 + jelly.velocity.y ** 2);
+        if (speed > maxSpeed) {
+          const scale = maxSpeed / speed;
+          Matter.Body.setVelocity(jelly, {
+            x: jelly.velocity.x * scale,
+            y: jelly.velocity.y * scale,
+          });
+        }
+
+        // 수평 드리프트
+        const driftForce = Math.sin(Date.now() * 0.001) * 0.00004;
+        Matter.Body.applyForce(jelly, jelly.position, { x: driftForce, y: 0 });
+      });
+
       // 충돌 감지 설정 (REQ-EVT-003)
       setupCollisionDetection(engine, () => {
         const state = jellyStore.getState();
@@ -151,39 +189,6 @@ export function usePhysicsInit(options: UsePhysicsInitOptions): UsePhysicsInitRe
           hasBeads = beadBodies.length > 0;
           if (jelly) {
             jellyPosRef.current = { x: jelly.position.x, y: jelly.position.y };
-
-            // 중력 상쇄: 스프링만으로 정확한 타겟 위치 유지
-            const gScale = eng.gravity.scale ?? 0.001;
-            Matter.Body.applyForce(jelly, jelly.position, {
-              x: 0,
-              y: -(jelly.mass * eng.gravity.y * gScale),
-            });
-
-            // 속도 제한 (부드러운 떠다님)
-            const maxSpeed = 15;
-            const speed = Math.sqrt(jelly.velocity.x ** 2 + jelly.velocity.y ** 2);
-            if (speed > maxSpeed) {
-              const scale = maxSpeed / speed;
-              Matter.Body.setVelocity(jelly, {
-                x: jelly.velocity.x * scale,
-                y: jelly.velocity.y * scale,
-              });
-            }
-
-            // 젤리 중앙 복귀 스프링 힘
-            const springKX = 0.00006;
-            const springKY = 0.00015;
-            Matter.Body.applyForce(jelly, jelly.position, {
-              x: (cx - jelly.position.x) * springKX,
-              y: (cy - jelly.position.y) * springKY,
-            });
-
-            // 수평 둥둥 떠다니는 힘 - sin파로 좌우 드리프트
-            const driftForce = Math.sin(Date.now() * 0.001) * 0.00004;
-            Matter.Body.applyForce(jelly, jelly.position, {
-              x: driftForce,
-              y: 0,
-            });
 
             // 자기장 힘 적용 (REQ-EVT-002, REQ-STA-005)
             if (beadBodies.length > 0) {

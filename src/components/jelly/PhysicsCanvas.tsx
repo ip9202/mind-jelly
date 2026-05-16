@@ -81,7 +81,7 @@ export function PhysicsCanvas({ width, height, children }: PhysicsCanvasProps) {
     <div
       ref={containerRef}
       data-canvas-container
-      className="relative w-full max-w-[800px] mx-auto overflow-visible bg-transparent"
+      className="relative w-full max-w-[800px] mx-auto overflow-hidden bg-transparent"
       style={{ aspectRatio: `${width}/${height}` }}
     >
       <div

@@ -427,8 +427,21 @@ export default function HomePage() {
             const relY = e.clientY - rect.top;
 
             // 캔버스 좌표(800x600)로 변환
+            // rect.height 대신 rect.width 기반 스케일 사용: aspectRatio(800/600) 적용
             const canvasX = (relX / rect.width) * 800;
-            const canvasY = (relY / rect.height) * 600;
+            const canvasY = (relY / rect.width) * 800;
+
+            // @MX:WARN: [AUTO] WebView 터치 동기화 — DOM 조작이 WebView 렌더링 파이프라인을
+            // 강제 동기화. 제거/변경 시 앱인토스에서 터치 히트박스 미작동 (Heisenbug)
+            // @MX:REASON: 앱인토스 WebView에서 getBoundingClientRect/이벤트 타이밍 불안정
+            let _dbg = document.getElementById('__wv_dbg');
+            if (!_dbg) {
+              _dbg = document.createElement('div');
+              _dbg.id = '__wv_dbg';
+              _dbg.style.cssText = 'position:fixed;top:0;left:0;z-index:9999;background:rgba(0,0,0,0.7);color:#0f0;padding:4px 6px;font-size:10px;font-family:monospace;pointer-events:none;';
+              document.body.appendChild(_dbg);
+            }
+            _dbg.textContent = `rW${rect.width.toFixed(0)} rH${rect.height.toFixed(0)} jY${jellyPosRef.current.y.toFixed(0)} cY${canvasY.toFixed(0)}`;
 
             // 화면 좌표(하트 파티클용)와 캔버스 좌표(hit-test용) 함께 전달
             handleJellyTouch(e.clientX, e.clientY, canvasX, canvasY);
@@ -585,8 +598,6 @@ export default function HomePage() {
         onClose={() => setShowStatsSheet(false)}
         triggerRef={statsButtonRef}
       />
-
-
 
       {/* EmotionInput: fixed bottom-0, 젤리 변화 없음 */}
       {/* interactiveWidget:resizes-visual 설정으로 키보드가 올라오면 자동으로 키보드 위에 붙음 */}
