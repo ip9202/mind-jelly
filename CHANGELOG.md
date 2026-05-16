@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.7.1] - 2026-05-16
+
+### Fixed
+- 앱인토스 출시 체크리스트 미통과 항목 수정
+  - `granite.config.ts`에 `webViewProps.type: 'partner'` 및 `navigationBar` (back/home 버튼) 설정 추가
+  - `brand.icon` 콘솔 로고 URL 적용으로 내비게이션 바 브랜드 표시
+  - `HeartParticle.tsx` requestAnimationFrame 정리 누락으로 인한 메모리 누수 수정
+
 ## [1.7.0] - 2026-05-16
 
 ### Fixed

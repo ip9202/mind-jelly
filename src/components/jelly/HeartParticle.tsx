@@ -30,12 +30,14 @@ export function HeartParticle({ x, y, delay, offsetX }: HeartParticleProps) {
   const [visible, setVisible] = useState(true);
 
   useEffect(() => {
+    let rafId: number | null = null;
+
     // 지연 후 애니메이션 시작
     const startTimer = setTimeout(() => {
       setState({ opacity: 1, translateY: 0 });
 
       // 다음 프레임에서 애니메이션 트리거
-      requestAnimationFrame(() => {
+      rafId = requestAnimationFrame(() => {
         setState({ opacity: 0, translateY: -30 });
       });
     }, delay);
@@ -48,6 +50,7 @@ export function HeartParticle({ x, y, delay, offsetX }: HeartParticleProps) {
     return () => {
       clearTimeout(startTimer);
       clearTimeout(removeTimer);
+      if (rafId !== null) cancelAnimationFrame(rafId);
     };
   }, [delay]);
 

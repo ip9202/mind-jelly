@@ -5,7 +5,16 @@ export default defineConfig({
   brand: {
     displayName: '마음젤리',
     primaryColor: '#FFD1DC',
-    icon: '', // Empty for now, will be set from console later
+    icon: 'https://static.toss.im/appsintoss/41387/11283758-3397-4a75-97ba-435fac3337e8.png',
+  },
+  webViewProps: {
+    type: 'partner',
+    overScrollMode: 'never',
+    bounces: false,
+  },
+  navigationBar: {
+    withBackButton: true,
+    withHomeButton: true,
   },
   web: {
     host: 'localhost',
