@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.8.2] - 2026-05-16
+
+### Fixed
+- 젤리 히트박스 동기화 수정 (터치 좌표와 물리 엔진 위치 불일치)
+  - PhysicsCanvas `overflow-visible` → `overflow-hidden` (rect.height 오염 방지)
+  - 좌표 변환 `rect.height` 기반 → `rect.width` 균일 스케일로 수정
+  - 중력 상쇄/스프링 힘을 `track()` → `beforeUpdate` 이벤트로 이동 (60fps 보장)
+- 앱인토스 WebView 터치 미작동 수정 (Heisenbug)
+  - DOM 뮤테이션으로 레이아웃 리플로우 강제 동기화
+
 ## [1.8.1] - 2026-05-16
 
 ### Fixed
