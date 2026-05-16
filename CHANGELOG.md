@@ -7,6 +7,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.7.0] - 2026-05-16
+
+### Fixed
+- 앱인토스 Static export 환경에서 온보딩 진입 오류 수정
+  - `page.tsx` 서버사이드 `redirect()` → 클라이언트 `useEffect` + `window.location.replace` 교체
+  - Static export에서 Next.js 서버사이드 redirect가 동작하지 않아 `/home`으로 이동하던 문제 해결
+- `BridgeInitializer` early return 전 `linkTossUser` 누락 수정
+  - 닉네임 없어 `/onboarding`으로 redirect할 때 `setUserIdentity` 미실행 → `toss_user_id` null 버그
+  - redirect 전에 `setUserIdentity(identity)` 먼저 실행하도록 순서 변경
+- 데이터 초기화 후 `supabaseUserId` 소실 문제 수정
+  - 초기화 시 `diaryStore.supabaseUserId = null`로 리셋됨 → 닉네임 저장 실패
+  - 온보딩 시작하기 버튼 클릭 시 `supabaseUserId` 없으면 `initSupabaseSession` 재실행하여 복구
+- `BridgeInitializer` 닉네임 없는 신규 유저를 `/onboarding`으로 redirect (기존 `/welcome`)
+
+### Added
+- 실제 광고 그룹 ID 교체 준비 주석 및 메모리 저장
+  - 배너: `ait.v2.live.d219bdc9c20d477d`
+  - 전면: `ait.v2.live.07e208f269914407`
+  - 보상: `ait.v2.live.07e7441f22524f3f`
+
+### Tests
+- 온보딩 흐름 E2E 테스트 6개 추가 (Playwright, 전부 PASS)
+  - `/` → `/onboarding` 리다이렉트 검증
+  - 온보딩 페이지 UI 요소 검증 (헤드라인, 기능 카드 3개, 시작하기 버튼)
+  - 시작하기 버튼 클릭 → `/welcome` 또는 `/home` 이동 검증
+- 기존 테스트 `마인드 젤리` → `마음젤리` 텍스트 수정 (2곳)
+
 ## [1.6.0] - 2026-05-16
 
 ### Added
