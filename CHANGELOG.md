@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.8.1] - 2026-05-16
+
+### Fixed
+- 배너 광고 표시 후 `감정 표현하기` 버튼이 눌리지 않는 문제 수정
+  - `report` 상태에서 버튼 `disabled` 조건 제거
+  - `report` 상태에서 버튼 클릭 시 `jellyStore` `satisfied → idle` 리셋 처리
+
 ## [1.8.0] - 2026-05-16
 
 ### Fixed

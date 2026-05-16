@@ -490,9 +490,14 @@ export default function HomePage() {
                     <button
                       onClick={() => {
                         if (showStatsSheet) setShowStatsSheet(false);
+                        if (uiState === 'report') {
+                          const st = jellyStore.getState();
+                          if (st.currentState === 'satisfied') {
+                            st.transitionState('idle');
+                          }
+                        }
                         setUiState('input');
                       }}
-                      disabled={uiState === 'report'}
                       aria-label="감정 표현하기"
                       className="flex-[2] h-11 rounded-xl text-on-primary font-gowun text-sm font-bold flex items-center justify-center gap-1.5 transition-all duration-200 disabled:opacity-50 disabled:cursor-default active:scale-[0.97] hover:shadow-md"
                       style={{
