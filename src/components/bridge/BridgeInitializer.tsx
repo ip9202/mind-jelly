@@ -88,6 +88,14 @@ export default function BridgeInitializer() {
           jellyStore.getState().setInitialized(true);
         }
 
+        // @MX:NOTE: [AUTO] toss_user_id 등록: 페이지 이동 전에 반드시 실행해야 함
+        // 닉네임 없어서 /onboarding으로 early return하기 전에 linkTossUser 완료 보장
+        // (redirect 후 return하면 아래 setUserIdentity 코드가 실행되지 않음)
+        if (!cancelled && isWebView && identity && !identityErrored) {
+          tossStore.getState().setUserIdentity(identity);
+          tossStore.getState().setBridgeReady(true);
+        }
+
         // @MX:NOTE: [AUTO] 닉네임 미설정 시 /onboarding으로 리다이렉트
         // Static export(앱인토스 빌드)에서는 page.tsx의 서버사이드 redirect()가 동작하지 않으므로
         // BridgeInitializer가 온보딩 진입점 역할을 담당
@@ -119,7 +127,7 @@ export default function BridgeInitializer() {
         return;
       }
 
-      // WebView일 때 identity를 tossStore에 반영 (멱등 가드는 setUserIdentity 내부에서)
+      // WebView + supabaseUserId 없는 경우(early return 안 된 경우)에도 identity 반영 보장
       if (cancelled) return;
       if (identity) {
         tossStore.getState().setUserIdentity(identity);
