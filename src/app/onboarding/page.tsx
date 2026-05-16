@@ -3,6 +3,9 @@
 import { useSyncExternalStore, useState } from 'react';
 import { JELLY_SHAPE_CONFIGS } from '@/lib/constants/jellyShapes';
 import { jellyStore } from '@/stores/jellyStore';
+import { diaryStore } from '@/stores/diaryStore';
+import { detectWebView, getUserIdentity } from '@/lib/toss/bridge';
+import { initSupabaseSession } from '@/lib/supabase/auth';
 import type { JellyShape } from '@/types/physics';
 
 // @MX:NOTE: 온보딩 페이지 부유 비즈 - welcome 페이지와 동일한 감정 색상 장식
@@ -130,11 +133,34 @@ export default function OnboardingPage() {
   );
   const [isNavigating, setIsNavigating] = useState(false);
 
-  function handleStart() {
+  // @MX:NOTE: 데이터 초기화 후 supabaseUserId가 null일 수 있으므로
+  // 버튼 클릭 시 Supabase 세션을 복구한 뒤 이동
+  async function handleStart() {
     if (isNavigating) return;
     setIsNavigating(true);
-    const hasNickname = !!jellyStore.getState().jellyName;
-    window.location.href = hasNickname ? '/home' : '/welcome';
+
+    try {
+      // supabaseUserId가 없으면 (데이터 초기화 후) 재획득
+      let supabaseUserId = diaryStore.getState().supabaseUserId;
+      if (!supabaseUserId) {
+        const isWebView = detectWebView();
+        let identity: Awaited<ReturnType<typeof getUserIdentity>> = null;
+        if (isWebView) {
+          try { identity = await getUserIdentity(); } catch { identity = null; }
+        }
+        supabaseUserId = await initSupabaseSession(
+          identity?.anonymousKey ? { tossHash: identity.anonymousKey } : undefined,
+        );
+        if (supabaseUserId) {
+          await diaryStore.getState().setUserId(supabaseUserId);
+        }
+      }
+
+      const hasNickname = !!jellyStore.getState().jellyName;
+      window.location.href = hasNickname ? '/home' : '/welcome';
+    } catch {
+      setIsNavigating(false);
+    }
   }
 
   if (!isInitialized) {
