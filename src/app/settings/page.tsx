@@ -517,8 +517,9 @@ export default function SettingsPage() {
 
       // 5. Reload app
       window.location.reload();
-    } catch {
+    } catch (e) {
       setIsResetting(false);
+      console.error('[DataReset] 실패:', e);
       alert('초기화 중 오류가 발생했습니다. 다시 시도해주세요.');
     }
   }
