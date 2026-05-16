@@ -84,13 +84,15 @@ export async function saveDiaryEntry(entry: {
   return data;
 }
 
-/** 내 일기 전체 조회 */
+/** 내 일기 조회 (최근 30개) */
+// @MX:NOTE: [AUTO] SPEC-PERF-001 (REQ-PERF-001) - 모바일 WebView 메모리 절약을 위해 30개 제한
 export async function getMyDiaryEntries(userId: string) {
   const { data, error } = await supabase
     .from('diary_entries')
     .select('*')
     .eq('user_id', userId)
-    .order('created_at', { ascending: false });
+    .order('created_at', { ascending: false })
+    .limit(30);
 
   if (error) throw error;
   return data ?? [];

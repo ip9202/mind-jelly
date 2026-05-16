@@ -1,5 +1,6 @@
 'use client';
 
+import { memo } from 'react';
 import { hexToRgba, lightenHex, darkenHex } from '@/lib/utils/color';
 import { JELLY_COLOR, EMOTION_THEME, JELLY_DEFAULT_SHAPE } from '@/lib/constants/emotion';
 import { JELLY_SHAPE_CONFIGS } from '@/lib/constants/jellyShapes';
@@ -27,7 +28,8 @@ interface JellyRendererProps {
 
 // @MX:ANCHOR: 3D 글로시 풍선 젤리 렌더러 (홈/감정플로우/다이어리 3곳 이상에서 사용)
 // @MX:REASON: SVG 네이티브 렌더링 + radialGradient + SMIL 애니메이션으로 풍선형 3D 입체감 구현
-export function JellyRenderer({ bodies, face, emotionColor, emotion, jellyShape, bounceKey, skinId }: JellyRendererProps) {
+// @MX:NOTE: [AUTO] SPEC-PERF-003 - React.memo로 불필요한 리렌더링 방지 (312줄 SVG)
+export const JellyRenderer = memo(function JellyRenderer({ bodies, face, emotionColor, emotion, jellyShape, bounceKey, skinId }: JellyRendererProps) {
   if (bodies.length === 0) return null;
 
   const jelly = bodies[0];
@@ -309,7 +311,7 @@ export function JellyRenderer({ bodies, face, emotionColor, emotion, jellyShape,
       </svg>
     </div>
   );
-}
+});
 
 // @MX:NOTE: 감정별 SVG 눈 렌더링 (viewBox 0 0 1 1 기반)
 // @MX:REASON: 좌측 눈 중심 x=0.38, 우측 눈 중심 x=0.62 → SVG 중심 0.50 대칭, idle 표정과 동일 간격

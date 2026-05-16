@@ -86,6 +86,22 @@ function getCurrentEntry(): CacheEntry | null {
 
 // ─── 공개 API ───
 
+// @MX:NOTE: [AUTO] SPEC-PERF-005 - Supabase RPC 실패 시 최대 3회 재시도
+async function retryRpc(fn: () => Promise<void>, label: string, retries = 3): Promise<void> {
+  for (let i = 0; i < retries; i++) {
+    try {
+      await fn();
+      return;
+    } catch (err) {
+      if (i === retries - 1) {
+        console.error(`[AdFrequency] ${label} (${retries}회 재시도 실패):`, err);
+        return;
+      }
+      await new Promise((r) => setTimeout(r, 1000 * (i + 1)));
+    }
+  }
+}
+
 /**
  * 광고 노출 캐시를 Supabase 데이터로 초기화합니다.
  * 앱 시작 시 BridgeInitializer에서 호출합니다.
@@ -159,10 +175,11 @@ export function recordAdShown(): void {
   entry.interstitialCount += 1;
   entry.lastInterstitialAt = Date.now();
 
-  // Supabase RPC 비동기 호출 (fire-and-forget)
-  incrementAdImpression(currentUserId, currentDate, 'interstitial').catch((err) => {
-    console.error('[AdFrequency] 전면형 광고 기록 실패:', err);
-  });
+  // Supabase RPC 비동기 호출 (재시도 포함)
+  retryRpc(
+    () => incrementAdImpression(currentUserId!, currentDate!, 'interstitial').then(() => {}),
+    '전면형 광고 기록',
+  );
 }
 
 /**
@@ -177,10 +194,11 @@ export function recordRewardedAdShown(): void {
   entry.rewardedCount += 1;
   entry.sessionRewardedCount += 1;
 
-  // Supabase RPC 비동기 호출 (fire-and-forget)
-  incrementAdImpression(currentUserId, currentDate, 'rewarded').catch((err) => {
-    console.error('[AdFrequency] 보상형 광고 기록 실패:', err);
-  });
+  // Supabase RPC 비동기 호출 (재시도 포함)
+  retryRpc(
+    () => incrementAdImpression(currentUserId!, currentDate!, 'rewarded').then(() => {}),
+    '보상형 광고 기록',
+  );
 }
 
 /**

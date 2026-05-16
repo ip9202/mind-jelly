@@ -22,8 +22,12 @@ interface InterstitialAdProps {
 export function InterstitialAd({ onClosed, onLoadError }: InterstitialAdProps) {
   const onClosedRef = useRef(onClosed);
   const onLoadErrorRef = useRef(onLoadError);
-  onClosedRef.current = onClosed;
-  onLoadErrorRef.current = onLoadError;
+
+  // ref 동기화는 useEffect 내에서 처리 (react-hooks/refs 규칙 준수)
+  useEffect(() => {
+    onClosedRef.current = onClosed;
+    onLoadErrorRef.current = onLoadError;
+  });
 
   // 마운트 시 1회만 카운트 기록
   useEffect(() => {

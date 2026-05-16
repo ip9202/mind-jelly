@@ -26,7 +26,7 @@ const PhysicsCanvas = dynamic(
 
 const JellyRenderer = dynamic(
   () => import('@/components/jelly/JellyRenderer').then((m) => m.JellyRenderer),
-  { ssr: false }
+  { ssr: false, loading: () => <JellySkeleton /> }
 );
 
 const BeadGroup = dynamic(

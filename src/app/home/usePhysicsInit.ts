@@ -41,6 +41,8 @@ export function usePhysicsInit(options: UsePhysicsInitOptions): UsePhysicsInitRe
   const engineRef = useRef<Engine | null>(null);
   const collisionSetupRef = useRef(false);
   const animRef = useRef<number>(0);
+  // @MX:NOTE: [AUTO] SPEC-PERF-002 - idle 시 setTimeout 기반 저빈도 폴링 (CPU 90% 절감)
+  const idleRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const satisfiedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const stuckTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -48,6 +50,7 @@ export function usePhysicsInit(options: UsePhysicsInitOptions): UsePhysicsInitRe
   useEffect(() => {
     return () => {
       if (animRef.current) cancelAnimationFrame(animRef.current);
+      if (idleRef.current) clearTimeout(idleRef.current);
       if (satisfiedTimerRef.current) clearTimeout(satisfiedTimerRef.current);
       if (stuckTimerRef.current) clearTimeout(stuckTimerRef.current);
       engineRef.current = null;
@@ -140,9 +143,12 @@ export function usePhysicsInit(options: UsePhysicsInitOptions): UsePhysicsInitRe
       // 애니메이션 루프: 젤리 위치 추적 + 자기장 적용
       const track = () => {
         const eng = engineRef.current;
+        let hasBeads = false;
         if (eng?.world) {
           const allBodies = Matter.Composite.allBodies(eng.world);
           const jelly = allBodies.find((b) => b.label === 'jelly');
+          const beadBodies = allBodies.filter((b) => b.label === 'bead');
+          hasBeads = beadBodies.length > 0;
           if (jelly) {
             jellyPosRef.current = { x: jelly.position.x, y: jelly.position.y };
 
@@ -180,7 +186,6 @@ export function usePhysicsInit(options: UsePhysicsInitOptions): UsePhysicsInitRe
             });
 
             // 자기장 힘 적용 (REQ-EVT-002, REQ-STA-005)
-            const beadBodies = allBodies.filter((b) => b.label === 'bead');
             if (beadBodies.length > 0) {
               applyMagneticField(beadBodies, jelly.position);
 
@@ -245,7 +250,17 @@ export function usePhysicsInit(options: UsePhysicsInitOptions): UsePhysicsInitRe
             }
           }
         }
-        animRef.current = requestAnimationFrame(track);
+        // 비드 활성 시 전속력, idle 시 저빈도 전환 (SPEC-PERF-002)
+        if (hasBeads) {
+          if (idleRef.current) { clearTimeout(idleRef.current); idleRef.current = null; }
+          animRef.current = requestAnimationFrame(track);
+        } else {
+          animRef.current = 0;
+          idleRef.current = setTimeout(() => {
+            idleRef.current = null;
+            animRef.current = requestAnimationFrame(track);
+          }, 150);
+        }
       };
       animRef.current = requestAnimationFrame(track);
     },
