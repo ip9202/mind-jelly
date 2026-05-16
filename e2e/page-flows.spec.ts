@@ -50,11 +50,69 @@ test.describe('/ (root) - redirect', () => {
     await page.waitForTimeout(3000);
 
     const currentUrl = page.url();
-    expect(currentUrl).toMatch(/\/(welcome|home)$/);
+    expect(currentUrl).toMatch(/\/(onboarding|welcome|home)$/);
   });
 
   test('no horizontal overflow after redirect', async ({ page }) => {
     await navigateAndWait(page, '/');
+    await assertNoHorizontalOverflow(page);
+  });
+});
+
+// ============================================================
+// 1-B. Onboarding (/onboarding) - 신규 진입 화면
+// ============================================================
+test.describe('/onboarding page', () => {
+  test('redirects from / to /onboarding', async ({ page }) => {
+    await page.goto('/', { waitUntil: 'domcontentloaded' });
+    await page.waitForLoadState('networkidle', { timeout: 15000 }).catch(() => {});
+    await page.waitForTimeout(3000);
+
+    const currentUrl = page.url();
+    expect(currentUrl).toContain('/onboarding');
+  });
+
+  test('displays headline copy', async ({ page }) => {
+    await navigateAndWait(page, '/onboarding');
+
+    const line1 = page.getByText('오늘 힘든 일을').first();
+    const line2 = page.getByText('젤리에게 줘봐').first();
+    const line1Visible = await line1.isVisible().catch(() => false);
+    const line2Visible = await line2.isVisible().catch(() => false);
+    expect(line1Visible || line2Visible).toBe(true);
+  });
+
+  test('shows three feature cards', async ({ page }) => {
+    await navigateAndWait(page, '/onboarding');
+
+    await expect(page.getByText('힘든 말을 털어놔').first()).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText('젤리가 냠냠 먹어').first()).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText('조금 가벼워져').first()).toBeVisible({ timeout: 10000 });
+  });
+
+  test('start button is visible', async ({ page }) => {
+    await navigateAndWait(page, '/onboarding');
+
+    const startButton = page.getByRole('button', { name: '마음젤리 시작하기' });
+    await expect(startButton).toBeVisible({ timeout: 10000 });
+  });
+
+  test('clicking start navigates to /welcome or /home', async ({ page }) => {
+    await navigateAndWait(page, '/onboarding');
+
+    const startButton = page.getByRole('button', { name: '마음젤리 시작하기' });
+    await expect(startButton).toBeVisible({ timeout: 10000 });
+    await startButton.click();
+
+    await page.waitForLoadState('networkidle', { timeout: 15000 }).catch(() => {});
+    await page.waitForTimeout(2000);
+
+    const url = page.url();
+    expect(url).toMatch(/\/(welcome|home)/);
+  });
+
+  test('no horizontal overflow', async ({ page }) => {
+    await navigateAndWait(page, '/onboarding');
     await assertNoHorizontalOverflow(page);
   });
 });
@@ -66,7 +124,7 @@ test.describe('/welcome page', () => {
   test('page loads with onboarding content', async ({ page }) => {
     await navigateAndWait(page, '/welcome');
 
-    const heading = page.getByText('마인드 젤리에 오신 걸').first();
+    const heading = page.getByText('마음젤리에 오신 걸').first();
     await expect(heading).toBeVisible({ timeout: 10000 });
   });
 
@@ -267,7 +325,7 @@ test.describe('/friends page (basic)', () => {
 test.describe('All pages render correctly', () => {
   const pages = [
     { url: '/', name: 'root', check: () => 'redirects to /welcome or /home' },
-    { url: '/welcome', name: 'welcome', check: '마인드 젤리에 오신 걸' },
+    { url: '/welcome', name: 'welcome', check: '마음젤리에 오신 걸' },
     { url: '/home', name: 'home', check: () => 'renders skeleton or redirects to /welcome' },
     { url: '/diary', name: 'diary', check: 'header' },
     { url: '/settings', name: 'settings', check: 'header' },
