@@ -5,7 +5,7 @@ import { JELLY_SHAPE_CONFIGS } from '@/lib/constants/jellyShapes';
 import { jellyStore } from '@/stores/jellyStore';
 import { diaryStore } from '@/stores/diaryStore';
 import { detectWebView, getUserIdentity } from '@/lib/toss/bridge';
-import { initSupabaseSession } from '@/lib/supabase/auth';
+import { initSupabaseSession, linkTossUser } from '@/lib/supabase/auth';
 import type { JellyShape } from '@/types/physics';
 
 // @MX:NOTE: 온보딩 페이지 부유 비즈 - welcome 페이지와 동일한 감정 색상 장식
@@ -134,17 +134,19 @@ export default function OnboardingPage() {
   const [isNavigating, setIsNavigating] = useState(false);
 
   // @MX:NOTE: 데이터 초기화 후 supabaseUserId가 null일 수 있으므로
-  // 버튼 클릭 시 Supabase 세션을 복구한 뒤 이동
+  // 버튼 클릭 시 Supabase 세션을 복구한 뒤 이동.
+  // RPC가 toss_user_id를 초기화하므로, 여기서 반드시 재등록한다.
   async function handleStart() {
     if (isNavigating) return;
     setIsNavigating(true);
 
     try {
-      // supabaseUserId가 없으면 (데이터 초기화 후) 재획득
       let supabaseUserId = diaryStore.getState().supabaseUserId;
+      const isWebView = detectWebView();
+      let identity: Awaited<ReturnType<typeof getUserIdentity>> = null;
+
+      // supabaseUserId가 없으면 (데이터 초기화 후) 재획득
       if (!supabaseUserId) {
-        const isWebView = detectWebView();
-        let identity: Awaited<ReturnType<typeof getUserIdentity>> = null;
         if (isWebView) {
           try { identity = await getUserIdentity(); } catch { identity = null; }
         }
@@ -153,6 +155,17 @@ export default function OnboardingPage() {
         );
         if (supabaseUserId) {
           await diaryStore.getState().setUserId(supabaseUserId);
+        }
+      }
+
+      // WebView 환경에서 toss_user_id DB 등록 보장
+      // (RPC 초기화 또는 fire-and-forget 누락 대비)
+      if (isWebView && supabaseUserId) {
+        if (!identity) {
+          try { identity = await getUserIdentity(); } catch { /* best-effort */ }
+        }
+        if (identity?.anonymousKey) {
+          await linkTossUser(supabaseUserId, identity.anonymousKey);
         }
       }
 

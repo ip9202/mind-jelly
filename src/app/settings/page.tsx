@@ -8,7 +8,6 @@ import { rewardStore } from '@/stores/rewardStore';
 import { JELLY_SHAPE_CONFIGS } from '@/lib/constants/jellyShapes';
 import { JELLY_COLOR } from '@/lib/constants/emotion';
 import { SKIN_THEMES } from '@/lib/rewards/jellySkins';
-import { supabase } from '@/lib/supabase/client';
 import type { JellyShape } from '@/types/physics';
 import BottomNav from '@/components/layout/BottomNav';
 
@@ -511,8 +510,10 @@ export default function SettingsPage() {
       localStorage.removeItem('rewarded_ad_frequency');
       localStorage.removeItem('mind-jelly-theme');
 
-      // 4. Supabase 인증 세션 폐기 → 재시작 시 새 익명 ID 발급
-      await supabase.auth.signOut();
+      // 4. 세션 유지 — signOut() 시 auth.users 행이 삭제되어
+      // recover-session이 실패하고 orphaned user가 생성됨.
+      // 세션을 유지하면 동일 user 행을 재사용하여 toss_user_id 보존.
+      // RPC가 nickname을 초기화하므로 리로드 후 자동으로 /onboarding 진입.
 
       // 5. Reload app
       window.location.reload();
