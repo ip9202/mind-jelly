@@ -438,7 +438,7 @@ export default function HomePage() {
             if (!_dbg) {
               _dbg = document.createElement('div');
               _dbg.id = '__wv_dbg';
-              _dbg.style.cssText = 'position:fixed;top:0;left:0;z-index:9999;background:rgba(0,0,0,0.7);color:#0f0;padding:4px 6px;font-size:10px;font-family:monospace;pointer-events:none;';
+              _dbg.style.cssText = 'position:fixed;top:0;left:0;z-index:9999;background:rgba(0,0,0,0.7);color:#0f0;padding:4px 6px;font-size:10px;font-family:monospace;pointer-events:none;opacity:0;';
               document.body.appendChild(_dbg);
             }
             _dbg.textContent = `rW${rect.width.toFixed(0)} rH${rect.height.toFixed(0)} jY${jellyPosRef.current.y.toFixed(0)} cY${canvasY.toFixed(0)}`;
