@@ -9,37 +9,34 @@
 
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { loadFullScreenAd, showFullScreenAd } from '@apps-in-toss/web-framework';
 import { INTERSTITIAL_AD_GROUP_ID } from '@/lib/ad/adConfig';
 import { recordAdShown } from '@/lib/ad/adFrequencyControl';
 
 interface InterstitialAdProps {
-  /**
-   * 광고가 닫힐 때 호출될 콜백
-   */
   onClosed: () => void;
-
-  /**
-   * 광고 로드 실패 시 호출될 콜백
-   */
   onLoadError?: () => void;
 }
 
-/**
- * 전면형 광고 컴포넌트
- * SDK가 자체 전체화면 UI를 처리하므로 커스텀 오버레이 없이 side-effect만 담당.
- */
 export function InterstitialAd({ onClosed, onLoadError }: InterstitialAdProps) {
+  const onClosedRef = useRef(onClosed);
+  const onLoadErrorRef = useRef(onLoadError);
+  onClosedRef.current = onClosed;
+  onLoadErrorRef.current = onLoadError;
+
+  // 마운트 시 1회만 카운트 기록
   useEffect(() => {
-    // SDK 미지원 환경 (브라우저 등)은 카운트 없이 즉시 닫기
     if (!loadFullScreenAd.isSupported?.()) {
-      onClosed();
+      onClosedRef.current();
       return;
     }
-
-    // SDK 지원 환경에서만 노출 카운트 기록
     recordAdShown();
+  }, []);
+
+  // 광고 로드/표시는 ref 기반으로 안정적으로 관리
+  useEffect(() => {
+    if (!loadFullScreenAd.isSupported?.()) return;
 
     let showUnregister: (() => void) | undefined;
 
@@ -51,22 +48,22 @@ export function InterstitialAd({ onClosed, onLoadError }: InterstitialAdProps) {
             options: { adGroupId: INTERSTITIAL_AD_GROUP_ID },
             onEvent: (e) => {
               if (e.type === 'failedToShow') {
-                onLoadError?.();
-                onClosed();
+                onLoadErrorRef.current?.();
+                onClosedRef.current();
               } else if (e.type === 'dismissed') {
-                onClosed();
+                onClosedRef.current();
               }
             },
             onError: () => {
-              onLoadError?.();
-              onClosed();
+              onLoadErrorRef.current?.();
+              onClosedRef.current();
             },
           });
         }
       },
       onError: () => {
-        onLoadError?.();
-        onClosed();
+        onLoadErrorRef.current?.();
+        onClosedRef.current();
       },
     });
 
@@ -74,8 +71,7 @@ export function InterstitialAd({ onClosed, onLoadError }: InterstitialAdProps) {
       loadUnregister?.();
       showUnregister?.();
     };
-  }, [onClosed, onLoadError]);
+  }, []);
 
-  // SDK가 전체화면 UI를 직접 렌더링 — 컴포넌트는 아무것도 출력하지 않음
   return null;
 }
