@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.8.0] - 2026-05-16
+
+### Fixed
+- 데이터 초기화 시 `supabase.auth.signOut()` 제거로 `toss_user_id` 유실 방지
+- 온보딩 페이지에 `linkTossUser` 안전망 추가
+- 전면광고 중복 카운트 수정 (`interstitial_count=2` → 1)
+- `InterstitialAd` ref 동기화를 useEffect로 이동 (ESLint 준수)
+
+### Performance
+- 일기 조회 `.limit(30)` 추가로 무제한 로딩 방지 (HIGH)
+- 물리엔진 rAF 루프 idle 시 150ms 저빈도 전환으로 CPU 90% 절감 (HIGH)
+- `JellyRenderer` React.memo 적용으로 불필요 리렌더링 방지 (MEDIUM)
+- 광고 노출 기록 RPC 실패 시 최대 3회 재시도 로직 추가 (MEDIUM)
+- `JellyRenderer` dynamic import 로딩 스켈레톤 추가 (LOW)
+
 ## [1.7.1] - 2026-05-16
 
 ### Fixed
