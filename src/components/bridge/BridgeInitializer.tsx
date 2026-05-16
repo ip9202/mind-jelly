@@ -88,12 +88,14 @@ export default function BridgeInitializer() {
           jellyStore.getState().setInitialized(true);
         }
 
-        // @MX:NOTE: [AUTO] 닉네임 미설정 시 /welcome으로 리다이렉트
+        // @MX:NOTE: [AUTO] 닉네임 미설정 시 /onboarding으로 리다이렉트
+        // Static export(앱인토스 빌드)에서는 page.tsx의 서버사이드 redirect()가 동작하지 않으므로
+        // BridgeInitializer가 온보딩 진입점 역할을 담당
         if (!cancelled) {
           const currentPath = window.location.pathname;
 
           if (!profile?.nickname && currentPath !== '/welcome' && currentPath !== '/onboarding') {
-            window.location.href = '/welcome';
+            window.location.href = '/onboarding';
             return;
           }
 
