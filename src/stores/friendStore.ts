@@ -8,8 +8,6 @@
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 
-import { getPendingFriendRequests } from '@/lib/supabase/db';
-
 interface FriendStoreState {
   pendingCount: number;
   isBadgeVisible: boolean;
@@ -25,6 +23,7 @@ export const useFriendStore = create<FriendStoreState>()(
       isBadgeVisible: false,
 
       fetchPendingCount: async (userId: string) => {
+        const { getPendingFriendRequests } = await import('@/lib/supabase/db');
         const requests = await getPendingFriendRequests(userId);
         const count = requests.length;
         set({ pendingCount: count, isBadgeVisible: count > 0 });
