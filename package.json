@@ -10,7 +10,10 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
-    "e2e": "playwright test"
+    "e2e": "playwright test",
+    "db:sync": "bash scripts/db-sync.sh",
+    "db:seed": "bash scripts/db-seed.sh",
+    "deploy:functions": "supabase functions deploy recover-session --project-ref qvtyguimflzcaxhleupb && supabase functions deploy toss-login --project-ref qvtyguimflzcaxhleupb && supabase functions deploy toss-disconnect --project-ref qvtyguimflzcaxhleupb"
   },
   "dependencies": {
     "@apps-in-toss/web-framework": "^2.5.0",

@@ -36,7 +36,7 @@ let mockStoreState = {
 
 // useFriendStore 모킹 - selector 패턴 지원
 jest.mock('@/stores/friendStore', () => ({
-  useFriendStore: jest.fn((selector?: Function) =>
+  useFriendStore: jest.fn((selector?: (state: typeof mockStoreState) => unknown) =>
     selector ? selector(mockStoreState) : mockStoreState
   ),
 }));
