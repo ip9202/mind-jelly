@@ -179,14 +179,14 @@ describe('T-002: 친구 수 + 비활성화 가이드', () => {
     setStoreEntries([createTestEntry()]);
   });
 
-  it('친구가 0명일 때 공유 아이콘이 비활성화되어야 함', async () => {
+  it('친구가 0명일 때 공유 아이콘이 시각적으로 비활성화되어야 함', async () => {
     mockGetMyFriends.mockResolvedValue([]);
     const { default: DiaryPage } = await import('../page');
     render(<DiaryPage />);
 
     await waitFor(() => {
       const shareIcon = screen.getByTestId('share-icon');
-      expect(shareIcon).toHaveAttribute('disabled');
+      expect(shareIcon.className).toContain('opacity-50');
     });
   });
 
@@ -195,12 +195,16 @@ describe('T-002: 친구 수 + 비활성화 가이드', () => {
     const { default: DiaryPage } = await import('../page');
     render(<DiaryPage />);
 
-    // friendCount=0이면 아이콘이 disabled.
-    // disabled 상태에서는 클릭이 동작하지 않으므로,
-    // 공유 아이콘이 비활성화 상태인지만 확인.
     await waitFor(() => {
-      const shareIcon = screen.getByTestId('share-icon');
-      expect(shareIcon).toHaveAttribute('disabled');
+      expect(screen.getByTestId('share-icon')).toBeInTheDocument();
+    });
+
+    const shareIcon = screen.getByTestId('share-icon');
+    fireEvent.click(shareIcon);
+
+    // 토스트 메시지 확인
+    await waitFor(() => {
+      expect(screen.getByText('친구를 먼저 추가해주세요')).toBeInTheDocument();
     });
   });
 

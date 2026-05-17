@@ -120,6 +120,8 @@ function getCalendarDays(year: number, month: number): (number | null)[] {
   return days;
 }
 
+const EMPTY_ENTRIES: DiaryEntry[] = [];
+
 export default function DiaryPage() {
   const mounted = useSyncExternalStore(emptySubscribe, () => true, () => false);
 
@@ -127,7 +129,7 @@ export default function DiaryPage() {
   const storeEntries = useSyncExternalStore(
     (callback) => diaryStore.subscribe(callback),
     () => diaryStore.getState().entries,
-    () => [] as DiaryEntry[],
+    () => EMPTY_ENTRIES,
   );
 
   const today = useMemo(() => {
@@ -432,7 +434,8 @@ function TimelineEntry({ entry, onModalChange, friendCount, showToast }: { entry
     setSwipeActiveState(false);
   }
 
-  function handleCardClick() {
+  function handleCardClick(e: React.MouseEvent) {
+    if ((e.target as HTMLElement).closest('[data-testid="share-icon"]')) return;
     // 스와이프로 삭제 버튼이 노출된 상태에서는 카드 탭으로 모달 열지 않고 원복
     if (swipeOffset !== 0) {
       setSwipeOffset(0);
@@ -539,27 +542,6 @@ function TimelineEntry({ entry, onModalChange, friendCount, showToast }: { entry
         >
           <span className="w-1.5 h-1.5 bg-white rounded-full" />
         </div>
-        {/* @MX:NOTE: [AUTO] SPEC-FRIEND-003 (REQ-F003-002) 공유 아이콘 - isShared 상태에 따른 색상/클릭 */}
-        <button
-          data-testid="share-icon"
-          disabled={friendCount === 0}
-          onClick={(e) => {
-            e.stopPropagation();
-            if (friendCount === 0) {
-              showToast('친구를 먼저 추가해주세요');
-              return;
-            }
-            diaryStore.getState().toggleShare(entry.id, !entry.isShared);
-          }}
-          className={`absolute top-[12px] right-[12px] z-10 material-symbols-outlined text-[20px] p-1 rounded-full hover:bg-surface-container-high transition-colors ${
-            entry.isShared
-              ? 'text-primary'
-              : 'text-on-surface-variant'
-          } ${entry.isShared ? 'fill-icon' : ''}`}
-          aria-label={entry.isShared ? '공유 취소' : '친구에게 공유'}
-        >
-          share
-        </button>
         <div className="flex items-center gap-[8px]">
           <div className={`shrink-0 flex items-center justify-center w-8 h-8 ${ui.bg} rounded-full`}>
             <EmotionFace emotion={entry.emotion} size={22} />
@@ -572,6 +554,26 @@ function TimelineEntry({ entry, onModalChange, friendCount, showToast }: { entry
           </div>
         </div>
       </article>
+      {/* 공유 버튼 - article 외부에 배치하여 카드 active 효과 분리 */}
+      <button
+        data-testid="share-icon"
+        onClick={(e) => {
+          e.stopPropagation();
+          if (friendCount === 0) {
+            showToast('친구를 먼저 추가해주세요');
+            return;
+          }
+          diaryStore.getState().toggleShare(entry.id, !entry.isShared);
+        }}
+        className={`absolute top-[12px] right-[12px] z-20 material-symbols-outlined text-[20px] p-1 rounded-full hover:bg-surface-container-high active:scale-[0.85] transition-all ${
+          entry.isShared
+            ? 'text-primary'
+            : 'text-on-surface-variant'
+        } ${entry.isShared ? 'fill-icon' : ''} ${friendCount === 0 ? 'opacity-50' : ''}`}
+        aria-label={entry.isShared ? '공유 취소' : '친구에게 공유'}
+      >
+        share
+      </button>
       </div>
 
       {/* SPEC-DIARY-002: 삭제 확인 다이얼로그 */}
