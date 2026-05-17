@@ -14,6 +14,7 @@ import {
   getMyProfile,
   checkFriendshipStatus,
 } from '@/lib/supabase/db';
+import { EMOTION_COLORS } from '@/lib/constants/emotion';
 import BottomNav from '@/components/layout/BottomNav';
 
 type Tab = 'search' | 'list' | 'feed';
@@ -54,26 +55,62 @@ interface FeedEntry {
   user: UserLite | null;
 }
 
-// @MX:NOTE: [AUTO] 닉네임 첫 글자를 초성 아바타로 표시하는 재사용 컴포넌트
+// @MX:NOTE: [AUTO] 감정별 라벨 매핑 (이모지 + 상태 텍스트)
+const EMOTION_LABELS: Record<string, { emoji: string; text: string }> = {
+  joy: { emoji: '🌸', text: '평온해요' },
+  sadness: { emoji: '💧', text: '조금 슬퍼요' },
+  anger: { emoji: '🔥', text: '조금 화나요' },
+  fear: { emoji: '💜', text: '불안해요' },
+  surprise: { emoji: '✨', text: '신나요!' },
+  love: { emoji: '💖', text: '사랑에 빠졌어요' },
+  gratitude: { emoji: '🙏', text: '감사해요' },
+  hope: { emoji: '🌟', text: '희망차요' },
+  disgust: { emoji: '😅', text: '좀 그래요' },
+};
+
+// @MX:NOTE: [AUTO] 감정색 기반 젤리 SVG 아바타. 그라디언트 ID 충돌 방지를 위해 평면 색상 사용
 function Avatar({
-  nickname,
   size = 'md',
+  emotion,
 }: {
-  nickname: string | null;
+  nickname?: string | null;
   size?: 'sm' | 'md' | 'lg';
+  emotion?: string | null;
 }) {
-  const initial = nickname?.[0] ?? '?';
-  const sizes = {
-    sm: 'w-8 h-8 text-xl',
-    md: 'w-10 h-10 text-2xl',
-    lg: 'w-12 h-12 text-3xl',
-  };
+  const sizes = { sm: 32, md: 40, lg: 48 };
+  const px = sizes[size];
+  // 감정색이 있으면 해당 색상, 없으면 기본 젤리 핑크
+  const bodyColor = emotion && EMOTION_COLORS[emotion as keyof typeof EMOTION_COLORS]
+    ? EMOTION_COLORS[emotion as keyof typeof EMOTION_COLORS]
+    : '#FFD1DC';
   return (
-    <div
-      className={`${sizes[size]} rounded-full bg-primary-container flex items-center justify-center font-dongle text-on-primary-container leading-none flex-shrink-0`}
-    >
-      {initial}
-    </div>
+    <svg width={px} height={px} viewBox="0 0 48 48" fill="none" className="flex-shrink-0">
+      {/* 젤리 몸체 */}
+      <ellipse cx="24" cy="26" rx="18" ry="17" fill={bodyColor} />
+      {/* 하이라이트 */}
+      <ellipse cx="18" cy="20" rx="6" ry="4" fill="white" fillOpacity="0.35" />
+      {/* 눈 */}
+      <circle cx="19" cy="26" r="2" fill="#7a5761" />
+      <circle cx="29" cy="26" r="2" fill="#7a5761" />
+      {/* 미소 */}
+      <path d="M20 31 Q24 35 28 31" stroke="#7a5761" strokeWidth="1.5" strokeLinecap="round" fill="none" />
+    </svg>
+  );
+}
+
+// @MX:NOTE: [AUTO] 빈 상태용 큰 젤리 일러스트 (아바타보다 크고 볼이 추가됨)
+function JellyIllustration({ size = 64 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 72 72" fill="none" className="mx-auto">
+      <ellipse cx="36" cy="40" rx="26" ry="24" fill="#FFD1DC" />
+      <ellipse cx="28" cy="32" rx="8" ry="5" fill="white" fillOpacity="0.35" />
+      <circle cx="29" cy="40" r="2.5" fill="#7a5761" />
+      <circle cx="43" cy="40" r="2.5" fill="#7a5761" />
+      <path d="M31 47 Q36 53 41 47" stroke="#7a5761" strokeWidth="2" strokeLinecap="round" fill="none" />
+      {/* 볼터치 */}
+      <circle cx="23" cy="44" r="3" fill="#FFB7C5" fillOpacity="0.5" />
+      <circle cx="49" cy="44" r="3" fill="#FFB7C5" fillOpacity="0.5" />
+    </svg>
   );
 }
 
@@ -214,7 +251,7 @@ function SearchTab({ supabaseUserId }: { supabaseUserId: string }) {
 
           {result && resultStatus !== 'self' && resultStatus !== 'notfound' && (
             <div className="flex items-center gap-[12px] bg-white/60 rounded-lg p-[12px]">
-              <Avatar nickname={result.nickname} />
+              <Avatar nickname={result.nickname} emotion={result.avatar_emotion} />
               <div className="flex-1 min-w-0">
                 <p className="font-gowun text-[16px] text-on-surface truncate">
                   {result.nickname ?? '이름 없는 젤리'}
@@ -247,7 +284,8 @@ function SearchTab({ supabaseUserId }: { supabaseUserId: string }) {
 
       {recentFriends.length > 0 && (
         <section className="space-y-[8px]">
-          <h2 className="font-gowun text-xl font-bold text-primary leading-tight px-2">
+          <h2 className="font-gowun text-xl font-bold text-primary leading-tight px-2 flex items-center gap-2">
+            <span className="material-symbols-outlined text-[22px]">history</span>
             최근에 추가한 친구
           </h2>
           <div className="glass-card rounded-lg shadow-[0_4px_20px_0_rgba(0,0,0,0.05)] border border-white/40 overflow-hidden">
@@ -258,7 +296,7 @@ function SearchTab({ supabaseUserId }: { supabaseUserId: string }) {
                   i < recentFriends.length - 1 ? 'border-b border-white/40' : ''
                 }`}
               >
-                <Avatar nickname={f.nickname} size="sm" />
+                <Avatar nickname={f.nickname} size="sm" emotion={f.avatar_emotion} />
                 <div className="flex-1 min-w-0">
                   <p className="font-gowun text-[15px] text-on-surface truncate">
                     {f.nickname ?? '이름 없는 젤리'}
@@ -373,8 +411,13 @@ function ListTab({ supabaseUserId, onTabChange }: { supabaseUserId: string; onTa
       )}
 
       <section className="space-y-[8px]">
-        <h2 className="font-gowun text-xl font-bold text-primary leading-tight px-2">
+        <h2 className="font-gowun text-xl font-bold text-primary leading-tight px-2 flex items-center gap-2">
           받은 요청
+          {pending.length > 0 && (
+            <span className="bg-primary/20 text-primary text-[12px] px-2 py-0.5 rounded-full font-gowun">
+              {pending.length}
+            </span>
+          )}
         </h2>
         {pending.length === 0 ? (
           <div className="glass-card rounded-lg p-[24px] shadow-[0_4px_20px_0_rgba(0,0,0,0.05)] border border-white/40 space-y-[12px]">
@@ -397,7 +440,7 @@ function ListTab({ supabaseUserId, onTabChange }: { supabaseUserId: string; onTa
                 key={req.id}
                 className="glass-card rounded-lg p-[16px] shadow-[0_4px_20px_0_rgba(0,0,0,0.05)] border border-white/40 flex items-center gap-[12px]"
               >
-                <Avatar nickname={req.requester?.nickname ?? null} />
+                <Avatar nickname={req.requester?.nickname ?? null} emotion={req.requester?.avatar_emotion} />
                 <div className="flex-1 min-w-0">
                   <p className="font-gowun text-[15px] text-on-surface truncate">
                     {req.requester?.nickname ?? '이름 없는 젤리'}
@@ -429,12 +472,17 @@ function ListTab({ supabaseUserId, onTabChange }: { supabaseUserId: string; onTa
       </section>
 
       <section className="space-y-[8px]">
-        <h2 className="font-gowun text-xl font-bold text-primary leading-tight px-2">
+        <h2 className="font-gowun text-xl font-bold text-primary leading-tight px-2 flex items-center gap-2">
           내 친구
+          {friends.length > 0 && (
+            <span className="bg-primary/20 text-primary text-[12px] px-2 py-0.5 rounded-full font-gowun">
+              {friends.length}
+            </span>
+          )}
         </h2>
         {friends.length === 0 ? (
           <div className="glass-card rounded-lg p-[32px] shadow-[0_4px_20px_0_rgba(0,0,0,0.05)] border border-white/40 text-center space-y-[12px]">
-            <div className="text-5xl">🪼</div>
+            <JellyIllustration />
             <p className="font-gowun text-[14px] text-on-surface-variant whitespace-pre-line leading-relaxed">
               아직 친구가 없어요{'\n'}초대코드로 친구를 찾아보세요
             </p>
@@ -454,14 +502,20 @@ function ListTab({ supabaseUserId, onTabChange }: { supabaseUserId: string; onTa
                   i < friends.length - 1 ? 'border-b border-white/40' : ''
                 }`}
               >
-                <Avatar nickname={f.nickname} size="sm" />
+                <Avatar nickname={f.nickname} size="sm" emotion={f.avatar_emotion} />
                 <div className="flex-1 min-w-0">
                   <p className="font-gowun text-[15px] text-on-surface truncate">
                     {f.nickname ?? '이름 없는 젤리'}
                   </p>
-                  <p className="font-gowun text-[12px] text-on-surface-variant tracking-[0.15em]">
-                    {f.invite_code}
-                  </p>
+                  {f.avatar_emotion && EMOTION_LABELS[f.avatar_emotion] ? (
+                    <p className="font-gowun text-[12px] text-on-surface-variant">
+                      {EMOTION_LABELS[f.avatar_emotion].emoji} 오늘: {EMOTION_LABELS[f.avatar_emotion].text}
+                    </p>
+                  ) : (
+                    <p className="font-gowun text-[12px] text-on-surface-variant tracking-[0.15em]">
+                      {f.invite_code}
+                    </p>
+                  )}
                 </div>
                 <button
                   onClick={() => setConfirmTarget(f)}
@@ -476,6 +530,14 @@ function ListTab({ supabaseUserId, onTabChange }: { supabaseUserId: string; onTa
           </div>
         )}
       </section>
+
+      {/* 친구 추가 유도 CTA */}
+      {friends.length > 0 && (
+        <div className="flex items-center justify-center gap-2 py-4 text-on-surface-variant">
+          <span className="material-symbols-outlined text-[20px]">group_add</span>
+          <p className="font-gowun text-[13px]">친구를 추가하면 감정을 함께 나눌 수 있어요</p>
+        </div>
+      )}
 
       {/* 친구 삭제 확인 다이얼로그 */}
       {confirmTarget && (
@@ -559,7 +621,7 @@ function FeedTab({ supabaseUserId }: { supabaseUserId: string }) {
 
       {entries.length === 0 ? (
         <div className="glass-card rounded-lg p-[32px] shadow-[0_4px_20px_0_rgba(0,0,0,0.05)] border border-white/40 text-center space-y-[12px]">
-          <div className="text-5xl">🪼</div>
+          <JellyIllustration />
           <p className="font-gowun text-[14px] text-on-surface-variant whitespace-pre-line leading-relaxed">
             아직 공유된 감정이 없어요{'\n'}친구가 일기를 공유하면 여기에 나타나요
           </p>
@@ -572,7 +634,7 @@ function FeedTab({ supabaseUserId }: { supabaseUserId: string }) {
               className="glass-card rounded-lg p-[20px] shadow-[0_4px_20px_0_rgba(0,0,0,0.05)] border border-white/40 space-y-[12px]"
             >
               <div className="flex items-center gap-[10px]">
-                <Avatar nickname={entry.user?.nickname ?? null} size="sm" />
+                <Avatar nickname={entry.user?.nickname ?? null} size="sm" emotion={entry.user?.avatar_emotion} />
                 <div className="flex-1 min-w-0">
                   <p className="font-gowun text-[14px] text-on-surface truncate">
                     {entry.user?.nickname ?? '이름 없는 젤리'}
@@ -704,7 +766,7 @@ export default function FriendsPage() {
 
         {!supabaseUserId ? (
           <div className="glass-card rounded-lg p-[32px] shadow-[0_4px_20px_0_rgba(0,0,0,0.05)] border border-white/40 text-center space-y-[12px]">
-            <div className="text-5xl">🪼</div>
+            <JellyIllustration />
             <p className="font-gowun text-[14px] text-on-surface-variant leading-relaxed">
               로그인이 필요해요
             </p>

@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.9.0] - 2026-05-17
+
+### Added
+- 친구 시스템 기능 (SPEC-FRIEND-001, SPEC-FRIEND-002)
+  - 내 초대코드 섹션 + 복사 버튼 및 공유 가이드 추가
+  - 친구 삭제(unfriend) 기능 + 확인 다이얼로그
+  - 받은 요청/친구 목록 빈 상태 CTA 버튼
+- 친구 페이지 Stitch 디자인 적용
+  - 젤리 캐릭터 SVG 아바타 (감정색 지원)
+  - 친구 목록 감정 상태 표시 ("🌸 오늘: 평온해요")
+  - 섹션 헤더 카운트 배지 (받은 요청 N, 내 친구 N)
+  - 빈 상태 젤리 일러스트 (🪼 → SVG 교체)
+  - 친구 목록 하단 CTA + 최근 친구 history 아이콘
+
 ## [1.8.2] - 2026-05-16
 
 ### Fixed
