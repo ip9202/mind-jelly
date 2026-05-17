@@ -16,6 +16,7 @@ import {
 } from '@/lib/supabase/db';
 import { EMOTION_COLORS } from '@/lib/constants/emotion';
 import BottomNav from '@/components/layout/BottomNav';
+import { useFriendStore } from '@/stores/friendStore';
 
 type Tab = 'search' | 'list' | 'feed';
 
@@ -701,6 +702,14 @@ export default function FriendsPage() {
     return () => { cancelled = true; };
   }, [supabaseUserId]);
 
+  // 친구 페이지 진입 시 뱃지 초기화 + 받은 요청 수 갱신
+  useEffect(() => {
+    useFriendStore.getState().resetBadge();
+    if (supabaseUserId) {
+      useFriendStore.getState().fetchPendingCount(supabaseUserId);
+    }
+  }, [supabaseUserId]);
+
   const handleCopy = useCallback(async () => {
     if (!myInviteCode) return;
     try {
@@ -804,8 +813,8 @@ export default function FriendsPage() {
         <div className="absolute bottom-[20%] left-[5%] w-48 h-48 bg-secondary-container rounded-full blur-[60px]"></div>
       </div>
 
-      {/* 전역 BottomNav (friends 탭은 BottomNav에 없으므로 activeTab 미지정) */}
-      <BottomNav />
+      {/* 전역 BottomNav - 친구 탭 활성 */}
+      <BottomNav activeTab="friends" />
     </div>
   );
 }

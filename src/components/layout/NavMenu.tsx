@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useState, useRef, useEffect, useCallback } from 'react';
 
 interface NavMenuProps {
-  activeTab?: 'jelly' | 'history' | 'garden';
+  activeTab?: 'jelly' | 'history' | 'friends' | 'garden';
 }
 
 export default function NavMenu({ activeTab = 'jelly' }: NavMenuProps) {
@@ -17,8 +17,7 @@ export default function NavMenu({ activeTab = 'jelly' }: NavMenuProps) {
   const items = [
     { id: 'jelly' as const, label: 'Jelly', icon: 'pets', href: '/home' },
     { id: 'history' as const, label: 'History', icon: 'analytics', href: '/diary' },
-    // @MX:TODO: Friends 메뉴 추후 오픈 예정 (사용자 요청으로 일시 숨김)
-    // { id: 'friends' as const, label: 'Friends', icon: 'group', href: '/friends' },
+    { id: 'friends' as const, label: 'Friends', icon: 'group', href: '/friends' },
     { id: 'garden' as const, label: 'Settings', icon: 'settings', href: '/settings' },
   ];
 
