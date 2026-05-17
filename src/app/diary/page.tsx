@@ -127,6 +127,7 @@ export default function DiaryPage() {
   const storeEntries = useSyncExternalStore(
     (callback) => diaryStore.subscribe(callback),
     () => diaryStore.getState().entries,
+    () => [] as DiaryEntry[],
   );
 
   const today = useMemo(() => {
