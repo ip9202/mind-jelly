@@ -123,6 +123,12 @@ function getCalendarDays(year: number, month: number): (number | null)[] {
 export default function DiaryPage() {
   const mounted = useSyncExternalStore(emptySubscribe, () => true, () => false);
 
+  // diaryStore entries 변경 감지 (toggleShare 등 상태 변경 시 재렌더링)
+  const storeEntries = useSyncExternalStore(
+    (callback) => diaryStore.subscribe(callback),
+    () => diaryStore.getState().entries,
+  );
+
   const today = useMemo(() => {
     const d = new Date();
     d.setHours(0, 0, 0, 0);
@@ -188,7 +194,7 @@ export default function DiaryPage() {
   const monthEntries = useMemo(
     () =>
       diaryStore.getState().getEntriesByMonth(currentYear, currentMonth),
-    [currentYear, currentMonth],
+    [currentYear, currentMonth, storeEntries],
   );
 
   // 날짜별 대표 감정 Map (SPEC-CALENDAR-001: 최빈 감정, 동률 시 최근 감정)
@@ -231,7 +237,7 @@ export default function DiaryPage() {
           (a, b) =>
             new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
         ),
-    [selectedDate],
+    [selectedDate, storeEntries],
   );
 
   return (
