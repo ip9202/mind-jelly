@@ -7,6 +7,7 @@ import {
   sendFriendRequest,
   acceptFriendRequest,
   rejectFriendRequest,
+  removeFriend,
   getMyFriends,
   getPendingFriendRequests,
   getFriendsFeed,
@@ -279,12 +280,13 @@ function SearchTab({ supabaseUserId }: { supabaseUserId: string }) {
 }
 
 // ── 목록 탭 ──────────────────────────────────────────
-function ListTab({ supabaseUserId }: { supabaseUserId: string }) {
+function ListTab({ supabaseUserId, onTabChange }: { supabaseUserId: string; onTabChange: (tab: Tab) => void }) {
   const [pending, setPending] = useState<PendingRequest[]>([]);
   const [friends, setFriends] = useState<UserLite[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [actingId, setActingId] = useState<string | null>(null);
+  const [confirmTarget, setConfirmTarget] = useState<UserLite | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -341,6 +343,21 @@ function ListTab({ supabaseUserId }: { supabaseUserId: string }) {
     }
   }
 
+  // @MX:NOTE: [AUTO] 친구 삭제 확인 후 실행. confirmTarget 상태로 다이얼로그 제어
+  async function handleUnfriend() {
+    if (!confirmTarget) return;
+    setActingId(confirmTarget.id);
+    try {
+      await removeFriend(supabaseUserId, confirmTarget.id);
+      setConfirmTarget(null);
+      await load();
+    } catch {
+      setError('친구 삭제 중 문제가 생겼어요');
+    } finally {
+      setActingId(null);
+    }
+  }
+
   if (loading) {
     return (
       <div className="text-center py-12 font-gowun text-on-surface-variant">
@@ -360,10 +377,18 @@ function ListTab({ supabaseUserId }: { supabaseUserId: string }) {
           받은 요청
         </h2>
         {pending.length === 0 ? (
-          <div className="glass-card rounded-lg p-[24px] shadow-[0_4px_20px_0_rgba(0,0,0,0.05)] border border-white/40">
+          <div className="glass-card rounded-lg p-[24px] shadow-[0_4px_20px_0_rgba(0,0,0,0.05)] border border-white/40 space-y-[12px]">
             <p className="font-gowun text-[14px] text-on-surface-variant text-center">
               아직 받은 요청이 없어요
             </p>
+            <div className="flex justify-center">
+              <button
+                onClick={() => onTabChange('search')}
+                className="bg-primary text-on-primary font-gowun text-[14px] px-[20px] py-[8px] rounded-full"
+              >
+                친구 찾기
+              </button>
+            </div>
           </div>
         ) : (
           <div className="space-y-[8px]">
@@ -413,6 +438,12 @@ function ListTab({ supabaseUserId }: { supabaseUserId: string }) {
             <p className="font-gowun text-[14px] text-on-surface-variant whitespace-pre-line leading-relaxed">
               아직 친구가 없어요{'\n'}초대코드로 친구를 찾아보세요
             </p>
+            <button
+              onClick={() => onTabChange('search')}
+              className="bg-primary text-on-primary font-gowun text-[14px] px-[20px] py-[8px] rounded-full"
+            >
+              친구 찾기
+            </button>
           </div>
         ) : (
           <div className="glass-card rounded-lg shadow-[0_4px_20px_0_rgba(0,0,0,0.05)] border border-white/40 overflow-hidden">
@@ -432,14 +463,45 @@ function ListTab({ supabaseUserId }: { supabaseUserId: string }) {
                     {f.invite_code}
                   </p>
                 </div>
-                <span className="material-symbols-outlined text-on-surface-variant">
-                  chevron_right
-                </span>
+                <button
+                  onClick={() => setConfirmTarget(f)}
+                  disabled={actingId === f.id}
+                  className="material-symbols-outlined text-on-surface-variant text-[20px] p-1 rounded-full hover:bg-error/10 hover:text-error transition-colors disabled:opacity-50"
+                  aria-label={`${f.nickname ?? '친구'} 삭제`}
+                >
+                  close
+                </button>
               </div>
             ))}
           </div>
         )}
       </section>
+
+      {/* 친구 삭제 확인 다이얼로그 */}
+      {confirmTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="glass-card rounded-2xl p-6 mx-4 max-w-sm w-full shadow-[0_4px_20px_0_rgba(0,0,0,0.05)] border border-white/40">
+            <p className="font-gowun text-[15px] text-on-surface text-center mb-4">
+              {confirmTarget.nickname}님과 친구를 끊을까요?
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setConfirmTarget(null)}
+                className="flex-1 bg-surface-container text-on-surface-variant font-gowun text-[14px] py-[10px] rounded-full"
+              >
+                취소
+              </button>
+              <button
+                onClick={handleUnfriend}
+                disabled={actingId === confirmTarget.id}
+                className="flex-1 bg-error text-on-error font-gowun text-[14px] py-[10px] rounded-full disabled:opacity-50"
+              >
+                {actingId === confirmTarget.id ? '...' : '확인'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -650,7 +712,7 @@ export default function FriendsPage() {
         ) : tab === 'search' ? (
           <SearchTab supabaseUserId={supabaseUserId} />
         ) : tab === 'list' ? (
-          <ListTab supabaseUserId={supabaseUserId} />
+          <ListTab supabaseUserId={supabaseUserId} onTabChange={setTab} />
         ) : (
           <FeedTab supabaseUserId={supabaseUserId} />
         )}
