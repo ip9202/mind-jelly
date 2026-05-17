@@ -569,10 +569,11 @@ function ListTab({ supabaseUserId, onTabChange }: { supabaseUserId: string; onTa
 }
 
 // ── 피드 탭 ──────────────────────────────────────────
-function FeedTab({ supabaseUserId }: { supabaseUserId: string }) {
+function FeedTab({ supabaseUserId, onTabChange }: { supabaseUserId: string; onTabChange: (tab: Tab) => void }) {
   const [entries, setEntries] = useState<FeedEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [hasFriends, setHasFriends] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -584,8 +585,10 @@ function FeedTab({ supabaseUserId }: { supabaseUserId: string }) {
         const friendIds = (friendships as FriendshipRow[]).map((f) =>
           f.requester_id === supabaseUserId ? f.receiver_id : f.requester_id
         );
+        if (!cancelled) setHasFriends(friendIds.length > 0);
         if (friendIds.length === 0) {
           if (!cancelled) setEntries([]);
+          if (!cancelled) setLoading(false);
           return;
         }
         const feed = await getFriendsFeed(friendIds);
@@ -622,9 +625,24 @@ function FeedTab({ supabaseUserId }: { supabaseUserId: string }) {
       {entries.length === 0 ? (
         <div className="glass-card rounded-lg p-[32px] shadow-[0_4px_20px_0_rgba(0,0,0,0.05)] border border-white/40 text-center space-y-[12px]">
           <JellyIllustration />
-          <p className="font-gowun text-[14px] text-on-surface-variant whitespace-pre-line leading-relaxed">
-            아직 공유된 감정이 없어요{'\n'}친구가 일기를 공유하면 여기에 나타나요
-          </p>
+          {!hasFriends ? (
+            <>
+              <p className="font-gowun text-[14px] text-on-surface-variant whitespace-pre-line leading-relaxed">
+                먼저 친구를 추가해주세요{'\n'}친구의 공유 감정을 볼 수 있어요
+              </p>
+              <button
+                data-testid="feed-cta-search"
+                onClick={() => onTabChange('search')}
+                className="bg-primary text-on-primary font-gowun text-[14px] px-[20px] py-[8px] rounded-full"
+              >
+                친구 찾기
+              </button>
+            </>
+          ) : (
+            <p className="font-gowun text-[14px] text-on-surface-variant whitespace-pre-line leading-relaxed">
+              아직 공유된 감정이 없어요{'\n'}친구가 일기를 공유하면 여기에 나타나요
+            </p>
+          )}
         </div>
       ) : (
         <div className="space-y-[8px]">
@@ -776,7 +794,7 @@ export default function FriendsPage() {
         ) : tab === 'list' ? (
           <ListTab supabaseUserId={supabaseUserId} onTabChange={setTab} />
         ) : (
-          <FeedTab supabaseUserId={supabaseUserId} />
+          <FeedTab supabaseUserId={supabaseUserId} onTabChange={setTab} />
         )}
       </main>
 
