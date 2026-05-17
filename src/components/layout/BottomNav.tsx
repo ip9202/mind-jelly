@@ -1,7 +1,6 @@
 'use client';
 
 import Link from 'next/link';
-import { useState, useEffect } from 'react';
 
 import { useFriendStore } from '@/stores/friendStore';
 
@@ -18,14 +17,9 @@ interface BottomNavProps {
  * @MX:REASON: 햄버거 메뉴 대체 + 서비스의 "이쁘고 귀여운" 브랜드 컨셉 반영
  */
 export default function BottomNav({ activeTab }: BottomNavProps) {
-  // 클라이언트 마운트 후에만 스토어 읽기 (SSR hydration mismatch 방지)
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => { setMounted(true); }, []);
-
-  // 친구 요청 뱃지 상태
+  // 친구 요청 뱃지 상태 (초기값 0/false → SSR에서도 뱃지 미표시)
   const pendingCount = useFriendStore((s) => s.pendingCount);
   const isBadgeVisible = useFriendStore((s) => s.isBadgeVisible);
-  const showBadge = mounted && isBadgeVisible && pendingCount > 0;
   const tabs = [
     { id: 'jelly', label: '젤리', icon: 'bubble_chart', href: '/home' },
     { id: 'history', label: '기록', icon: 'auto_stories', href: '/diary' },
@@ -109,7 +103,7 @@ export default function BottomNav({ activeTab }: BottomNavProps) {
                     )}
 
                     {/* 친구 요청 뱃지 */}
-                    {tab.id === 'friends' && showBadge && (
+                    {tab.id === 'friends' && isBadgeVisible && pendingCount > 0 && (
                       <span
                         aria-label="친구 요청 수"
                         className="absolute -top-1 -right-1 min-w-[16px] h-4 flex items-center justify-center rounded-full bg-red-500 text-white text-[10px] font-bold px-1"
