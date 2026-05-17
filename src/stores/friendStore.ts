@@ -23,10 +23,15 @@ export const useFriendStore = create<FriendStoreState>()(
       isBadgeVisible: false,
 
       fetchPendingCount: async (userId: string) => {
-        const { getPendingFriendRequests } = await import('@/lib/supabase/db');
-        const requests = await getPendingFriendRequests(userId);
-        const count = requests.length;
-        set({ pendingCount: count, isBadgeVisible: count > 0 });
+        try {
+          const { getPendingFriendRequests } = await import('@/lib/supabase/db');
+          const requests = await getPendingFriendRequests(userId);
+          const count = requests.length;
+          set({ pendingCount: count, isBadgeVisible: count > 0 });
+        } catch {
+          // 외래키 관계 미설정 등 DB 스키마 문제 시 조용히 무시
+          set({ pendingCount: 0, isBadgeVisible: false });
+        }
       },
 
       resetBadge: () => {
