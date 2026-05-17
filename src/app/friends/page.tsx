@@ -540,6 +540,44 @@ function FeedTab({ supabaseUserId }: { supabaseUserId: string }) {
 export default function FriendsPage() {
   const supabaseUserId = diaryStore((s) => s.supabaseUserId);
   const [tab, setTab] = useState<Tab>('search');
+  const [myInviteCode, setMyInviteCode] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+  const [showGuide, setShowGuide] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return !localStorage.getItem('invite-guide-shown');
+  });
+
+  useEffect(() => {
+    if (!supabaseUserId) return;
+    let cancelled = false;
+    (async () => {
+      const profile = await getMyProfile(supabaseUserId);
+      if (!cancelled && profile?.invite_code) {
+        setMyInviteCode(profile.invite_code.toUpperCase());
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [supabaseUserId]);
+
+  const handleCopy = useCallback(async () => {
+    if (!myInviteCode) return;
+    try {
+      await navigator.clipboard.writeText(myInviteCode);
+    } catch {
+      const textarea = document.createElement('textarea');
+      textarea.value = myInviteCode;
+      textarea.style.position = 'fixed';
+      textarea.style.opacity = '0';
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textarea);
+    }
+    setCopied(true);
+    localStorage.setItem('invite-guide-shown', '1');
+    setShowGuide(false);
+    setTimeout(() => setCopied(false), 1500);
+  }, [myInviteCode]);
 
   const tabs: { id: Tab; label: string }[] = [
     { id: 'search', label: '찾기' },
@@ -550,6 +588,38 @@ export default function FriendsPage() {
   return (
     <div className="bg-background text-on-surface font-body-md min-h-screen overflow-x-hidden pb-24">
       <main className="mt-4 px-[20px] pb-8 space-y-[12px]">
+        {/* 내 초대코드 */}
+        {supabaseUserId && myInviteCode && (
+          <section className="space-y-[8px]">
+            <h2 className="font-gowun text-xl font-bold text-primary leading-tight px-2">
+              내 초대코드
+            </h2>
+            <div className="glass-card rounded-lg p-[20px] shadow-[0_4px_20px_0_rgba(0,0,0,0.05)] border border-white/40">
+              <div className="flex items-center gap-[12px]">
+                <span className="font-gowun text-[22px] text-on-surface tracking-[0.3em] font-bold flex-1">
+                  {myInviteCode}
+                </span>
+                <button
+                  onClick={handleCopy}
+                  className="bg-primary text-on-primary font-gowun text-[13px] px-[16px] py-[8px] rounded-full flex items-center gap-[6px]"
+                >
+                  <span className="material-symbols-outlined text-[16px]">
+                    content_copy
+                  </span>
+                  {copied ? '복사됨!' : '복사'}
+                </button>
+              </div>
+              <p className={`font-gowun text-[13px] mt-[10px] ${
+                    showGuide
+                      ? 'text-primary bg-primary-container/30 rounded-lg px-[12px] py-[8px]'
+                      : 'text-on-surface-variant'
+                  }`}>
+                코드를 친구에게 알려주면 친구 추가가 가능해요
+              </p>
+            </div>
+          </section>
+        )}
+
         {/* Tab bar */}
         <div className="bg-surface-container rounded-full p-1 flex gap-1">
           {tabs.map((t) => {
