@@ -2,8 +2,10 @@
 
 import Link from 'next/link';
 
+import { useFriendStore } from '@/stores/friendStore';
+
 interface BottomNavProps {
-  activeTab?: 'jelly' | 'history' | 'garden';
+  activeTab?: 'jelly' | 'history' | 'friends' | 'garden';
 }
 
 /**
@@ -11,13 +13,17 @@ interface BottomNavProps {
  * - 화면 하단에서 16px 떠있는 글래스 카드 형태
  * - 활성 탭: 핑크 그라데이션 + 위로 살짝 떠오름 + 도트 인디케이터
  * - 비활성: 부드러운 회색, 호버 시 살짝 강조
- * @MX:ANCHOR: 전역 내비게이션 - home/diary/settings 3개 페이지에서 공유
+ * @MX:ANCHOR: 전역 내비게이션 - home/diary/friends/settings 4개 페이지에서 공유
  * @MX:REASON: 햄버거 메뉴 대체 + 서비스의 "이쁘고 귀여운" 브랜드 컨셉 반영
  */
 export default function BottomNav({ activeTab }: BottomNavProps) {
+  // 친구 요청 뱃지 상태 (초기값 0/false → SSR에서도 뱃지 미표시)
+  const pendingCount = useFriendStore((s) => s.pendingCount);
+  const isBadgeVisible = useFriendStore((s) => s.isBadgeVisible);
   const tabs = [
     { id: 'jelly', label: '젤리', icon: 'bubble_chart', href: '/home' },
     { id: 'history', label: '기록', icon: 'auto_stories', href: '/diary' },
+    { id: 'friends', label: '친구', icon: 'group', href: '/friends' },
     { id: 'garden', label: '설정', icon: 'tune', href: '/settings' },
   ] as const;
 
@@ -93,6 +99,16 @@ export default function BottomNav({ activeTab }: BottomNavProps) {
                         style={{ fontSize: '10px' }}
                       >
                         ✦
+                      </span>
+                    )}
+
+                    {/* 친구 요청 뱃지 */}
+                    {tab.id === 'friends' && isBadgeVisible && pendingCount > 0 && (
+                      <span
+                        aria-label="친구 요청 수"
+                        className="absolute -top-1 -right-1 min-w-[16px] h-4 flex items-center justify-center rounded-full bg-red-500 text-white text-[10px] font-bold px-1"
+                      >
+                        {pendingCount > 9 ? '9+' : pendingCount}
                       </span>
                     )}
                   </div>

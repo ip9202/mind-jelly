@@ -196,6 +196,16 @@ export async function rejectFriendRequest(requesterId: string, myId: string) {
   if (error) throw error;
 }
 
+/** 친구 삭제 (양방향) */
+export async function removeFriend(userId: string, friendId: string) {
+  const { error } = await supabase
+    .from('friendships')
+    .delete()
+    .or(`and(requester_id.eq.${userId},receiver_id.eq.${friendId}),and(requester_id.eq.${friendId},receiver_id.eq.${userId})`)
+    .eq('status', 'accepted');
+  if (error) throw error;
+}
+
 /** 보낸 친구 요청 상태 확인 */
 export async function checkFriendshipStatus(myId: string, targetId: string) {
   const { data, error } = await supabase

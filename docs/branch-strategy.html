@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mind Jelly - 브랜치 전략</title>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f8f9fa;
+      color: #1a1a2e;
+      line-height: 1.7;
+    }
+    .container { max-width: 960px; margin: 0 auto; padding: 40px 24px; }
+
+    h1 { font-size: 2rem; font-weight: 800; margin-bottom: 8px; color: #1a1a2e; }
+    h2 { font-size: 1.4rem; font-weight: 700; margin: 48px 0 16px; color: #2d3a8c; border-left: 4px solid #6c5ce7; padding-left: 12px; }
+    h3 { font-size: 1.1rem; font-weight: 600; margin: 24px 0 8px; color: #4a4a6a; }
+    p { margin-bottom: 12px; }
+    .subtitle { color: #666; font-size: 1rem; margin-bottom: 32px; }
+    .updated { color: #999; font-size: 0.85rem; margin-bottom: 32px; }
+
+    .mermaid { margin: 24px 0; background: #fff; border-radius: 12px; padding: 24px; border: 1px solid #e2e8f0; }
+
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 24px;
+      margin: 16px 0;
+      border: 1px solid #e2e8f0;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    }
+    .card-header { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+    .card-icon { font-size: 1.8rem; }
+    .card-title { font-size: 1.15rem; font-weight: 700; }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: 99px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+    .badge-main { background: #d4edda; color: #155724; }
+    .badge-develop { background: #cce5ff; color: #004085; }
+    .badge-feature { background: #e2d9f3; color: #5a189a; }
+    .badge-hotfix { background: #f8d7da; color: #721c24; }
+    .badge-release { background: #fff3cd; color: #856404; }
+    .badge-native { background: #d1ecf1; color: #0c5460; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0;
+      background: #fff;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid #e2e8f0;
+    }
+    th { background: #f1f3f5; padding: 12px 16px; text-align: left; font-weight: 600; font-size: 0.9rem; }
+    td { padding: 12px 16px; border-top: 1px solid #eee; font-size: 0.9rem; }
+    tr:hover td { background: #f8f9ff; }
+    code { background: #f1f3f5; padding: 2px 6px; border-radius: 4px; font-size: 0.85em; font-family: 'SF Mono', Fira Code, monospace; }
+
+    .workflow-steps { counter-reset: step; list-style: none; padding: 0; }
+    .workflow-steps li {
+      counter-increment: step;
+      position: relative;
+      padding: 16px 16px 16px 56px;
+      margin-bottom: 12px;
+      background: #fff;
+      border-radius: 10px;
+      border: 1px solid #e2e8f0;
+    }
+    .workflow-steps li::before {
+      content: counter(step);
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 28px;
+      height: 28px;
+      background: #6c5ce7;
+      color: #fff;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.85rem;
+    }
+    .workflow-steps li strong { color: #2d3a8c; }
+
+    .tag-box {
+      display: inline-block;
+      background: #2d3a8c;
+      color: #fff;
+      padding: 3px 12px;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      font-family: 'SF Mono', Fira Code, monospace;
+      font-weight: 600;
+    }
+
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+      margin: 16px 0;
+    }
+    .info-item {
+      background: #fff;
+      border-radius: 10px;
+      padding: 20px;
+      border: 1px solid #e2e8f0;
+    }
+    .info-item-title { font-weight: 700; color: #2d3a8c; margin-bottom: 8px; font-size: 0.95rem; }
+    .info-item-body { font-size: 0.9rem; color: #555; }
+
+    .alert {
+      padding: 14px 18px;
+      border-radius: 8px;
+      margin: 16px 0;
+      font-size: 0.9rem;
+    }
+    .alert-info { background: #e8f4fd; border-left: 4px solid #2196f3; color: #0d47a1; }
+    .alert-warn { background: #fff8e1; border-left: 4px solid #ffc107; color: #7b5800; }
+
+    footer { margin-top: 64px; padding-top: 24px; border-top: 1px solid #e2e8f0; color: #999; font-size: 0.85rem; text-align: center; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Mind Jelly 브랜치 전략</h1>
+    <p class="subtitle">Git Flow 기반 버전별 브랜치 관리 가이드</p>
+    <p class="updated">최종 갱신: 2026-05-18 · 기준 버전: v1.0.0</p>
+
+    <!-- 브랜치 전략 다이어그램 -->
+    <h2>브랜치 구조</h2>
+    <div class="mermaid">
+gitGraph
+   commit id: "init"
+   branch develop
+   checkout develop
+   commit id: "feat: ..."
+   branch feature/friend-system
+   checkout feature/friend-system
+   commit id: "SPEC-FRIEND-001"
+   commit id: "SPEC-FRIEND-002"
+   checkout develop
+   merge feature/friend-system id: "merge feature"
+   branch release/v2.0.0
+   checkout release/v2.0.0
+   commit id: "chore: bump v2.0.0"
+   checkout main
+   merge release/v2.0.0 id: "v2.0.0" tag: "v2.0.0"
+   checkout develop
+   merge release/v2.0.0 id: "sync release"
+   checkout main
+   branch hotfix/critical-bug
+   checkout hotfix/critical-bug
+   commit id: "fix: critical"
+   checkout main
+   merge hotfix/critical-bug id: "v2.0.1" tag: "v2.0.1"
+   checkout develop
+   merge hotfix/critical-bug id: "sync hotfix"
+    </div>
+
+    <!-- 브랜치 목록 테이블 -->
+    <h2>브랜치 목록</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>브랜치</th>
+          <th>용도</th>
+          <th>분기점</th>
+          <th>머지 대상</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>main</code> <span class="badge badge-main">배포</span></td>
+          <td>배포 안정본 (핫픽스/릴리즈만 머지)</td>
+          <td>-</td>
+          <td><code>hotfix/*</code>, <code>release/*</code></td>
+        </tr>
+        <tr>
+          <td><code>develop</code> <span class="badge badge-develop">통합</span></td>
+          <td>기능 개발 통합 브랜치</td>
+          <td><code>main</code></td>
+          <td><code>feature/*</code></td>
+        </tr>
+        <tr>
+          <td><code>feature/*</code> <span class="badge badge-feature">기능</span></td>
+          <td>개별 기능 개발 (SPEC 단위)</td>
+          <td><code>develop</code></td>
+          <td><code>develop</code></td>
+        </tr>
+        <tr>
+          <td><code>hotfix/*</code> <span class="badge badge-hotfix">긴급</span></td>
+          <td>프로덕션 긴급 수정</td>
+          <td><code>main</code></td>
+          <td><code>main</code> + <code>develop</code></td>
+        </tr>
+        <tr>
+          <td><code>release/*</code> <span class="badge badge-release">릴리즈</span></td>
+          <td>릴리즈 준비 (QA, 버전 bump)</td>
+          <td><code>develop</code></td>
+          <td><code>main</code> (태그) + <code>develop</code></td>
+        </tr>
+        <tr>
+          <td><code>native/rn-port</code> <span class="badge badge-native">미래</span></td>
+          <td>React Native 포팅 (앱인토스 승인 후)</td>
+          <td><code>develop</code></td>
+          <td>미래 계획</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- 워크플로우 -->
+    <h2>워크플로우</h2>
+
+    <div class="card">
+      <div class="card-header">
+        <span class="card-icon">🚀</span>
+        <span class="card-title">기능 개발 플로우</span>
+      </div>
+      <ol class="workflow-steps">
+        <li><strong>브랜치 생성</strong>: <code>develop</code>에서 <code>feature/spec-xxx</code> 분기</li>
+        <li><strong>SPEC 구현</strong>: TDD/DDD 방법론으로 기능 구현 + 테스트</li>
+        <li><strong>PR 생성</strong>: <code>feature/spec-xxx</code> → <code>develop</code> PR 오픈</li>
+        <li><strong>리뷰 & 머지</strong>: 테스트 통과 확인 후 develop에 머지</li>
+      </ol>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span class="card-icon">📦</span>
+        <span class="card-title">릴리즈 플로우</span>
+      </div>
+      <ol class="workflow-steps">
+        <li><strong>릴리즈 브랜치 생성</strong>: <code>develop</code>에서 <code>release/vX.Y.Z</code> 분기</li>
+        <li><strong>버전 bump & QA</strong>: <code>package.json</code> 버전 업데이트, CHANGELOG 작성</li>
+        <li><strong>main 머지</strong>: <code>release/vX.Y.Z</code> → <code>main</code> 머지 + 버전 태그</li>
+        <li><strong>develop 동기화</strong>: <code>release/vX.Y.Z</code> → <code>develop</code>에도 머지</li>
+        <li><strong>배포</strong>: <code>main</code>에서 <code>npx ait deploy --memo "vX.Y.Z"</code></li>
+      </ol>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span class="card-icon">🔥</span>
+        <span class="card-title">핫픽스 플로우</span>
+      </div>
+      <ol class="workflow-steps">
+        <li><strong>핫픽스 브랜치 생성</strong>: <code>main</code>에서 <code>hotfix/issue-name</code> 분기</li>
+        <li><strong>버그 수정</strong>: 최소 변경으로 버그만 수정, 테스트 추가</li>
+        <li><strong>main 머지</strong>: <code>hotfix/issue-name</code> → <code>main</code> + 태그 (<code>vX.Y.Z+1</code>)</li>
+        <li><strong>develop 동기화</strong>: <code>hotfix/issue-name</code> → <code>develop</code>에도 머지 (이중 머지 필수)</li>
+      </ol>
+    </div>
+
+    <!-- 버전 네이밍 -->
+    <h2>버전 네이밍 규칙</h2>
+    <div class="info-grid">
+      <div class="info-item">
+        <div class="info-item-title">MAJOR (X.0.0)</div>
+        <div class="info-item-body">하위 호환 불가 변경<br>예: React Native 전환, 데이터베이스 스키마 대규모 변경</div>
+      </div>
+      <div class="info-item">
+        <div class="info-item-title">MINOR (X.Y.0)</div>
+        <div class="info-item-body">하위 호환 기능 추가<br>예: 친구 시스템, 온보딩, 새로운 스킨</div>
+      </div>
+      <div class="info-item">
+        <div class="info-item-title">PATCH (X.Y.Z)</div>
+        <div class="info-item-body">버그 수정, 핫픽스<br>예: 젤리 히트박스 수정, 광고 ID 교체</div>
+      </div>
+    </div>
+
+    <!-- 태그 규칙 -->
+    <h2>Git 태그 규칙</h2>
+    <div class="card">
+      <p>모든 릴리즈와 핫픽스는 <code>main</code> 머지 후 즉시 태그를 생성합니다.</p>
+      <br>
+      <table>
+        <thead>
+          <tr><th>태그 형식</th><th>예시</th><th>설명</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>vX.Y.Z</code></td>
+            <td><span class="tag-box">v1.0.0</span></td>
+            <td>정식 릴리즈</td>
+          </tr>
+          <tr>
+            <td><code>vX.Y.Z-rc.N</code></td>
+            <td><span class="tag-box">v2.0.0-rc.1</span></td>
+            <td>릴리즈 후보 (QA 단계)</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 현재 상태 -->
+    <h2>현재 브랜치 상태 (2026-05-18)</h2>
+    <div class="card">
+      <table>
+        <thead>
+          <tr><th>브랜치</th><th>상태</th><th>비고</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>main</code></td>
+            <td>✅ <code>v1.0.0</code> (c7ac422)</td>
+            <td>앱인토스 배포 안정본</td>
+          </tr>
+          <tr>
+            <td><code>develop</code></td>
+            <td>🔄 기능 통합 중</td>
+            <td>feature/friend-system 머지 대기</td>
+          </tr>
+          <tr>
+            <td><code>feature/friend-system</code></td>
+            <td>🟡 PR #1 오픈</td>
+            <td>SPEC-FRIEND-001~004 + SPEC-INFRA-001, 테스트 82/82</td>
+          </tr>
+          <tr>
+            <td><code>native/rn-port</code></td>
+            <td>⏸️ 대기</td>
+            <td>앱인토스 입점 승인 후 착수</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="alert alert-info">
+      <strong>배포 시 주의:</strong> <code>ait deploy</code> 전 반드시 <code>rm -rf .next && npx ait build</code> 클린 빌드 실행 후 <code>--memo</code> 옵션 포함 (<code>npx ait deploy --memo "vX.Y.Z"</code>)
+    </div>
+
+    <div class="alert alert-warn">
+      <strong>React Native 전환 (native/rn-port):</strong> 앱인토스 입점 승인 완료 후 <code>develop</code>에서 분기하여 Turborepo 모노레포 구조로 전환 예정. 코드 70% 공유 가능 (Zustand, Supabase, 감정 엔진).
+    </div>
+
+    <footer>
+      Mind Jelly Branch Strategy · Git Flow 기반 · 최종 갱신 2026-05-18
+    </footer>
+  </div>
+
+  <script>
+    mermaid.initialize({ startOnLoad: true, theme: 'default', gitGraph: { showBranches: true } });
+  </script>
+</body>
+</html>

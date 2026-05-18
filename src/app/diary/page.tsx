@@ -1,11 +1,12 @@
 'use client';
 
-import { useState, useMemo, useSyncExternalStore, useEffect, useRef } from 'react';
+import { useState, useMemo, useSyncExternalStore, useEffect, useRef, useCallback } from 'react';
 import { EmotionFace } from '@/components/jelly/EmotionFace';
 import { diaryStore } from '@/stores/diaryStore';
 import type { DiaryEntry } from '@/types/diary';
 import type { EmotionType } from '@/types/emotion';
 import { EMOTION_COLORS } from '@/lib/constants/emotion';
+import { getMyFriends } from '@/lib/supabase/db';
 import BottomNav from '@/components/layout/BottomNav';
 
 const emptySubscribe = () => () => {};
@@ -119,8 +120,17 @@ function getCalendarDays(year: number, month: number): (number | null)[] {
   return days;
 }
 
+const EMPTY_ENTRIES: DiaryEntry[] = [];
+
 export default function DiaryPage() {
   const mounted = useSyncExternalStore(emptySubscribe, () => true, () => false);
+
+  // diaryStore entries 변경 감지 (toggleShare 등 상태 변경 시 재렌더링)
+  const storeEntries = useSyncExternalStore(
+    (callback) => diaryStore.subscribe(callback),
+    () => diaryStore.getState().entries,
+    () => EMPTY_ENTRIES,
+  );
 
   const today = useMemo(() => {
     const d = new Date();
@@ -131,6 +141,30 @@ export default function DiaryPage() {
   const [currentMonth, setCurrentMonth] = useState(today.getMonth() + 1);
   const [selectedDate, setSelectedDate] = useState<Date>(today);
   const [anyModalOpen, setAnyModalOpen] = useState(false);
+
+  // @MX:NOTE: [AUTO] SPEC-FRIEND-003 (REQ-F003-001) 친구 수 관리 + 공유 토스트
+  const [friendCount, setFriendCount] = useState(0);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  // 친구 수 로드
+  useEffect(() => {
+    const userId = diaryStore.getState().supabaseUserId;
+    if (!userId) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const friendships = await getMyFriends(userId);
+        if (!cancelled) setFriendCount(friendships.length);
+      } catch { /* ignore */ }
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  // 토스트 표시 핸들러
+  const showToast = useCallback((msg: string) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(null), 2000);
+  }, []);
 
   // 월 이동
   const goToPrevMonth = () => {
@@ -163,7 +197,7 @@ export default function DiaryPage() {
   const monthEntries = useMemo(
     () =>
       diaryStore.getState().getEntriesByMonth(currentYear, currentMonth),
-    [currentYear, currentMonth],
+    [currentYear, currentMonth, storeEntries],
   );
 
   // 날짜별 대표 감정 Map (SPEC-CALENDAR-001: 최빈 감정, 동률 시 최근 감정)
@@ -206,7 +240,7 @@ export default function DiaryPage() {
           (a, b) =>
             new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
         ),
-    [selectedDate],
+    [selectedDate, storeEntries],
   );
 
   return (
@@ -305,12 +339,19 @@ export default function DiaryPage() {
           ) : (
             <div aria-live="polite" className="space-y-[12px]">
               {dayEntries.map((entry) => (
-                <TimelineEntry key={entry.id} entry={entry} onModalChange={setAnyModalOpen} />
+                <TimelineEntry key={entry.id} entry={entry} onModalChange={setAnyModalOpen} friendCount={friendCount} showToast={showToast} />
               ))}
             </div>
           )}
         </section>
       </main>
+
+      {/* 토스트 메시지 */}
+      {toastMessage && (
+        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 bg-on-surface text-surface px-4 py-2 rounded-full text-[13px] font-gowun shadow-lg animate-fade-in">
+          {toastMessage}
+        </div>
+      )}
 
       {/* 전역 BottomNav — 모달 오픈 시 숨김 */}
       {!anyModalOpen && <BottomNav activeTab="history" />}
@@ -332,7 +373,7 @@ function getConfidenceLabel(confidence: number): string {
  */
 const SWIPE_THRESHOLD_PX = 80;
 
-function TimelineEntry({ entry, onModalChange }: { entry: DiaryEntry; onModalChange: (open: boolean) => void }) {
+function TimelineEntry({ entry, onModalChange, friendCount, showToast }: { entry: DiaryEntry; onModalChange: (open: boolean) => void; friendCount: number; showToast: (msg: string) => void }) {
   const ui = EMOTION_UI[entry.emotion];
   const [modalOpen, setModalOpen] = useState(false);
   const [dragOffset, setDragOffset] = useState(0);
@@ -393,7 +434,8 @@ function TimelineEntry({ entry, onModalChange }: { entry: DiaryEntry; onModalCha
     setSwipeActiveState(false);
   }
 
-  function handleCardClick() {
+  function handleCardClick(e: React.MouseEvent) {
+    if ((e.target as HTMLElement).closest('[data-testid="share-icon"]')) return;
     // 스와이프로 삭제 버튼이 노출된 상태에서는 카드 탭으로 모달 열지 않고 원복
     if (swipeOffset !== 0) {
       setSwipeOffset(0);
@@ -512,6 +554,26 @@ function TimelineEntry({ entry, onModalChange }: { entry: DiaryEntry; onModalCha
           </div>
         </div>
       </article>
+      {/* 공유 버튼 - article 외부에 배치하여 카드 active 효과 분리 */}
+      <button
+        data-testid="share-icon"
+        onClick={(e) => {
+          e.stopPropagation();
+          if (friendCount === 0) {
+            showToast('친구를 먼저 추가해주세요');
+            return;
+          }
+          diaryStore.getState().toggleShare(entry.id, !entry.isShared);
+        }}
+        className={`absolute top-[12px] right-[12px] z-20 material-symbols-outlined text-[20px] p-1 rounded-full hover:bg-surface-container-high active:scale-[0.85] transition-all ${
+          entry.isShared
+            ? 'text-primary'
+            : 'text-on-surface-variant'
+        } ${entry.isShared ? 'fill-icon' : ''} ${friendCount === 0 ? 'opacity-50' : ''}`}
+        aria-label={entry.isShared ? '공유 취소' : '친구에게 공유'}
+      >
+        share
+      </button>
       </div>
 
       {/* SPEC-DIARY-002: 삭제 확인 다이얼로그 */}
@@ -606,6 +668,39 @@ function TimelineEntry({ entry, onModalChange }: { entry: DiaryEntry; onModalCha
               <span>{formatTimeKo(entry.createdAt)}</span>
               <span className="text-outline-variant">|</span>
               <span>신뢰도: {getConfidenceLabel(entry.confidence)}</span>
+            </div>
+
+            {/* @MX:NOTE: [AUTO] SPEC-FRIEND-003 (REQ-F003-001) 모달 내 공유 토글 - friendCount=0 비활성화 */}
+            <div className="mt-[16px] pt-[12px] border-t border-outline-variant/30">
+              <div className="flex items-center justify-between">
+                <label htmlFor="share-toggle" className="text-[14px] text-on-surface font-gowun">
+                  친구에게 공유
+                </label>
+                <button
+                  id="share-toggle"
+                  data-testid="share-toggle"
+                  role="switch"
+                  aria-checked={entry.isShared}
+                  disabled={friendCount === 0}
+                  onClick={() => {
+                    diaryStore.getState().toggleShare(entry.id, !entry.isShared);
+                  }}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                    entry.isShared ? 'bg-primary' : 'bg-surface-container-highest'
+                  } ${friendCount === 0 ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                >
+                  <span
+                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                      entry.isShared ? 'translate-x-6' : 'translate-x-1'
+                    }`}
+                  />
+                </button>
+              </div>
+              {friendCount === 0 && (
+                <p className="text-[12px] text-on-surface-variant mt-[4px]">
+                  먼저 친구를 추가해주세요
+                </p>
+              )}
             </div>
           </div>
         </div>

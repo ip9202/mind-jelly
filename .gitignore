@@ -36,8 +36,10 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
-.env*
+# env files (.env.example만 git 추적 허용)
+.env.local
+.env.development
+.env.production
 
 # vercel
 .vercel
