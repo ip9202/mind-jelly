@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mind Jelly - 광고 노출 시나리오</title>
+  <title>Mind Jelly - 광고 노출 시나리오 (v1.0.2)</title>
   <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -114,7 +114,7 @@
 <body>
   <div class="container">
     <h1>Mind Jelly - 광고 노출 시나리오</h1>
-    <p class="subtitle">SPEC-AD-001 기반 | 앱인토스 WebView + GoogleAdMob SDK</p>
+    <p class="subtitle">SPEC-AD-001 기반 | 앱인토스 WebView + GoogleAdMob SDK | v1.0.2</p>
 
     <!-- 요약 통계 -->
     <div class="grid">
@@ -123,12 +123,12 @@
         <div class="stat-label">광고 유형 (컴포넌트)</div>
       </div>
       <div class="stat-box" style="background: linear-gradient(135deg, #00b894 0%, #55efc4 100%);">
-        <div class="stat-number">2</div>
+        <div class="stat-number">3</div>
         <div class="stat-label">실제 사용 중</div>
       </div>
       <div class="stat-box" style="background: linear-gradient(135deg, #e17055 0%, #fab1a0 100%);">
-        <div class="stat-number">3</div>
-        <div class="stat-label">사용자 유형별 빈도</div>
+        <div class="stat-number">2회/일</div>
+        <div class="stat-label">전면광고 일일 한도 + 2시간 쿨다운</div>
       </div>
     </div>
 
@@ -164,11 +164,11 @@
           <span class="card-icon">🎁</span>
           <div>
             <div class="card-title">보상형 광고</div>
-            <span class="card-status status-ready">미사용</span> <span class="tag tag-rewarded">RewardedAdModal</span>
+            <span class="card-status status-active">사용 중</span> <span class="tag tag-rewarded">RewardedAdModal</span>
           </div>
         </div>
-        <p>광고 시청 후 보상 선택 (주간 리포트 / 감정 키워드 / 젤리 스킨). 컴포넌트는 구현 완료, 페이지에 미연결.</p>
-        <p><strong>위치:</strong> <code>src/components/ads/RewardedAdModal.tsx</code></p>
+        <p>광고 시청 후 보상 선택 (주간 리포트 / 감정 키워드 / 젤리 스킨). 홈 화면 리포트 카드 하단 CTA 버튼으로 연결. 일 3회 / 세션 1회 한도.</p>
+        <p><strong>위치:</strong> <code>src/components/ads/RewardedAdModal.tsx</code> · <code>home/page.tsx</code> data-testid="rewarded-ad-cta"</p>
       </div>
     </div>
 
@@ -182,30 +182,38 @@ flowchart TD
     B --> C["🔄 젤리 복원<br/><b>restoring</b>"]
     C --> D["🔮 구슬 생성<br/><b>beads</b>"]
 
-    D --> E{"구슬을 모두 먹었나?<br/><b>currentState === satisfied</b>"}
+    D --> E{"구슬을 모두 먹었나?<br/><b>satisfied</b>"}
     E -->|"No"| D
-    E -->|"Yes"| F{"광고 빈도 검사<br/><b>canShowInterstitial()</b>"}
+    E -->|"Yes"| F{"canShowInterstitial()\n일 2회 한도 + 2h 쿨다운"}
 
-    F -->|"신규 사용자<br/>(세션 < 3)"| G["🚫 광고 스킵"]
-    F -->|"일반 사용자<br/>(오늘 광고 < 1)"| H["🎬 전면형 광고 노출<br/><b>InterstitialAd</b>"]
-    F -->|"헤비 사용자<br/>(오늘 광고 < 2)"| H
-    F -->|"오늘 광고 한도 초과"| G
+    F -->|"한도 초과 또는 쿨다운"| G["🚫 광고 스킵"]
+    F -->|"조건 충족"| H["🎬 전면형 광고 노출<br/><b>InterstitialAd</b>"]
 
     G --> I["📊 감정 리포트<br/><b>report</b>"]
     H -->|"5초 후 스킵 또는 닫기"| I
 
     I --> J["📏 배너 광고<br/><b>BannerAd (320x50)</b>"]
     I --> K["📄 감정 리포트 카드"]
+    I --> R{"canShowRewardedAd()\n일 3회 + 세션 1회"}
+    R -->|"가능"| RB["🎁 보상형 광고 CTA 버튼\n<b>rewarded-ad-cta</b>"]
+    R -->|"한도 초과"| SKIP2["CTA 숨김"]
+
+    RB -->|"클릭 → 광고 시청"| REWARD["보상 지급\n리포트/키워드/스킨"]
 
     J --> L["🏠 홈으로 복귀<br/><b>idle</b>"]
     K --> L
+    REWARD --> L
+    SKIP2 --> L
     L --> A
 
     style H fill:#ffeaa7,stroke:#6c5ce7,stroke-width:2px,color:#333
     style J fill:#dfe6e9,stroke:#2d3436,stroke-width:2px,color:#333
     style F fill:#fab1a0,stroke:#e17055,stroke-width:2px,color:#333
+    style R fill:#fab1a0,stroke:#e17055,stroke-width:2px,color:#333
     style G fill:#d4edda,stroke:#28a745,stroke-width:2px,color:#333
     style I fill:#a29bfe,stroke:#6c5ce7,stroke-width:2px,color:#fff
+    style RB fill:#fab1a0,stroke:#e17055,stroke-width:2px,color:#333
+    style REWARD fill:#d4edda,stroke:#28a745,stroke-width:2px,color:#333
     </div>
 
     <!-- UI 상태머신 -->
@@ -235,63 +243,73 @@ stateDiagram-v2
 
     <!-- 광고 빈도 제어 -->
     <h2>광고 빈도 제어 로직</h2>
-    <p><code>adFrequencyControl.ts</code>에서 localStorage 기반으로 사용자 유형별 광고 노출을 제어합니다.</p>
+    <p><code>adFrequencyControl.ts</code>에서 <strong>세션 메모리 캐시 + Supabase DB</strong> 기반으로 광고 노출을 제어합니다. (v1.0.2 기준, 사용자 유형 분류 방식에서 단순 한도 방식으로 변경)</p>
 
     <div class="mermaid">
 flowchart LR
-    subgraph 사용자_유형
-        N["👤 신규<br/>세션 < 3"]
-        O["👤 일반<br/>세션 >= 3<br/>오늘 < 5회"]
-        H["👤 헤비<br/>오늘 >= 5회"]
+    subgraph 전면광고_체크
+        A["canShowInterstitial()"] --> B{"일일 노출 횟수\n>= 2?"}
+        B -->|"Yes"| BLOCK1["❌ 차단"]
+        B -->|"No"| C{"마지막 노출 후\n2시간 이내?"}
+        C -->|"Yes"| BLOCK2["❌ 차단 (쿨다운)"]
+        C -->|"No"| ALLOW1["✅ 노출 허용"]
     end
 
-    subgraph 전면광고_한도
-        N -->|"광고 없음"| X1["0회/일"]
-        O -->|"1회/일"| X2["오늘 시청 < 1"]
-        H -->|"2회/일"| X3["오늘 시청 < 2"]
+    subgraph 보상형광고_체크
+        D["canShowRewardedAd()"] --> E{"일일 시청 횟수\n>= 3?"}
+        E -->|"Yes"| BLOCK3["❌ 차단"]
+        E -->|"No"| F{"세션 시청 횟수\n>= 1?"}
+        F -->|"Yes"| BLOCK4["❌ 차단 (세션 한도)"]
+        F -->|"No"| ALLOW2["✅ 노출 허용"]
     end
 
-    subgraph 배너광고
-        X2 --> B["리포트 화면에서<br/>항상 노출"]
-        X3 --> B
-        X1 --> B
+    subgraph 저장소
+        ALLOW1 --> G["recordAdShown()\nSupabase DB 기록\n+ 메모리 캐시 갱신"]
+        ALLOW2 --> H["recordRewardedAdShown()\nSupabase DB 기록\n+ 메모리 캐시 갱신"]
     end
 
-    style N fill:#d4edda,stroke:#28a745
-    style O fill:#fff3cd,stroke:#ffc107
-    style H fill:#f8d7da,stroke:#dc3545
+    style ALLOW1 fill:#d4edda,stroke:#28a745
+    style ALLOW2 fill:#d4edda,stroke:#28a745
+    style BLOCK1 fill:#f8d7da,stroke:#dc3545
+    style BLOCK2 fill:#f8d7da,stroke:#dc3545
+    style BLOCK3 fill:#f8d7da,stroke:#dc3545
+    style BLOCK4 fill:#f8d7da,stroke:#dc3545
     </div>
 
     <table>
       <thead>
         <tr>
-          <th>사용자 유형</th>
-          <th>판별 조건</th>
-          <th>전면광고 한도</th>
-          <th>배너광고</th>
+          <th>광고 유형</th>
+          <th>일일 한도</th>
+          <th>추가 조건</th>
+          <th>저장 방식</th>
         </tr>
       </thead>
       <tbody>
         <tr>
-          <td>신규 (<code>new</code>)</td>
-          <td><code>sessionCount < 3</code></td>
-          <td>0회/일 (전면광고 없음)</td>
-          <td>리포트 화면에서만 노출</td>
+          <td>전면형 (<code>interstitial</code>)</td>
+          <td>최대 <strong>2회/일</strong></td>
+          <td>노출 간 <strong>2시간 쿨다운</strong> 필수</td>
+          <td>Supabase DB + 메모리 캐시</td>
         </tr>
         <tr>
-          <td>일반 (<code>normal</code>)</td>
-          <td><code>sessionCount >= 3</code> + <code>todaySession < 5</code></td>
-          <td>최대 1회/일</td>
-          <td>리포트 화면에서만 노출</td>
+          <td>보상형 (<code>rewarded</code>)</td>
+          <td>최대 <strong>3회/일</strong></td>
+          <td>세션당 <strong>1회</strong> 한도</td>
+          <td>Supabase DB + 메모리 캐시</td>
         </tr>
         <tr>
-          <td>헤비 (<code>heavy</code>)</td>
-          <td><code>todaySession >= 5</code></td>
-          <td>최대 2회/일</td>
-          <td>리포트 화면에서만 노출</td>
+          <td>배너 (<code>banner</code>)</td>
+          <td>한도 없음</td>
+          <td>리포트 화면 진입 시 항상 노출</td>
+          <td>빈도 제어 없음</td>
         </tr>
       </tbody>
     </table>
+
+    <div class="note">
+      <strong>저장 방식 변경 (v1.0.0 → v1.0.2):</strong> localStorage 기반에서 <strong>Supabase DB + 세션 메모리 캐시 조합</strong>으로 변경. 앱 재시작 후에도 일일 한도가 유지됩니다. 사용자 유형(신규/일반/헤비) 분류는 제거되고, 모든 사용자에게 동일한 한도 적용.
+    </div>
 
     <!-- 타임라인 -->
     <h2>광고 노출 타임라인</h2>
@@ -362,12 +380,12 @@ sequenceDiagram
     </div>
 
     <!-- 보상형 광고 -->
-    <h2>보상형 광고 (RewardedAd) - 미사용 (인프라 완성)</h2>
+    <h2>보상형 광고 (RewardedAd) - <span style="color:#155724;background:#d4edda;padding:2px 10px;border-radius:99px;font-size:0.85rem;">사용 중</span></h2>
 
     <div class="note" style="background: #e8f5e9; border-left-color: #4caf50;">
       <strong>보상형 광고란?</strong> 사용자가 <strong>광고를 끝까지 시청하면</strong> 보상을 받는 형태입니다.
       일반 광고와 달리 <strong>사용자가 직접 선택</strong>해서 보는 것이고, <strong>끝까지 봐야만</strong> 보상이 지급됩니다.
-      중간에 닫으면 보상이 없습니다.
+      중간에 닫으면 보상이 없습니다. <strong>v1.0.2부터 홈 화면 리포트 카드 하단 CTA 버튼으로 연결됩니다.</strong>
     </div>
 
     <!-- 보상형 광고 UX 흐름 -->
@@ -672,7 +690,7 @@ flowchart TD
           <td><strong>현재 상태</strong></td>
           <td><span class="card-status status-active">사용 중</span></td>
           <td><span class="card-status status-active">사용 중</span></td>
-          <td><span class="card-status status-ready">인프라 완성</span></td>
+          <td><span class="card-status status-active">사용 중</span></td>
         </tr>
       </tbody>
     </table>
@@ -682,8 +700,38 @@ flowchart TD
       특히 젤리 스킨 같은 <strong>한정판 보상</strong>은 사용자가 광고를 피하지 않고 능동적으로 시청하게 만드는 핵심 수단입니다.
     </div>
 
+    <div class="note" style="background: #e8f5e9; border-left-color: #4caf50;">
+      <strong>v1.0.2 연결 완료:</strong> <code>RewardedAdModal</code>이 <code>home/page.tsx</code>에 연결되었습니다. 리포트 화면에서 <code>canShowRewardedAd()</code> 조건(일 3회 + 세션 1회) 충족 시 CTA 버튼이 노출됩니다.
+    </div>
+
+    <!-- 광고 ID 설정 -->
+    <h2>광고 ID 환경변수 관리 (v1.0.2)</h2>
+    <p>광고 그룹 ID는 <strong>환경변수</strong>로 관리됩니다. 개발/배포 환경이 자동으로 분리됩니다.</p>
+
+    <table>
+      <thead>
+        <tr><th>환경</th><th>파일</th><th>BANNER_AD_GROUP_ID</th><th>INTERSTITIAL_AD_GROUP_ID</th><th>REWARDED_AD_GROUP_ID</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>개발</strong></td>
+          <td><code>.env.local</code></td>
+          <td><code>ait-ad-test-banner-id</code></td>
+          <td><code>ait-ad-test-interstitial-id</code></td>
+          <td><code>ait-ad-test-rewarded-id</code></td>
+        </tr>
+        <tr>
+          <td><strong>배포</strong></td>
+          <td><code>.env.production</code></td>
+          <td><code>ait.v2.live.d219bdc9c20d477d</code></td>
+          <td><code>ait.v2.live.07e208f269914407</code></td>
+          <td><code>ait.v2.live.07e7441f22524f3f</code></td>
+        </tr>
+      </tbody>
+    </table>
+
     <div class="note">
-      <strong>연결 필요:</strong> <code>RewardedAdModal</code>을 리포트 화면이나 설정 페이지에 연결하면 즉시 사용 가능합니다. <code>rewardStore</code>에 <code>canShowRewardedAd</code>, <code>incrementRewardedAdCount</code> 로직도 이미 준비되어 있습니다.
+      <strong>환경변수 읽기 방식:</strong> <code>adConfig.ts</code>에서 <code>process.env.NEXT_PUBLIC_*</code>로 읽음. 미설정 시 테스트 ID로 fallback. <code>npx ait build</code> 시 <code>.env.production</code>이 자동 적용되어 실제 광고 ID로 빌드됩니다.
     </div>
 
     <!-- 파일 구조 -->
@@ -697,26 +745,27 @@ graph LR
     subgraph 광고_컴포넌트
         IA["InterstitialAd.tsx"]
         BA["BannerAd.tsx"]
-        RA["RewardedAdModal.tsx"]
+        RA["RewardedAdModal.tsx\n+ rewarded-ad-cta 버튼"]
     end
 
     subgraph 광고_라이브러리
-        AC["adConfig.ts"]
+        AC["adConfig.ts\n(환경변수 기반)"]
         AI["adInitializer.ts"]
-        FC["adFrequencyControl.ts"]
+        FC["adFrequencyControl.ts\n(Supabase+캐시)"]
     end
 
     HP -->|"satisfied 시점"| IA
     HP -->|"report 상태"| BA
-    HP -.->|"미연결"| RA
+    HP -->|"canShowRewardedAd()"| RA
 
     IA --> AC
     IA --> FC
     BA --> AC
     RA --> AC
+    RA --> FC
 
-    style RA stroke-dasharray: 5 5,stroke:#999
     style HP fill:#a29bfe,stroke:#6c5ce7,color:#fff
+    style RA fill:#fab1a0,stroke:#e17055,color:#333
     </div>
 
     <table>
@@ -726,16 +775,16 @@ graph LR
       <tbody>
         <tr><td><code>components/ads/InterstitialAd.tsx</code></td><td>전면형 광고 컴포넌트</td><td>REQ-AD-002</td></tr>
         <tr><td><code>components/ads/BannerAd.tsx</code></td><td>배너 광고 컴포넌트</td><td>REQ-AD-003</td></tr>
-        <tr><td><code>components/ads/RewardedAdModal.tsx</code></td><td>보상형 광고 모달 (미사용)</td><td>-</td></tr>
-        <tr><td><code>lib/ad/adConfig.ts</code></td><td>광고 설정 (광고그룹 ID, 크기, 지연)</td><td>REQ-AD-001</td></tr>
-        <tr><td><code>lib/ad/adFrequencyControl.ts</code></td><td>노출 빈도 제어 (사용자 유형별)</td><td>REQ-AD-004</td></tr>
+        <tr><td><code>components/ads/RewardedAdModal.tsx</code></td><td>보상형 광고 모달 + CTA 버튼 (홈 연결 완료)</td><td>SPEC-AD-003</td></tr>
+        <tr><td><code>lib/ad/adConfig.ts</code></td><td>광고 ID 환경변수 관리, 크기/지연 설정</td><td>REQ-AD-001</td></tr>
+        <tr><td><code>lib/ad/adFrequencyControl.ts</code></td><td>노출 빈도 제어 (Supabase DB + 메모리 캐시)</td><td>REQ-AD-004</td></tr>
         <tr><td><code>lib/ad/adInitializer.ts</code></td><td>SDK 초기화</td><td>-</td></tr>
         <tr><td><code>stores/rewardStore.ts</code></td><td>보상 상태 관리</td><td>-</td></tr>
       </tbody>
     </table>
 
     <footer>
-      Mind Jelly v1.0.0 | 앱인토스 WebView | GoogleAdMob SDK | 생성일: 2026-05-14
+      Mind Jelly v1.0.2 | 앱인토스 WebView | GoogleAdMob SDK | 최종 갱신: 2026-05-18
     </footer>
   </div>
 

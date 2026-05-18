@@ -10,16 +10,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.9.0] - 2026-05-17
 
 ### Added
-- 친구 시스템 기능 (SPEC-FRIEND-001, SPEC-FRIEND-002)
-  - 내 초대코드 섹션 + 복사 버튼 및 공유 가이드 추가
-  - 친구 삭제(unfriend) 기능 + 확인 다이얼로그
-  - 받은 요청/친구 목록 빈 상태 CTA 버튼
+- 친구 시스템 전체 구현 (SPEC-FRIEND-001 ~ SPEC-FRIEND-004)
+  - 내 초대코드 섹션 + 복사 버튼 및 공유 가이드 (SPEC-FRIEND-001)
+  - 친구 삭제(unfriend) 기능 + 확인 다이얼로그 + 빈 상태 CTA (SPEC-FRIEND-002)
+  - 감정 공유 토글 + 친구 피드 개선 - 친구의 오늘 감정 상태 표시 (SPEC-FRIEND-003)
+  - 하단 네비게이션 바 통합 + 친구 요청 뱃지 카운트 (SPEC-FRIEND-004)
 - 친구 페이지 Stitch 디자인 적용
   - 젤리 캐릭터 SVG 아바타 (감정색 지원)
   - 친구 목록 감정 상태 표시 ("🌸 오늘: 평온해요")
   - 섹션 헤더 카운트 배지 (받은 요청 N, 내 친구 N)
   - 빈 상태 젤리 일러스트 (🪼 → SVG 교체)
-  - 친구 목록 하단 CTA + 최근 친구 history 아이콘
+- 개발/프로덕션 Supabase 환경 분리 (SPEC-INFRA-001)
+  - mind-jelly-dev 프로젝트로 개발 DB 분리
+  - .env.development / .env.production 환경별 설정 완전 분리
+- 광고 ID 환경변수 분리
+  - `.env.local` (테스트 ID) / `.env.production` (실제 운영 ID) 자동 전환
+  - 배포 시 `ait build`가 `.env.production` 자동 적용
+- SPEC-FRIEND E2E 통합 테스트 추가 (82/82 통과)
+  - 친구 추가/수락/거절/삭제 전체 플로우 검증
+  - friendships FK 제약 및 RLS 정책 검증
+
+### Fixed
+- 일기 공유 토글 클릭 시 UI 업데이트 안 되는 버그 수정
+- `useSyncExternalStore` getServerSnapshot 누락 수정
+- 공유 버튼 카드 클릭 전파 방지 + getServerSnapshot 캐싱
+- BottomNav SSR hydration 런타임 에러 수정
+- BottomNav 친구 요청 뱃지 조건 수정 (음수 방지)
+- `fetchPendingCount` PGRST200 에러 핸들링 추가
+- 시드 데이터 `auth.users` 생성 추가 (FK 제약 해결)
+
+### Docs
+- 브랜치 전략 HTML 문서 추가 (`docs/branch-strategy.html`)
+- 광고 플로우 문서 최신화 (`docs/ad-flow.html` v1.0.2)
 
 ## [1.8.2] - 2026-05-16
 
