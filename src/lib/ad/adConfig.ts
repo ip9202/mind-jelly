@@ -8,25 +8,23 @@
  */
 
 // ─── 광고 그룹 ID ─────────────────────────────────────────────────────────────
-// @MX:WARN: 검토 요청 직전 테스트 ID → 실제 ID 교체 필수
-// @MX:REASON: 개발 중 실제 ID 사용은 앱인토스 정책 위반. 심사관이 광고 동작을 직접 확인하므로 검토 요청 시 실제 ID 필요.
-//
-// 교체 방법: 아래 3개 상수를 주석의 실제 ID로 교체 후 검토 요청
-//   BANNER_AD_GROUP_ID      → 'ait.v2.live.d219bdc9c20d477d'
-//   INTERSTITIAL_AD_GROUP_ID → 'ait.v2.live.07e208f269914407'
-//   REWARDED_AD_GROUP_ID    → 'ait.v2.live.07e7441f22524f3f'
+// @MX:NOTE: 실제 운영 광고 ID 적용 완료 (2026-05-18, hotfix/real-ad-ids)
+// 개발 환경 복귀 시 테스트 ID로 교체 필요:
+//   BANNER_AD_GROUP_ID      → 'ait-ad-test-banner-id'
+//   INTERSTITIAL_AD_GROUP_ID → 'ait-ad-test-interstitial-id'
+//   REWARDED_AD_GROUP_ID    → 'ait-ad-test-rewarded-id'
 
 // 배너 광고용 광고 그룹 ID (리스트형)
-export const BANNER_AD_GROUP_ID = 'ait-ad-test-banner-id' as const;
+export const BANNER_AD_GROUP_ID = 'ait.v2.live.d219bdc9c20d477d' as const;
 
 // 피드형 배너 광고용 광고 그룹 ID (현재 미사용 — 교체 불필요)
 export const NATIVE_AD_GROUP_ID = 'ait-ad-test-native-image-id' as const;
 
 // 전면형 광고용 광고 그룹 ID
-export const INTERSTITIAL_AD_GROUP_ID = 'ait-ad-test-interstitial-id' as const;
+export const INTERSTITIAL_AD_GROUP_ID = 'ait.v2.live.07e208f269914407' as const;
 
 // 보상형 광고용 광고 그룹 ID
-export const REWARDED_AD_GROUP_ID = 'ait-ad-test-rewarded-id' as const;
+export const REWARDED_AD_GROUP_ID = 'ait.v2.live.07e7441f22524f3f' as const;
 
 // 전면형 광고 설정
 // @MX:ANCHOR: [AUTO] 외부 시스템(AppIntos AdMob SDK) 연결 지점, fan_in >= 3
