@@ -43,6 +43,26 @@ CREATE INDEX IF NOT EXISTS idx_ad_impressions_user_date
 CREATE UNIQUE INDEX IF NOT EXISTS idx_users_invite_code
   ON users(invite_code) WHERE invite_code IS NOT NULL;
 
+-- 4.1) friendships FK constraints (PostgREST join 지원)
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.table_constraints
+    WHERE constraint_name = 'fk_friendships_requester' AND table_name = 'friendships'
+  ) THEN
+    ALTER TABLE friendships
+      ADD CONSTRAINT fk_friendships_requester
+      FOREIGN KEY (requester_id) REFERENCES users(id) ON DELETE CASCADE;
+  END IF;
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.table_constraints
+    WHERE constraint_name = 'fk_friendships_receiver' AND table_name = 'friendships'
+  ) THEN
+    ALTER TABLE friendships
+      ADD CONSTRAINT fk_friendships_receiver
+      FOREIGN KEY (receiver_id) REFERENCES users(id) ON DELETE CASCADE;
+  END IF;
+END $$;
+
 -- 5) RPC function: atomic rewarded ad + skin unlock
 CREATE OR REPLACE FUNCTION increment_rewarded_and_unlock(
   p_user_id UUID,
